@@ -2,6 +2,7 @@ package com.conectaedu.api.modules.university.controller;
 
 import com.conectaedu.api.modules.university.dto.request.UniversityCreationRequestDTO;
 import com.conectaedu.api.modules.university.dto.request.UniversityUpdateRequestDTO;
+import com.conectaedu.api.modules.university.dto.request.UniversityValidationRequestDTO;
 import com.conectaedu.api.modules.university.dto.response.UniversityCreationResponseDTO;
 import com.conectaedu.api.modules.university.dto.response.UniversityResponseDTO;
 import com.conectaedu.api.modules.university.interfaces.IUniversityFacade;
@@ -53,5 +54,19 @@ public class UniversityController {
     @GetMapping
     public ResponseEntity<List<UniversityResponseDTO>> getAllUniversities() {
         return ResponseEntity.ok(universityFacade.getAllUniversities());
+    }
+
+    //Aprova a universidade e a torna ativa.
+    @PatchMapping("/{id}/validate")
+    public ResponseEntity<UniversityResponseDTO> validateUniversity(
+            @PathVariable UUID id, @RequestBody @Valid UniversityValidationRequestDTO request) {
+        return ResponseEntity.ok(universityFacade.validateUniversity(id, request));
+    }
+
+    //Recusa a universidade.
+    @PatchMapping("/{id}/reject")
+    public ResponseEntity<UniversityResponseDTO> rejectUniversity(
+            @PathVariable UUID id, @RequestBody @Valid UniversityValidationRequestDTO request) {
+        return ResponseEntity.ok(universityFacade.rejectUniversity(id, request));
     }
 }
