@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface SchoolRepository extends JpaRepository<School, UUID> {
 
-    boolean existsByAddress(String address);
+    boolean existsByCie(String cie);
 
-    Optional<School> findByAddress(String address);
+    Optional<School> findByCie(String cie);
 }

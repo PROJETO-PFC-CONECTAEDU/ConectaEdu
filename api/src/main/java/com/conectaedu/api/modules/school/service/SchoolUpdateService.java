@@ -4,7 +4,7 @@ import com.conectaedu.api.modules.school.domain.School;
 import com.conectaedu.api.modules.school.dto.request.SchoolUpdateRequestDTO;
 import com.conectaedu.api.modules.school.dto.response.SchoolResponseDTO;
 import com.conectaedu.api.modules.school.repository.SchoolRepository;
-import com.conectaedu.api.shared.exceptions.AddressAlreadyExistsException;
+import com.conectaedu.api.shared.exceptions.CIEAlreadyExistsException;
 import com.conectaedu.api.shared.exceptions.SchoolNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,8 +23,8 @@ public class SchoolUpdateService {
                 .orElseThrow(() -> new SchoolNotFoundException("Escola não encontrada!"));
 
         if (request.address() != null && !request.address().equalsIgnoreCase(school.getAddress())) {
-            if (schoolRepository.existsByAddress(request.address())) {
-                throw new AddressAlreadyExistsException("Endereço já cadastrado!");
+            if (schoolRepository.existsByCie(school.getCie())) {
+                throw new CIEAlreadyExistsException("Endereço já cadastrado!");
             }
             school.setAddress(request.address());
         }
