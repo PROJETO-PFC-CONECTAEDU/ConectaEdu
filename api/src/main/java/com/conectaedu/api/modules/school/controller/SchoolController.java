@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/school")
+@RequestMapping("/api/v1/schools")
 @RequiredArgsConstructor
 public class SchoolController {
      private final ISchoolFacade  schoolFacade;

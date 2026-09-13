@@ -10,10 +10,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/students")
+@RequestMapping("/api/v1/students")
 @RequiredArgsConstructor
 public class StudentController {
 
@@ -31,10 +32,21 @@ public class StudentController {
         return ResponseEntity.ok(response);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        studentFacade.deleteStudent(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<StudentResponseDTO> get(@PathVariable UUID id) {
         StudentResponseDTO response = studentFacade.getStudent(id);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<StudentResponseDTO>> getAll() {
+        return ResponseEntity.ok(studentFacade.getAllStudents());
     }
 
     @PatchMapping("/{id}/validate")
