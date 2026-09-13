@@ -18,7 +18,7 @@ interface Student {
   name: string;
   email: string;
   universityName: string;
-  status: 'PENDING' | 'ACTIVE' | 'REJECTED';
+  status: 'PENDING' | 'VALIDATED' | 'REJECTED';
   availability: string;
   interestAreas: string[];
 }
@@ -259,11 +259,11 @@ export function Students() {
 
               <div className="mt-6 flex items-center justify-between">
                 <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${
-                  student.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' :
+                  student.status === 'VALIDATED' ? 'bg-emerald-100 text-emerald-700' :
                   student.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
                   'bg-amber-100 text-amber-700'
                 }`}>
-                  {student.status === 'ACTIVE' ? 'Validado' : 
+                  {student.status === 'VALIDATED' ? 'Validado' : 
                    student.status === 'REJECTED' ? 'Rejeitado' : 'Pendente'}
                 </span>
                 
@@ -286,7 +286,7 @@ export function Students() {
                   </div>
                 )}
 
-                {student.status === 'ACTIVE' && (
+                {student.status === 'VALIDATED' && (
                   <div className="flex items-center gap-1 text-emerald-600 text-xs font-medium">
                     <ShieldCheck size={14} />
                     Verificado
