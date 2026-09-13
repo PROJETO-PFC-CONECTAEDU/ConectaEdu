@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,4 +34,7 @@ public class Student extends User {
     private String course;
 
     private List<String> interestAreas;
+
+    @Column(name = "validated_at")
+    private LocalDateTime validatedAt;
 }
