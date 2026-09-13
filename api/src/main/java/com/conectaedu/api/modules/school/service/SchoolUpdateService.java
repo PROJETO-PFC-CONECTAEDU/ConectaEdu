@@ -22,16 +22,13 @@ public class SchoolUpdateService {
         School school =  schoolRepository.findById(id)
                 .orElseThrow(() -> new SchoolNotFoundException("Escola não encontrada!"));
 
-        if (request.address() != null && !request.address().equalsIgnoreCase(school.getAddress())) {
-            if (schoolRepository.existsByCie(school.getCie())) {
-                throw new CIEAlreadyExistsException("Endereço já cadastrado!");
-            }
-            school.setAddress(request.address());
-        }
-
         if (request.name() != null) {
             school.setName( request.name());
         }
+
+        school.setName(request.name());
+
+        school.setDirector(request.director());
 
         school.setUpdatedAt(LocalDateTime.now());
 

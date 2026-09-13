@@ -2,6 +2,8 @@ package com.conectaedu.api.modules.school.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 
+import java.time.LocalDateTime;
+
 public record SchoolCreationRequestDTO(
         @NotBlank(message = "Nome da escola é obrigatório")
         String name,
@@ -14,7 +16,5 @@ public record SchoolCreationRequestDTO(
 
         @NotBlank(message = "O endereço é obrigatório")
         String address
-
-
 ) {
 }

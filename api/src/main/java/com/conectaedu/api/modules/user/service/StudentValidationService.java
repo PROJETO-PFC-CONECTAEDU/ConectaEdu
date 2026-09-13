@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -21,6 +22,7 @@ public class StudentValidationService {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado!"));
 
+        student.setValidatedAt(LocalDateTime.now());
         student.setStatus(StudentStatus.VALIDATED);
         studentRepository.save(student);
     }

@@ -8,6 +8,8 @@ import com.conectaedu.api.shared.exceptions.CIEAlreadyExistsException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class SchoolCreationService {
@@ -26,6 +28,10 @@ public class SchoolCreationService {
         school.setDirector(request.director());
 
         school.setCie(request.cie());
+
+        school.setAddress(request.address());
+
+        school.setCreatedAt(LocalDateTime.now());
 
         schoolRepository.save(school);
         return new SchoolCreationResponseDTO("Escola cadastrada com sucesso!");

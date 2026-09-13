@@ -4,13 +4,11 @@ import com.conectaedu.api.modules.user.dto.request.StudentCreationRequestDTO;
 import com.conectaedu.api.modules.user.dto.request.StudentUpdateRequestDTO;
 import com.conectaedu.api.modules.user.dto.response.StudentResponseDTO;
 import com.conectaedu.api.modules.user.interfaces.IStudentFacade;
-import com.conectaedu.api.modules.user.service.StudentCreationService;
-import com.conectaedu.api.modules.user.service.StudentGetService;
-import com.conectaedu.api.modules.user.service.StudentUpdateService;
-import com.conectaedu.api.modules.user.service.StudentValidationService;
+import com.conectaedu.api.modules.user.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -20,6 +18,7 @@ public class StudentFacadeImpl implements IStudentFacade {
     private final StudentCreationService studentCreationService;
     private final StudentUpdateService studentUpdateService;
     private final StudentGetService studentGetService;
+    private final StudentDeletionService studentDeletionService;
     private final StudentValidationService studentValidationService;
 
     public StudentResponseDTO createStudent(StudentCreationRequestDTO request) {
@@ -32,6 +31,16 @@ public class StudentFacadeImpl implements IStudentFacade {
 
     public StudentResponseDTO getStudent(UUID id) {
         return studentGetService.getStudent(id);
+    }
+
+    @Override
+    public List<StudentResponseDTO> getAllStudents() {
+        return studentGetService.getAllStudents();
+    }
+
+    @Override
+    public void deleteStudent(UUID id) {
+        studentDeletionService.deleteStudent(id);
     }
 
     public void validateStudent(UUID id) {
