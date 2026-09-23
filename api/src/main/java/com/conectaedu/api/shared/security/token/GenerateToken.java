@@ -21,7 +21,7 @@ public class GenerateToken {
         try{
             Algorithm algorithm = Algorithm.HMAC256(secret);
             String token = JWT.create()
-                    .withIssuer("dumply-login")
+                    .withIssuer("conectaedu-login")
                     .withSubject(user.getEmail())
                     .withClaim("role", user.getUserRole().name())
                     .withExpiresAt(this.generateExpirationDate())
