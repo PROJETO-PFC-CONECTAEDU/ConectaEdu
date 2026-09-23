@@ -3,9 +3,14 @@ import { Dashboard } from './pages/Dashboard';
 import { Schools } from './pages/Schools';
 import { Universities } from './pages/Universities';
 import { Students } from './pages/Students';
+import { Login } from './pages/Login';
 import { Layout } from './components/layout/Layout';
 
 export const router = createBrowserRouter([
+  {
+    path: '/login',
+    element: <Login />,
+  },
   {
     path: '/',
     element: <Layout />,
