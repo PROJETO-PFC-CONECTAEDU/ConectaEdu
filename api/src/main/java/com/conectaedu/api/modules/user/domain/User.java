@@ -37,7 +37,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserType userType;
 
-    @Column(name = "user_role", insertable = false, updatable = false)
+    @Column(name = "user_role", insertable=false, updatable=false)
     @Enumerated(EnumType.STRING)
     private UserRole userRole;
 
