@@ -15,6 +15,7 @@ import com.conectaedu.api.shared.enums.UserType;
 import com.conectaedu.api.shared.exceptions.EmailAlreadyExistsException;
 import com.conectaedu.api.shared.exceptions.UniversityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,7 @@ public class StudentCreationService {
     private final StudentRepository studentRepository;
     private final UniversityRepository universityRepository;
     private final AuditService auditService;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public StudentResponseDTO createStudent(StudentCreationRequestDTO request) {
@@ -46,7 +48,7 @@ public class StudentCreationService {
         Student student = new Student();
         student.setName(request.name().trim());
         student.setEmail(email);
-        student.setPassword(request.password()); // TODO: Implementar criptografia de senha
+        student.setPassword(passwordEncoder.encode(request.password())); // Criptografia implantada :D
         student.setUserType(UserType.PERSON);
         student.setUserRole(UserRole.STUDENT);
         student.setCreatedAt(LocalDateTime.now());
