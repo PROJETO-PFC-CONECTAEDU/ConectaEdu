@@ -12,12 +12,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/legal-documents")
 @RequiredArgsConstructor
 public class LegalDocumentController {
 
     private final ILegalDocumentFacade legalDocumentFacade;
+
+    @GetMapping
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    public ResponseEntity<List<LegalDocumentResponseDTO>> listAllDocuments() {
+        return ResponseEntity.ok(legalDocumentFacade.listAll());
+    }
 
     //Publica a nova versão e arquiva a anterior do mesmo tipo.
     @PostMapping
@@ -33,5 +41,10 @@ public class LegalDocumentController {
     public ResponseEntity<LegalDocumentResponseDTO> getCurrentDocument(
             @PathVariable LegalDocumentType documentType) {
         return ResponseEntity.ok(legalDocumentFacade.getCurrentDocument(documentType));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<LegalDocumentResponseDTO> getDocumentById(@PathVariable java.util.UUID id) {
+        return ResponseEntity.ok(legalDocumentFacade.getDocumentById(id));
     }
 }

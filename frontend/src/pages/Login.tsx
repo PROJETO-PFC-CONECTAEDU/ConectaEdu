@@ -8,6 +8,7 @@ import { Input } from '../components/ui/Input';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import api from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
 const loginSchema = z.object({
@@ -20,6 +21,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 export function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { signIn } = useAuth();
 
   const {
     register,
@@ -35,12 +37,15 @@ export function Login() {
       return response.data;
     },
     onSuccess: (data) => {
-      localStorage.setItem('@ConectaEdu:token', data.token);
-      localStorage.setItem('@ConectaEdu:user', JSON.stringify({
-        name: data.name,
-        email: data.email,
-        role: data.role
-      }));
+      signIn({
+        token: data.token,
+        user: {
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          role: data.role
+        }
+      });
       toast.success('Bem-vindo ao ConectaEdu!');
       navigate('/dashboard');
     },
