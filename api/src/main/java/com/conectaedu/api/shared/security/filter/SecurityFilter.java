@@ -1,5 +1,6 @@
 package com.conectaedu.api.shared.security.filter;
 
+import com.conectaedu.api.shared.security.domain.AuthenticatedUser;
 import com.conectaedu.api.shared.security.token.ValidateToken;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -9,12 +10,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -36,12 +37,16 @@ public class SecurityFilter extends OncePerRequestFilter {
 
                 String role = decodedJWT.getClaim("role").asString();
 
-                var authorities = Collections.singletonList(new SimpleGrantedAuthority(role.startsWith("ROLE_") ? role : "ROLE_" + role));
+                String id = decodedJWT.getClaim("id").asString();
 
-                var userDetails = new User(email, "", authorities);
+                if (id != null) {
+                    var authorities = Collections.singletonList(new SimpleGrantedAuthority(role.startsWith("ROLE_") ? role : "ROLE_" + role));
 
-                var authentication = new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    var userDetails = new AuthenticatedUser(UUID.fromString(id), email, "", authorities);
+
+                    var authentication = new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             }
         }
 
