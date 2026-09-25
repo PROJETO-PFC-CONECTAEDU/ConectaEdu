@@ -34,15 +34,19 @@ public class AuditLog {
     @Column(name = "description", nullable = false, length = 2000)
     private String description;
 
+    @Column(name = "performed_by", length = 100)
+    private String performedBy;
+
     @Column(name = "occurred_at", nullable = false, updatable = false)
     private LocalDate occurredAt;
 
     public AuditLog(AuditEntityType entityType, UUID entityId,
-                    AuditAction action, String description) {
+                    AuditAction action, String description, String performedBy) {
         this.entityType = entityType;
         this.entityId = entityId;
         this.action = action;
         this.description = description;
+        this.performedBy = performedBy;
         this.occurredAt = LocalDate.now();
     }
 }

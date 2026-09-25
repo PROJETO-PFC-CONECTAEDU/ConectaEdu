@@ -5,6 +5,7 @@ import com.conectaedu.api.shared.audit.repository.AuditLogRepository;
 import com.conectaedu.api.shared.audit.support.AuditDiff;
 import com.conectaedu.api.shared.enums.AuditAction;
 import com.conectaedu.api.shared.enums.AuditEntityType;
+import com.conectaedu.api.shared.security.context.SecurityContextHolder;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -43,9 +44,13 @@ public class AuditService {
 
     private void record(AuditEntityType type, UUID id, AuditAction action, String description) {
         String text = description.length() > MAX ? description.substring(0, MAX) : description;
+        String performedBy = SecurityContextHolder.getAuthenticatedUserEmail();
+        if (performedBy == null) {
+            performedBy = "SYSTEM";
+        }
         AuditLog entry;
-        entry = AuditLogRepository.save(new AuditLog(type, id, action, text));
-        CONSOLE.info("[AUDIT] {} | {} | {} | id={} | {}",
-                entry.getOccurredAt(), type, action, id, text);
+        entry = AuditLogRepository.save(new AuditLog(type, id, action, text, performedBy));
+        CONSOLE.info("[AUDIT] {} | {} | {} | {} | id={} | {}",
+                entry.getOccurredAt(), performedBy, type, action, id, text);
     }
 }
