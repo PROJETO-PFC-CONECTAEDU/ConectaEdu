@@ -3,6 +3,9 @@ package com.conectaedu.api.modules.university.service;
 import com.conectaedu.api.modules.university.domain.University;
 import com.conectaedu.api.modules.university.dto.response.UniversityResponseDTO;
 import com.conectaedu.api.modules.university.repository.UniversityRepository;
+import com.conectaedu.api.shared.audit.service.AuditService;
+import com.conectaedu.api.shared.audit.support.AuditDiff;
+import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.UniversityStatus;
 import com.conectaedu.api.shared.exceptions.InvalidUniversityStatusException;
 import com.conectaedu.api.shared.exceptions.UniversityNotFoundException;
@@ -18,11 +21,15 @@ import java.util.UUID;
 public class UniversityValidationService {
 
     private final UniversityRepository universityRepository;
+    private final AuditService auditService;
 
     //Aprova a universidade: passa a APPROVED e é ativada.
     @Transactional
     public UniversityResponseDTO validateUniversity(UUID id, String notes) {
         University university = findPending(id);
+
+        UniversityStatus beforeStatus = university.getStatus();
+        boolean beforeActive = university.isActive();
 
         university.setStatus(UniversityStatus.APPROVED);
         university.setActive(true);
@@ -31,6 +38,12 @@ public class UniversityValidationService {
         university.setUpdatedAt(LocalDateTime.now());
 
         universityRepository.save(university);
+
+        AuditDiff diff = AuditDiff.create()
+                .field("status", beforeStatus, university.getStatus())
+                .field("active", beforeActive, university.isActive());
+        auditService.logUpdate(AuditEntityType.UNIVERSITY, university.getId(), university.getName(), diff);
+
         return new UniversityResponseDTO(university);
     }
 
@@ -44,6 +57,9 @@ public class UniversityValidationService {
 
         University university = findPending(id);
 
+        UniversityStatus beforeStatus = university.getStatus();
+        boolean beforeActive = university.isActive();
+
         university.setStatus(UniversityStatus.REJECTED);
         university.setActive(false);
         university.setValidatedAt(LocalDateTime.now());
@@ -51,6 +67,12 @@ public class UniversityValidationService {
         university.setUpdatedAt(LocalDateTime.now());
 
         universityRepository.save(university);
+
+        AuditDiff diff = AuditDiff.create()
+                .field("status", beforeStatus, university.getStatus())
+                .field("active", beforeActive, university.isActive());
+        auditService.logUpdate(AuditEntityType.UNIVERSITY, university.getId(), university.getName(), diff);
+
         return new UniversityResponseDTO(university);
     }
 

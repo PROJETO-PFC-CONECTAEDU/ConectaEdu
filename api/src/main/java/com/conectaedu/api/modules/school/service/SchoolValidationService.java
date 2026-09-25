@@ -4,6 +4,9 @@ import com.conectaedu.api.modules.school.domain.School;
 import com.conectaedu.api.modules.school.dto.response.SchoolResponseDTO;
 import com.conectaedu.api.modules.school.repository.SchoolRepository;
 import com.conectaedu.api.modules.university.dto.response.UniversityResponseDTO;
+import com.conectaedu.api.shared.audit.service.AuditService;
+import com.conectaedu.api.shared.audit.support.AuditDiff;
+import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.SchoolStatus;
 import com.conectaedu.api.shared.exceptions.InvalidSchoolStatusException;
 import com.conectaedu.api.shared.exceptions.SchoolNotFoundException;
@@ -19,11 +22,15 @@ import java.util.UUID;
 public class SchoolValidationService {
 
     private final SchoolRepository schoolRepository;
+    private final AuditService auditService;
 
     //Aprova a escola.
     @Transactional
     public SchoolResponseDTO validateSchool(UUID id, String notes) {
         School school = findPending(id);
+
+        SchoolStatus beforeStatus = school.getStatus();
+        boolean beforeActive = school.isActive();
 
         school.setStatus(SchoolStatus.ACTIVE);
         school.setActive(true);
@@ -31,6 +38,12 @@ public class SchoolValidationService {
         school.setUpdatedAt(LocalDateTime.now());
 
         schoolRepository.save(school);
+
+        AuditDiff diff = AuditDiff.create()
+                .field("status", beforeStatus, school.getStatus())
+                .field("active", beforeActive, school.isActive());
+        auditService.logUpdate(AuditEntityType.SCHOOL, school.getId(), school.getName(), diff);
+
         return new SchoolResponseDTO(school);
     }
 
@@ -39,6 +52,9 @@ public class SchoolValidationService {
     public SchoolResponseDTO deactivateSchool(UUID id) {
         School school = findPending(id);
 
+        SchoolStatus beforeStatus = school.getStatus();
+        boolean beforeActive = school.isActive();
+
         school.setStatus(SchoolStatus.INACTIVE);
         school.setActive(false);
         school.setValidatedAt(LocalDateTime.now());
@@ -46,6 +62,12 @@ public class SchoolValidationService {
         school.setUpdatedAt(LocalDateTime.now());
 
         schoolRepository.save(school);
+
+        AuditDiff diff = AuditDiff.create()
+                .field("status", beforeStatus, school.getStatus())
+                .field("active", beforeActive, school.isActive());
+        auditService.logUpdate(AuditEntityType.SCHOOL, school.getId(), school.getName(), diff);
+
         return new SchoolResponseDTO(school);
 
     }

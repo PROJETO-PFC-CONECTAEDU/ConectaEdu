@@ -7,6 +7,8 @@ import com.conectaedu.api.modules.user.dto.request.StudentCreationRequestDTO;
 import com.conectaedu.api.modules.user.dto.response.StudentResponseDTO;
 import com.conectaedu.api.modules.user.repository.StudentRepository;
 import com.conectaedu.api.modules.user.repository.UserRepository;
+import com.conectaedu.api.shared.audit.service.AuditService;
+import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.StudentStatus;
 import com.conectaedu.api.shared.enums.UserRole;
 import com.conectaedu.api.shared.enums.UserType;
@@ -26,6 +28,7 @@ public class StudentCreationService {
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;
     private final UniversityRepository universityRepository;
+    private final AuditService auditService;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
@@ -55,6 +58,8 @@ public class StudentCreationService {
         student.setInterestAreas(request.interestAreas());
 
         studentRepository.save(student);
+
+        auditService.logCreate(AuditEntityType.STUDENT, student.getId(), student.getName());
 
         return new StudentResponseDTO(
                 student.getId(),
