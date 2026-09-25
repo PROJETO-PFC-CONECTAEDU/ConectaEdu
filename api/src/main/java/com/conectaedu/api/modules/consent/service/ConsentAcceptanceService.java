@@ -7,8 +7,8 @@ import com.conectaedu.api.modules.consent.dto.request.ConsentWithdrawalRequestDT
 import com.conectaedu.api.modules.consent.dto.response.ConsentRecordResponseDTO;
 import com.conectaedu.api.modules.consent.repository.ConsentRecordRepository;
 import com.conectaedu.api.modules.consent.repository.LegalDocumentRepository;
-import com.conectaedu.api.modules.user.domain.User;
-import com.conectaedu.api.modules.user.repository.UserRepository;
+import com.conectaedu.api.modules.user.genericUser.domain.User;
+import com.conectaedu.api.modules.user.genericUser.repository.UserRepository;
 import com.conectaedu.api.shared.enums.ConsentAction;
 import com.conectaedu.api.shared.enums.LegalDocumentStatus;
 import com.conectaedu.api.shared.exceptions.ConsentAlreadyGivenException;

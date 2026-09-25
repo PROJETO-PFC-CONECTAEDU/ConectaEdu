@@ -2,6 +2,7 @@ import { Header } from '../components/layout/Header';
 import { Card } from '../components/ui/Card';
 import { useQuery } from '@tanstack/react-query';
 import api from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 import { 
   Building2,
   School as SchoolIcon,
@@ -9,12 +10,16 @@ import {
 } from 'lucide-react';
 
 export function Dashboard() {
+  const { user } = useAuth();
+  const isPlatformAdmin = user?.role === 'PLATFORM_ADMIN';
+
   const { data: schools } = useQuery({
     queryKey: ['schools'],
     queryFn: async () => {
       const response = await api.get('/schools');
       return response.data;
     },
+    enabled: isPlatformAdmin,
   });
 
   const { data: universities } = useQuery({
@@ -23,6 +28,7 @@ export function Dashboard() {
       const response = await api.get('/universities');
       return response.data;
     },
+    enabled: isPlatformAdmin,
   });
 
   const { data: students } = useQuery({
@@ -31,45 +37,50 @@ export function Dashboard() {
       const response = await api.get('/students');
       return response.data;
     },
+    enabled: isPlatformAdmin,
   });
 
   return (
     <div className="flex-1">
       <Header 
         title="Dashboard" 
-        subtitle="Bem-vindo ao ConectaEdu. Veja o resumo da plataforma." 
+        subtitle={isPlatformAdmin ? "Bem-vindo ao ConectaEdu. Veja o resumo da plataforma." : "Bem-vindo ao ConectaEdu."} 
       />
       
       <div className="p-8 space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <MetricCard 
-            icon={<SchoolIcon className="text-brand-primary" size={24} />}
-            label="Escolas Parceiras"
-            value={schools?.length?.toString() || '0'}
-            note="Instituições cadastradas"
-          />
-          <MetricCard 
-            icon={<Building2 className="text-brand-accent" size={24} />}
-            label="Universidades"
-            value={universities?.length?.toString() || '0'}
-            note="Instituições de ensino superior"
-          />
-          <MetricCard 
-            icon={<Users className="text-orange-500" size={24} />}
-            label="Estudantes"
-            value={students?.length?.toString() || '0'}
-            note="Estudantes ativos na plataforma"
-          />
-        </div>
+        {isPlatformAdmin && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <MetricCard 
+              icon={<SchoolIcon className="text-brand-primary" size={24} />}
+              label="Escolas Parceiras"
+              value={schools?.length?.toString() || '0'}
+              note="Instituições cadastradas"
+            />
+            <MetricCard 
+              icon={<Building2 className="text-brand-accent" size={24} />}
+              label="Universidades"
+              value={universities?.length?.toString() || '0'}
+              note="Instituições de ensino superior"
+            />
+            <MetricCard 
+              icon={<Users className="text-orange-500" size={24} />}
+              label="Estudantes"
+              value={students?.length?.toString() || '0'}
+              note="Estudantes ativos na plataforma"
+            />
+          </div>
+        )}
 
         <Card className="p-8">
           <h3 className="text-xl font-bold text-text-heading mb-4">Plataforma ConectaEdu</h3>
           <p className="text-text-body leading-relaxed">
             Esta é a versão MVP da plataforma ConectaEdu conectada ao backend real.
           </p>
-          <p className="text-text-body mt-4 leading-relaxed">
-            As seções de agenda, vagas e avaliações foram removidas por não possuírem implementação no backend no momento, conforme solicitado na refatoração.
-          </p>
+          {isPlatformAdmin && (
+            <p className="text-text-body mt-4 leading-relaxed">
+              As seções de agenda, vagas e avaliações foram removidas por não possuírem implementação no backend no momento, conforme solicitado na refatoração.
+            </p>
+          )}
         </Card>
       </div>
     </div>

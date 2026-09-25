@@ -2,8 +2,8 @@ package com.conectaedu.api.modules.auth.service;
 
 import com.conectaedu.api.modules.auth.dto.LoginRequestDTO;
 import com.conectaedu.api.modules.auth.dto.LoginResponseDTO;
-import com.conectaedu.api.modules.user.domain.User;
-import com.conectaedu.api.modules.user.repository.UserRepository;
+import com.conectaedu.api.modules.user.genericUser.domain.User;
+import com.conectaedu.api.modules.user.genericUser.repository.UserRepository;
 import com.conectaedu.api.shared.security.token.GenerateToken;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,6 +33,7 @@ public class AuthLoginService {
 
         return new LoginResponseDTO(
                 token,
+                userEntity.getId(),
                 userEntity.getName(),
                 userEntity.getEmail(),
                 userEntity.getUserRole().name()

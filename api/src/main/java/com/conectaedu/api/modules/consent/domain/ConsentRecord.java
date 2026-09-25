@@ -1,6 +1,6 @@
 package com.conectaedu.api.modules.consent.domain;
 
-import com.conectaedu.api.modules.user.domain.User;
+import com.conectaedu.api.modules.user.genericUser.domain.User;
 import com.conectaedu.api.shared.enums.ConsentAction;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

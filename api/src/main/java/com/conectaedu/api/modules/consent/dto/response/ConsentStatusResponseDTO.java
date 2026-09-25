@@ -7,7 +7,7 @@ import java.util.UUID;
 //missingDocumentTypes avisa quando um documento obrigatório nunca foi publicado.
 public record ConsentStatusResponseDTO(
         UUID userId,
-        boolean upToDate,
+        boolean needsConsent,
         List<LegalDocumentResponseDTO> pendingDocuments,
         List<String> missingDocumentTypes
 ) {

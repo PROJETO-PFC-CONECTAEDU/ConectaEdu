@@ -9,6 +9,8 @@ import com.conectaedu.api.shared.enums.LegalDocumentType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 public class LegalDocumentFacadeImpl implements ILegalDocumentFacade {
@@ -24,5 +26,15 @@ public class LegalDocumentFacadeImpl implements ILegalDocumentFacade {
     @Override
     public LegalDocumentResponseDTO getCurrentDocument(LegalDocumentType documentType) {
         return legalDocumentListByService.listCurrentByType(documentType);
+    }
+
+    @Override
+    public LegalDocumentResponseDTO getDocumentById(java.util.UUID id) {
+        return legalDocumentListByService.getById(id);
+    }
+
+    @Override
+    public List<LegalDocumentResponseDTO> listAll() {
+        return legalDocumentListByService.listAll();
     }
 }

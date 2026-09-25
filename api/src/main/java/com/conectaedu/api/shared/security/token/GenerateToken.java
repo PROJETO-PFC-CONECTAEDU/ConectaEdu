@@ -3,7 +3,7 @@ package com.conectaedu.api.shared.security.token;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
-import com.conectaedu.api.modules.user.domain.User;
+import com.conectaedu.api.modules.user.genericUser.domain.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 

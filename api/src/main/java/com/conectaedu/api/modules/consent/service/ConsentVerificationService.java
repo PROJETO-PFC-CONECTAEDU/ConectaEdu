@@ -40,7 +40,7 @@ public class ConsentVerificationService {
                 .toList();
 
         return new ConsentStatusResponseDTO(
-                userId, pending.isEmpty(), pending, findMissingDocumentTypes(published));
+                userId, !pending.isEmpty(), pending, findMissingDocumentTypes(published));
     }
 
     //Tipo obrigatório que nunca foi publicado não vira pendência.
