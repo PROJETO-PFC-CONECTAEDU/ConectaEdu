@@ -23,6 +23,7 @@ public class GenerateToken {
             String token = JWT.create()
                     .withIssuer("conectaedu-login")
                     .withSubject(user.getEmail())
+                    .withClaim("id", user.getId().toString())
                     .withClaim("role", user.getUserRole().name())
                     .withExpiresAt(this.generateExpirationDate())
                     .sign(algorithm);

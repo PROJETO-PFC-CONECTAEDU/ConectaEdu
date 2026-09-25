@@ -1,6 +1,7 @@
 package com.conectaedu.api.shared.security.filter;
 
 import com.conectaedu.api.modules.user.repository.UserRepository;
+import com.conectaedu.api.shared.security.domain.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,7 +25,8 @@ public class CustomUserDetails implements UserDetailsService {
 
         var authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getUserRole().name()));
 
-        return new org.springframework.security.core.userdetails.User(
+        return new AuthenticatedUser(
+                user.getId(),
                 user.getEmail(),
                 user.getPassword(),
                 authorities);
