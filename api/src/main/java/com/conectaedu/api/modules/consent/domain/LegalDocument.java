@@ -35,7 +35,8 @@ public class LegalDocument {
     private String title;
 
     //Texto publicado é imutável para mudar, cria-se uma nova versão.
-    @Column(nullable = false, updatable = false)
+    //Aumentado tamanho da String para conseguir exibir o conteúdo completo.
+    @Column(nullable = false, updatable = false, length = 20000)
     private String content;
 
     //Impressão digital do texto. Prova que o conteúdo não mudou depois.
