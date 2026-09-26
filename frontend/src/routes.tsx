@@ -7,6 +7,7 @@ import { LegalDocuments } from './pages/LegalDocuments';
 import { Profile } from './pages/Profile';
 import { MapPage } from './pages/MapPage';
 import { Login } from './pages/Login';
+import { LegalDocumentView } from './pages/LegalDocumentView';
 import { Layout } from './components/layout/Layout';
 import { RoleProtectedRoute } from './components/auth/RoleProtectedRoute';
 
@@ -14,6 +15,10 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <Login />,
+  },
+  {
+    path: '/legal/:type',
+    element: <LegalDocumentView />,
   },
   {
     path: '/',

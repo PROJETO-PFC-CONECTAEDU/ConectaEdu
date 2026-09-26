@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
@@ -124,6 +124,22 @@ export function Login() {
               {loginMutation.isPending ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
+
+          <div className="flex justify-center gap-4 border-t border-gray-100 pt-6">
+            <Link
+              to="/legal/TERMS_OF_USE"
+              className="text-sm text-text-muted hover:text-brand-primary transition-colors underline-offset-4 hover:underline"
+            >
+              Termos de Uso
+            </Link>
+            <span className="text-text-muted text-sm">•</span>
+            <Link
+              to="/legal/PRIVACY_POLICY"
+              className="text-sm text-text-muted hover:text-brand-primary transition-colors underline-offset-4 hover:underline"
+            >
+              Política de Privacidade
+            </Link>
+          </div>
         </div>
       </div>
     </div>
