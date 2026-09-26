@@ -5,6 +5,7 @@ import { Universities } from './pages/Universities';
 import { Students } from './pages/Students';
 import { LegalDocuments } from './pages/LegalDocuments';
 import { Profile } from './pages/Profile';
+import { MapPage } from './pages/MapPage';
 import { Login } from './pages/Login';
 import { Layout } from './components/layout/Layout';
 import { RoleProtectedRoute } from './components/auth/RoleProtectedRoute';
@@ -29,6 +30,10 @@ export const router = createBrowserRouter([
       {
         path: '/perfil',
         element: <Profile />,
+      },
+      {
+        path: '/mapa',
+        element: <MapPage />,
       },
       {
         element: <RoleProtectedRoute allowedRoles={['PLATFORM_ADMIN']} />,

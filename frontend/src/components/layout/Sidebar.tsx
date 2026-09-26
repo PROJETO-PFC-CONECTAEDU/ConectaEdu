@@ -5,7 +5,8 @@ import {
   Map as MapIcon, 
   Users,
   School,
-  FileText
+  FileText,
+  Building2
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -16,9 +17,10 @@ function cn(...inputs: ClassValue[]) {
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', roles: ['PLATFORM_ADMIN', 'UNIVERSITY_ADMIN', 'STUDENT', 'SCHOOL_DIRECTOR'] },
+  { icon: MapIcon, label: 'Mapa', path: '/mapa', roles: ['PLATFORM_ADMIN', 'UNIVERSITY_ADMIN', 'STUDENT', 'SCHOOL_DIRECTOR'] },
   { icon: Users, label: 'Estudantes', path: '/estudantes', roles: ['PLATFORM_ADMIN'] },
   { icon: School, label: 'Escolas', path: '/oportunidades', roles: ['PLATFORM_ADMIN'] },
-  { icon: MapIcon, label: 'Universidades', path: '/universidades', roles: ['PLATFORM_ADMIN'] },
+  { icon: Building2, label: 'Universidades', path: '/universidades', roles: ['PLATFORM_ADMIN'] },
   { icon: FileText, label: 'Documentação', path: '/documentos-legais', roles: ['PLATFORM_ADMIN'] },
 ];
 
