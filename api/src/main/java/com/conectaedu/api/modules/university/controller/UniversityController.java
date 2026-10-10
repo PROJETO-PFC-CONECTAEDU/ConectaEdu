@@ -19,12 +19,12 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/universities")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('PLATFORM_ADMIN')")
 public class UniversityController {
 
     private final IUniversityFacade universityFacade;
 
     @PostMapping
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public ResponseEntity<UniversityCreationResponseDTO> createUniversity(
             @RequestBody @Valid UniversityCreationRequestDTO request) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -32,12 +32,14 @@ public class UniversityController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public ResponseEntity<UniversityResponseDTO> updateUniversity(
             @PathVariable UUID id, @RequestBody @Valid UniversityUpdateRequestDTO request) {
         return ResponseEntity.ok(universityFacade.updateUniversity(id, request));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public ResponseEntity<Void> deleteUniversity(@PathVariable UUID id) {
         universityFacade.deleteUniversity(id);
         return ResponseEntity.noContent().build();
@@ -60,6 +62,7 @@ public class UniversityController {
 
     //Aprova a universidade e a torna ativa.
     @PatchMapping("/{id}/validate")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public ResponseEntity<UniversityResponseDTO> validateUniversity(
             @PathVariable UUID id, @RequestBody @Valid UniversityValidationRequestDTO request) {
         return ResponseEntity.ok(universityFacade.validateUniversity(id, request));
@@ -67,6 +70,7 @@ public class UniversityController {
 
     //Recusa a universidade.
     @PatchMapping("/{id}/reject")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public ResponseEntity<UniversityResponseDTO> rejectUniversity(
             @PathVariable UUID id, @RequestBody @Valid UniversityValidationRequestDTO request) {
         return ResponseEntity.ok(universityFacade.rejectUniversity(id, request));

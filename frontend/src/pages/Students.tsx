@@ -10,8 +10,9 @@ import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { Users, Mail, GraduationCap, Trash2, ShieldCheck, XCircle, Plus } from 'lucide-react';
+import { Users, Mail, GraduationCap, Trash2, ShieldCheck, XCircle, Plus, MapPin } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { AddressAutocomplete } from '../components/map/AddressAutocomplete';
 
 interface Student {
   id: string;
@@ -20,6 +21,9 @@ interface Student {
   universityName: string;
   status: 'PENDING' | 'VALIDATED' | 'REJECTED';
   availability: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
   interestAreas: string[];
 }
 
@@ -34,6 +38,9 @@ const studentSchema = z.object({
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
   universityId: z.string().uuid('Selecione uma universidade'),
   availability: z.string().min(1, 'Disponibilidade é obrigatória'),
+  address: z.string().min(1, 'Endereço é obrigatório'),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
   interestAreas: z.string().min(1, 'Áreas de interesse são obrigatórias'),
 });
 
@@ -44,8 +51,14 @@ export function Students() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<StudentFormData>({
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<StudentFormData>({
     resolver: zodResolver(studentSchema)
+  });
+
+  useState(() => {
+    register('address');
+    register('latitude');
+    register('longitude');
   });
 
   const { data: students, isLoading, error } = useQuery<Student[]>({
@@ -194,6 +207,16 @@ export function Students() {
             {...register('availability')}
           />
           
+          <AddressAutocomplete
+            onAddressSelect={(address, lat, lng) => {
+              setValue('address', address, { shouldValidate: true });
+              if (lat) setValue('latitude', lat);
+              if (lng) setValue('longitude', lng);
+            }}
+            error={errors.address?.message}
+            placeholder="Busque o endereço do estudante..."
+          />
+          
           <Input
             label="Áreas de Interesse (separadas por vírgula)"
             placeholder="Ex: Educação, Tecnologia, Saúde"
@@ -252,6 +275,12 @@ export function Students() {
                   <Mail size={16} className="text-text-muted shrink-0" />
                   <span className="truncate">{student.email}</span>
                 </div>
+                {student.address && (
+                  <div className="flex items-start gap-2 text-sm text-text-body">
+                    <MapPin size={16} className="mt-0.5 text-text-muted shrink-0" />
+                    <span className="line-clamp-2">{student.address}</span>
+                  </div>
+                )}
                 <div className="text-xs text-text-muted">
                   <strong>Áreas:</strong> {student.interestAreas.join(', ')}
                 </div>

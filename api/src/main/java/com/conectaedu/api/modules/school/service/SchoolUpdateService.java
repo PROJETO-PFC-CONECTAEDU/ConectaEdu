@@ -28,14 +28,27 @@ public class SchoolUpdateService {
 
         String beforeName = school.getName();
         String beforeDirector = school.getDirector();
+        String beforeAddress = school.getAddress();
 
         if (request.name() != null) {
-            school.setName( request.name());
+            school.setName(request.name());
         }
 
-        school.setName(request.name());
+        if (request.director() != null) {
+            school.setDirector(request.director());
+        }
 
-        school.setDirector(request.director());
+        if (request.address() != null) {
+            school.setAddress(request.address());
+        }
+
+        if (request.latitude() != null) {
+            school.setLatitude(request.latitude());
+        }
+
+        if (request.longitude() != null) {
+            school.setLongitude(request.longitude());
+        }
 
         school.setUpdatedAt(LocalDateTime.now());
 
@@ -43,7 +56,8 @@ public class SchoolUpdateService {
 
         AuditDiff diff = AuditDiff.create()
                 .field("name", beforeName, school.getName())
-                .field("director", beforeDirector, school.getDirector());
+                .field("director", beforeDirector, school.getDirector())
+                .field("address", beforeAddress, school.getAddress());
         auditService.logUpdate(AuditEntityType.SCHOOL, school.getId(), school.getName(), diff);
 
         return new SchoolResponseDTO(school);

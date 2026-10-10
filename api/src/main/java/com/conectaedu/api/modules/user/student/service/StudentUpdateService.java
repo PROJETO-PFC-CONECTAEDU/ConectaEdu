@@ -39,6 +39,9 @@ public class StudentUpdateService {
         var beforeUserType = student.getUserType();
         var beforeUniversityId = student.getUniversity() != null ? student.getUniversity().getId() : null;
         String beforeAvailability = student.getAvailability();
+        String beforeAddress = student.getAddress();
+        Double beforeLatitude = student.getLatitude();
+        Double beforeLongitude = student.getLongitude();
         var beforeInterestAreas = student.getInterestAreas();
 
         if (request.email() != null && !request.email().trim().equalsIgnoreCase(student.getEmail())) {
@@ -71,6 +74,18 @@ public class StudentUpdateService {
             student.setAvailability(request.availability());
         }
 
+        if (request.address() != null) {
+            student.setAddress(request.address());
+        }
+
+        if (request.latitude() != null) {
+            student.setLatitude(request.latitude());
+        }
+
+        if (request.longitude() != null) {
+            student.setLongitude(request.longitude());
+        }
+
         if (request.interestAreas() != null) {
             student.setInterestAreas(request.interestAreas());
         }
@@ -85,6 +100,9 @@ public class StudentUpdateService {
                 .field("userType", beforeUserType, student.getUserType())
                 .field("universityId", beforeUniversityId, afterUniversityId)
                 .field("availability", beforeAvailability, student.getAvailability())
+                .field("address", beforeAddress, student.getAddress())
+                .field("latitude", beforeLatitude, student.getLatitude())
+                .field("longitude", beforeLongitude, student.getLongitude())
                 .field("interestAreas", beforeInterestAreas, student.getInterestAreas());
         auditService.logUpdate(AuditEntityType.STUDENT, student.getId(), student.getName(), diff);
 
@@ -96,6 +114,9 @@ public class StudentUpdateService {
                 student.getUniversity().getName(),
                 student.getStatus(),
                 student.getAvailability(),
+                student.getAddress(),
+                student.getLatitude(),
+                student.getLongitude(),
                 student.getInterestAreas()
         );
     }

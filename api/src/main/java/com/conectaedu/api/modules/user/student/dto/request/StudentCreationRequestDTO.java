@@ -23,6 +23,13 @@ public record StudentCreationRequestDTO(
         @NotBlank(message = "Disponibilidade é obrigatória")
         String availability,
 
+        @NotBlank(message = "Endereço é obrigatório")
+        String address,
+
+        Double latitude,
+
+        Double longitude,
+
         @NotEmpty(message = "Área de interesse é obrigatória")
         List<String> interestAreas
 ) {

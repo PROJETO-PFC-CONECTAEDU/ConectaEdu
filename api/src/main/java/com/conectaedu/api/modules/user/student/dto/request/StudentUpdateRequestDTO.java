@@ -19,6 +19,12 @@ public record StudentUpdateRequestDTO(
 
         String availability,
 
+        String address,
+
+        Double latitude,
+
+        Double longitude,
+
         List<String> interestAreas
 ) {
 }

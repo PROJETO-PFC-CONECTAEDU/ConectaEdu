@@ -55,6 +55,9 @@ public class StudentCreationService {
         student.setUniversity(university);
         student.setStatus(StudentStatus.PENDING);
         student.setAvailability(request.availability());
+        student.setAddress(request.address());
+        student.setLatitude(request.latitude());
+        student.setLongitude(request.longitude());
         student.setInterestAreas(request.interestAreas());
 
         studentRepository.save(student);
@@ -69,6 +72,9 @@ public class StudentCreationService {
                 university.getName(),
                 student.getStatus(),
                 student.getAvailability(),
+                student.getAddress(),
+                student.getLatitude(),
+                student.getLongitude(),
                 student.getInterestAreas()
         );
     }

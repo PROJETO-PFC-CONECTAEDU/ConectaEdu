@@ -20,21 +20,23 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/schools")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('PLATFORM_ADMIN')")
 public class SchoolController {
      private final ISchoolFacade  schoolFacade;
 
      @PostMapping
+     @PreAuthorize("hasRole('PLATFORM_ADMIN')")
      public ResponseEntity<SchoolCreationResponseDTO> createSchool(@RequestBody SchoolCreationRequestDTO request) {
          return ResponseEntity.status(HttpStatus.CREATED).body(schoolFacade.createSchool(request));
      }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public ResponseEntity<SchoolResponseDTO> updateSchool(@PathVariable UUID id, @RequestBody @Valid SchoolUpdateRequestDTO request) {
          return ResponseEntity.ok(schoolFacade.updateSchool(id, request));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public ResponseEntity<Void> deleteSchool(@PathVariable UUID id) {
          schoolFacade.deleteSchool(id);
          return ResponseEntity.noContent().build();
@@ -51,10 +53,18 @@ public class SchoolController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public ResponseEntity<List<SchoolResponseDTO>> getAllSchools() {return ResponseEntity.ok(schoolFacade.getAllSchools()); }
+
+    @GetMapping("/active")
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'SCHOOL_DIRECTOR', 'STUDENT')")
+    public ResponseEntity<List<SchoolResponseDTO>> getActiveSchools() {
+        return ResponseEntity.ok(schoolFacade.listActiveSchools());
+    }
 
     //Ativa a escola.
     @PatchMapping("/{id}/activate")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public ResponseEntity<SchoolResponseDTO> activateSchool(
             @PathVariable UUID id, @RequestBody @Valid SchoolValidationRequestDTO request) {
          return ResponseEntity.ok(schoolFacade.activateSchool(id, request));
@@ -62,10 +72,9 @@ public class SchoolController {
 
     //Inativa a escola.
     @PatchMapping("/{id}/deactivate")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public ResponseEntity<SchoolResponseDTO> deactivateSchool(
             @PathVariable UUID id, @RequestBody @Valid SchoolValidationRequestDTO request) {
          return ResponseEntity.ok(schoolFacade.deactivateSchool(id, request));
     }
-
-
 }

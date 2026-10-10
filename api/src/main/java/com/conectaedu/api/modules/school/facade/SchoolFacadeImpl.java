@@ -49,6 +49,9 @@ public class SchoolFacadeImpl implements ISchoolFacade {
     @Override
     public List<SchoolResponseDTO> getAllSchools() { return schoolListService.ListAll(); }
 
+    @Override
+    public List<SchoolResponseDTO> listActiveSchools() { return schoolListService.listActive(); }
+
     public SchoolResponseDTO activateSchool(UUID id, SchoolValidationRequestDTO request) {
         return schoolValidationService.validateSchool(id, request.validationNotes());
     }
