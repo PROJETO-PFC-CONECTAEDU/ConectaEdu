@@ -2,6 +2,7 @@ package com.conectaedu.api.modules.university.interfaces;
 
 import com.conectaedu.api.modules.university.dto.request.UniversityCreationRequestDTO;
 import com.conectaedu.api.modules.university.dto.request.UniversityUpdateRequestDTO;
+import com.conectaedu.api.modules.university.dto.request.UniversityValidationRequestDTO;
 import com.conectaedu.api.modules.university.dto.response.UniversityCreationResponseDTO;
 import com.conectaedu.api.modules.university.dto.response.UniversityResponseDTO;
 
@@ -21,4 +22,8 @@ public interface IUniversityFacade {
     UniversityResponseDTO getUniversityByCnpj(String cnpj);
 
     List<UniversityResponseDTO> getAllUniversities();
+
+    UniversityResponseDTO validateUniversity(UUID id, UniversityValidationRequestDTO request);
+
+    UniversityResponseDTO rejectUniversity(UUID id, UniversityValidationRequestDTO request);
 }

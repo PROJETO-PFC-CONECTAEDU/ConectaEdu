@@ -21,8 +21,8 @@ public class SchoolListByService {
         return new SchoolResponseDTO(school);
     }
 
-    public SchoolResponseDTO listByAddress(String address) {
-        School school = schoolRepository.findByAddress(address)
+    public SchoolResponseDTO listByCie(String cie) {
+        School school = schoolRepository.findByCie(cie)
                 .orElseThrow(() -> new SchoolNotFoundException("Escola não encontrada!"));
         return new SchoolResponseDTO(school);
     }

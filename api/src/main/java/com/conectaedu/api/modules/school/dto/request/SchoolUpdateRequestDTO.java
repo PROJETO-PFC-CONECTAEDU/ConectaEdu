@@ -2,6 +2,6 @@ package com.conectaedu.api.modules.school.dto.request;
 
 public record SchoolUpdateRequestDTO(
         String name,
-        String address
+        String director
 ) {
 }

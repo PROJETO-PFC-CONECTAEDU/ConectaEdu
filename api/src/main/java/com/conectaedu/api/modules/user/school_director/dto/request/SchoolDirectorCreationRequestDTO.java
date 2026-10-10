@@ -1,0 +1,25 @@
+package com.conectaedu.api.modules.user.school_director.dto.request;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+import java.util.UUID;
+
+public record SchoolDirectorCreationRequestDTO(
+        @NotBlank(message = "Nome é obrigatório")
+        String name,
+
+        @NotBlank(message = "Email é obrigatório")
+        @Email(message = "Email inválido")
+        String email,
+
+        @NotBlank(message = "Senha é obrigatória")
+        @Size(min = 6, message = "A senha deve ter pelo menos 6 caracteres")
+        String password,
+
+        @NotNull(message = "ID da escola é obrigatório")
+        UUID schoolId
+) {
+}
