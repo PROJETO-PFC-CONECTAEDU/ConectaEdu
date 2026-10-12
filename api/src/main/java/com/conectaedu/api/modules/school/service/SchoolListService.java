@@ -2,7 +2,6 @@ package com.conectaedu.api.modules.school.service;
 
 import com.conectaedu.api.modules.school.dto.response.SchoolResponseDTO;
 import com.conectaedu.api.modules.school.repository.SchoolRepository;
-import com.conectaedu.api.modules.user.dto.response.UserResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

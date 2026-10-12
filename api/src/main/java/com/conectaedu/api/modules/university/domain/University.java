@@ -1,15 +1,13 @@
 package com.conectaedu.api.modules.university.domain;
 
-import jakarta.persistence.CollectionTable;
+import com.conectaedu.api.shared.enums.UniversityStatus;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,8 +15,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.LinkedHashSet;
-import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -46,8 +42,20 @@ public class University {
 
     private String address;
 
+    //Situação no fluxo de validação. Nasce PENDING.
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private UniversityStatus status = UniversityStatus.PENDING;
+
+    //Nasce inativa e só é ativada após a validação do ADMIN.
     @Column(name = "active", nullable = false)
-    private boolean active = true;
+    private boolean active = false;
+
+    @Column(name = "validated_at")
+    private LocalDateTime validatedAt;
+
+    @Column(name = "validation_notes", length = 500)
+    private String validationNotes;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

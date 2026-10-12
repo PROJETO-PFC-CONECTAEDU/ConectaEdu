@@ -2,6 +2,7 @@ package com.conectaedu.api.modules.university.facade;
 
 import com.conectaedu.api.modules.university.dto.request.UniversityCreationRequestDTO;
 import com.conectaedu.api.modules.university.dto.request.UniversityUpdateRequestDTO;
+import com.conectaedu.api.modules.university.dto.request.UniversityValidationRequestDTO;
 import com.conectaedu.api.modules.university.dto.response.UniversityCreationResponseDTO;
 import com.conectaedu.api.modules.university.dto.response.UniversityResponseDTO;
 import com.conectaedu.api.modules.university.interfaces.IUniversityFacade;
@@ -21,6 +22,7 @@ public class UniversityFacadeImpl implements IUniversityFacade {
     private final UniversityDeletionService universityDeletionService;
     private final UniversityListService universityListService;
     private final UniversityListByService universityListByService;
+    private final UniversityValidationService universityValidationService;
 
     public UniversityCreationResponseDTO createUniversity(UniversityCreationRequestDTO request) {
         return universityCreationService.createUniversity(request);
@@ -44,6 +46,14 @@ public class UniversityFacadeImpl implements IUniversityFacade {
 
     public List<UniversityResponseDTO> getAllUniversities() {
         return universityListService.listAll();
+    }
+
+    public UniversityResponseDTO validateUniversity(UUID id, UniversityValidationRequestDTO request) {
+        return universityValidationService.validateUniversity(id, request.validationNotes());
+    }
+
+    public UniversityResponseDTO rejectUniversity(UUID id, UniversityValidationRequestDTO request) {
+        return universityValidationService.rejectUniversity(id, request.validationNotes());
     }
 }
 
