@@ -84,7 +84,7 @@ export function MapComponent({ schools = [] }: MapProps) {
           className="absolute top-4 left-4 z-10 bg-white p-2 rounded-lg shadow-md border border-slate-200 flex items-center gap-2 hover:bg-slate-50 transition-colors"
         >
           <List size={20} className="text-brand-primary" />
-          <span className="text-sm font-bold text-text-heading">Ver Demandas</span>
+          <span className="text-sm font-bold text-text-heading">Ver Oportunidades</span>
         </button>
       )}
 
@@ -94,7 +94,7 @@ export function MapComponent({ schools = [] }: MapProps) {
           <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
             <div className="flex items-center gap-2">
               <ClipboardList size={20} className="text-brand-primary" />
-              <h3 className="font-bold text-text-heading">Demandas Ativas</h3>
+              <h3 className="font-bold text-text-heading">Oportunidades Disponíveis</h3>
             </div>
             <button 
               onClick={() => setIsMenuOpen(false)}
@@ -138,7 +138,7 @@ export function MapComponent({ schools = [] }: MapProps) {
               ))
             ) : (
               <div className="p-8 text-center">
-                <p className="text-sm text-text-muted italic">Nenhuma demanda encontrada.</p>
+                <p className="text-sm text-text-muted italic">Nenhuma oportunidade encontrada.</p>
               </div>
             )}
           </div>
@@ -187,7 +187,7 @@ export function MapComponent({ schools = [] }: MapProps) {
 
               <div className="space-y-3">
                 <h5 className="text-xs font-semibold text-text-muted uppercase tracking-wider">
-                  Demandas Disponíveis ({selectedSchool.demands?.length || 0})
+                  Oportunidades Disponíveis ({selectedSchool.demands?.length || 0})
                 </h5>
                 
                 {selectedSchool.demands && selectedSchool.demands.length > 0 ? (
