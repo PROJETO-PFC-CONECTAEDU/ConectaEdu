@@ -34,6 +34,14 @@ public class SchoolCreationService {
 
         school.setAddress(request.address());
 
+        if (request.latitude() != null) {
+            school.setLatitude(request.latitude());
+        }
+
+        if (request.longitude() != null) {
+            school.setLongitude(request.longitude());
+        }
+
         school.setCreatedAt(LocalDateTime.now());
 
         schoolRepository.save(school);

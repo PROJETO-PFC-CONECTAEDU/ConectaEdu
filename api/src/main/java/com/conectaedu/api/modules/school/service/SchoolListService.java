@@ -20,4 +20,11 @@ public class SchoolListService {
                 .map(SchoolResponseDTO::new)
                 .collect(Collectors.toList());
     }
+
+    public List<SchoolResponseDTO> listActive() {
+        return schoolRepository.findByActiveTrue()
+                .stream()
+                .map(SchoolResponseDTO::new)
+                .collect(Collectors.toList());
+    }
 }

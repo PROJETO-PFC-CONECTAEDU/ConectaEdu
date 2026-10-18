@@ -22,6 +22,7 @@ public class ConsentController {
     private final IConsentFacade consentFacade;
 
     //Registra o aceite da versão em vigor.
+
     @PostMapping
     public ResponseEntity<ConsentRecordResponseDTO> acceptDocument(
             @RequestBody @Valid ConsentAcceptanceRequestDTO request) {
@@ -30,6 +31,7 @@ public class ConsentController {
     }
 
     //Revogação do aceite. O registro anterior não é apagado.
+
     @PatchMapping("/withdraw")
     public ResponseEntity<ConsentRecordResponseDTO> withdrawConsent(
             @RequestBody @Valid ConsentWithdrawalRequestDTO request) {
@@ -37,12 +39,14 @@ public class ConsentController {
     }
 
     //Chamado após o login, diz se falta aceitar alguma versão em vigor.
+
     @GetMapping("/status/{userId}")
     public ResponseEntity<ConsentStatusResponseDTO> getConsentStatus(@PathVariable UUID userId) {
         return ResponseEntity.ok(consentFacade.getConsentStatus(userId));
     }
 
     //Histórico do titular, atende ao direito de acesso do art. 18, II.
+
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<ConsentRecordResponseDTO>> getConsentsByUser(
             @PathVariable UUID userId) {

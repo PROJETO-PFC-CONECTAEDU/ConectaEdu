@@ -6,7 +6,8 @@ import {
   Users,
   School,
   FileText,
-  Building2
+  Building2,
+  ClipboardList
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -22,6 +23,8 @@ const menuItems = [
   { icon: School, label: 'Escolas', path: '/oportunidades', roles: ['PLATFORM_ADMIN'] },
   { icon: Building2, label: 'Universidades', path: '/universidades', roles: ['PLATFORM_ADMIN'] },
   { icon: FileText, label: 'Documentação', path: '/documentos-legais', roles: ['PLATFORM_ADMIN'] },
+  { icon: ClipboardList, label: 'Oportunidades', path: '/demandas', roles: ['STUDENT'] },
+  { icon: ClipboardList, label: 'Demandas', path: '/demandas', roles: ['SCHOOL_DIRECTOR'] },
 ];
 
 export function Sidebar() {

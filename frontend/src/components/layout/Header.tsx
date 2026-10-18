@@ -8,9 +8,11 @@ interface HeaderProps {
   title: string;
   subtitle?: string;
   action?: React.ReactNode;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
 }
 
-export function Header({ title, subtitle, action }: HeaderProps) {
+export function Header({ title, subtitle, action, searchValue, onSearchChange }: HeaderProps) {
   const { user, signOut } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
@@ -27,6 +29,8 @@ export function Header({ title, subtitle, action }: HeaderProps) {
           <input
             type="text"
             placeholder="Pesquisar..."
+            value={searchValue}
+            onChange={(e) => onSearchChange?.(e.target.value)}
             className="w-full h-10 pl-10 pr-4 rounded-lg border border-border-default bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
           />
         </div>

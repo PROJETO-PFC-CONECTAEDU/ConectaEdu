@@ -8,6 +8,8 @@ import { Profile } from './pages/Profile';
 import { MapPage } from './pages/MapPage';
 import { Login } from './pages/Login';
 import { LegalDocumentView } from './pages/LegalDocumentView';
+import { Demands } from './pages/Demands';
+import { DemandDetail } from './pages/DemandDetail';
 import { Layout } from './components/layout/Layout';
 import { RoleProtectedRoute } from './components/auth/RoleProtectedRoute';
 
@@ -58,6 +60,19 @@ export const router = createBrowserRouter([
           {
             path: '/documentos-legais',
             element: <LegalDocuments />,
+          }
+        ]
+      },
+      {
+        element: <RoleProtectedRoute allowedRoles={['SCHOOL_DIRECTOR', 'STUDENT']} />,
+        children: [
+          {
+            path: '/demandas',
+            element: <Demands />,
+          },
+          {
+            path: '/demandas/:id',
+            element: <DemandDetail />,
           }
         ]
       }
