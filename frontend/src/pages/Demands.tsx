@@ -12,7 +12,7 @@ import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { ClipboardList, Trash2, Plus, Calendar, Users, Clock, Building2, User as UserIcon, Check } from 'lucide-react';
+import { ClipboardList, Trash2, Plus, Calendar, Users, Clock, Building2, User as UserIcon, Check, MapPin } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 interface Candidate {
@@ -37,6 +37,9 @@ interface Demand {
   studentName?: string;
   candidates: Candidate[];
   isArchived: boolean;
+  recommendationScore?: number;
+  distance?: number;
+  isRecommended?: boolean;
 }
 
 const demandSchema = z.object({
@@ -71,16 +74,28 @@ export function Demands() {
     queryKey: ['demands', user?.role],
     queryFn: async () => {
       if (user?.role === 'STUDENT') {
-        const [availableRes, ongoingRes] = await Promise.all([
-          api.get('/demands/available/student'),
+        const [recommendedRes, ongoingRes] = await Promise.all([
+          api.get('/demands/recommendations'),
           api.get('/demands/ongoing'),
         ]);
 
         const demandsMap = new Map();
-        availableRes.data.forEach((d: any) => demandsMap.set(d.id, d));
-        ongoingRes.data.forEach((d: any) => demandsMap.set(d.id, d));
+        // Manter a ordem das recomendações
+        const orderedDemands: Demand[] = [];
+        
+        recommendedRes.data.forEach((d: any) => {
+          demandsMap.set(d.id, d);
+          orderedDemands.push(d);
+        });
 
-        return Array.from(demandsMap.values()) as Demand[];
+        ongoingRes.data.forEach((d: any) => {
+          if (!demandsMap.has(d.id)) {
+            demandsMap.set(d.id, d);
+            orderedDemands.push(d);
+          }
+        });
+
+        return orderedDemands;
       }
 
       const response = await api.get('/demands');
@@ -354,6 +369,12 @@ export function Demands() {
                     <Clock size={14} className="text-text-muted shrink-0" />
                     <span>{demand.totalHours} no total</span>
                   </div>
+                  {demand.distance !== undefined && demand.distance !== null && (
+                    <div className="flex items-center gap-2 text-xs text-text-body">
+                      <MapPin size={14} className="text-text-muted shrink-0" />
+                      <span>{demand.distance.toFixed(1)} km de distância</span>
+                    </div>
+                  )}
                   {demand.studentName && (
                     <div className="flex items-center gap-2 text-xs text-text-body">
                       <UserIcon size={14} className="text-brand-primary shrink-0" />
@@ -362,17 +383,28 @@ export function Demands() {
                   )}
                 </div>
 
-                <div className="mt-6 flex items-center justify-between">
-                  <div className="flex gap-2">
+                <div className="mt-6 flex items-center justify-between gap-4 flex-wrap">
+                  <div className="flex gap-2 flex-wrap">
                     <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${getStatusColor(demand.status)}`}>
                       {translateStatus(demand.status)}
                     </span>
+                    {isStudent && demand.status === 'WAITING' && (
+                      demand.isRecommended ? (
+                        <span className="px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-brand-primary/10 text-brand-primary border border-brand-primary/20">
+                          Recomendado
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-amber-100 text-amber-700 border border-amber-200">
+                          Não Recomendado
+                        </span>
+                      )
+                    )}
                   </div>
                   {isStudent && demand.status === 'WAITING' && !demand.isArchived && (
                     <button 
                       onClick={() => applyMutation.mutate(demand.id)}
                       disabled={applyMutation.isPending || demand.candidates.some(c => c.id === user?.id)}
-                      className="text-xs bg-brand-primary text-white px-3 py-1.5 rounded-md font-bold hover:bg-brand-primary/90 transition-colors disabled:opacity-50 flex items-center gap-1"
+                      className="text-xs bg-brand-primary text-white px-3 py-1.5 rounded-md font-bold hover:bg-brand-primary/90 transition-colors disabled:opacity-50 flex items-center gap-1 whitespace-nowrap"
                     >
                       {demand.candidates.some(c => c.id === user?.id) ? (
                         <>
@@ -382,7 +414,6 @@ export function Demands() {
                         applyMutation.isPending ? 'Candidatando...' : 'Tenho interesse'
                       )}
                     </button>
-
                   )}
                 </div>
 

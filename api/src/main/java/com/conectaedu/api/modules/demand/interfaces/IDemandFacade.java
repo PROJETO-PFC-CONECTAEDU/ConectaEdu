@@ -24,4 +24,5 @@ public interface IDemandFacade {
     DemandResponseDTO finishDemand(UUID demandId);
 
     List<DemandStudentDTO> getDemandsByStatusAndStudentId(DemandStatus status, UUID studentId);
+    List<DemandStudentDTO> getRecommendedDemands(UUID studentId);
 }
