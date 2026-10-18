@@ -54,6 +54,8 @@ interface Demand {
   studentName?: string;
   candidates: Candidate[];
   createdAt: string;
+  distance?: number;
+  isRecommended?: boolean;
 }
 
 export function DemandDetail() {
@@ -219,21 +221,25 @@ export function DemandDetail() {
                       />
                     </div>
                     <div className="flex items-center text-sm gap-2 mt-4">
-                      <MapPin />
-                      <p className="text-text-muted mt-2">
+                      <MapPin size={16} className="text-text-muted shrink-0" />
+                      <p className="text-text-muted">
                         {demand.schoolAddress}
                       </p>
-                      <MapPin />
-                      <p className="text-text-muted mt-2">
-                        Aqui mostrará a distancia do estudante até a escola.
-                      </p>
                     </div>
+                    {demand.distance !== undefined && demand.distance !== null && (
+                      <div className="flex items-center text-sm gap-2 mt-2">
+                        <MapPin size={16} className="text-brand-primary shrink-0" />
+                        <p className="text-brand-primary font-medium">
+                          Aproximadamente {demand.distance.toFixed(1)} km de você.
+                        </p>
+                      </div>
+                    )}
 
                   </Card>
                 </div>
                 <div className="md:col-span-3">
                   <Card className="p-8 h-full">
-                    <div className="flex items-start justify-between mb-6">
+                    <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
                       <div className="flex items-center gap-4">
                         <div className="w-14 h-14 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary">
                           <ClipboardList size={28} />
@@ -243,11 +249,22 @@ export function DemandDetail() {
                           <p className="text-text-muted">{demand.subject} • {demand.gradeLevel}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex gap-2">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <div className="flex gap-2 flex-wrap">
                           <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(demand.status)}`}>
                             {translateStatus(demand.status)}
                           </span>
+                          {isStudent && demand.status === 'WAITING' && (
+                            demand.isRecommended ? (
+                              <span className="px-3 py-1 rounded-full text-xs font-bold bg-brand-primary/10 text-brand-primary border border-brand-primary/20">
+                                Recomendado
+                              </span>
+                            ) : (
+                              <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200">
+                                Não Recomendado
+                              </span>
+                            )
+                          )}
                         </div>
                       </div>
                     </div>
@@ -298,7 +315,7 @@ export function DemandDetail() {
 
             {!isStudent && (
               <Card className="p-8">
-                <div className="flex items-start justify-between mb-6">
+                <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
                   <div className="flex items-center gap-4">
                     <div className="w-14 h-14 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary">
                       <ClipboardList size={28} />
@@ -308,7 +325,7 @@ export function DemandDetail() {
                       <p className="text-text-muted">{demand.subject} • {demand.gradeLevel}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
                     {isDirector && demand.status === 'WAITING' && !demand.isArchived && (
                       <button 
                         onClick={() => setIsDeleteModalOpen(true)}
@@ -318,7 +335,7 @@ export function DemandDetail() {
                         <Trash2 size={20} />
                       </button>
                     )}
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(demand.status)}`}>
                         {translateStatus(demand.status)}
                       </span>

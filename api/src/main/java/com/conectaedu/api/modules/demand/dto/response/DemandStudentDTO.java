@@ -29,7 +29,10 @@ public record DemandStudentDTO(
         String studentName,
         List<CandidateResponseDTO> candidates,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        Double recommendationScore,
+        Double distance,
+        Boolean isRecommended
 ) {
     public record CandidateResponseDTO(UUID id, String name) {}
 }

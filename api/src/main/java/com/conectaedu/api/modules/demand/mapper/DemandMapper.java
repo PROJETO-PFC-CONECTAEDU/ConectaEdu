@@ -48,7 +48,51 @@ public class DemandMapper {
                         ))
                         .collect(Collectors.toList()),
                 demand.getCreatedAt(),
-                demand.getUpdatedAt()
+                demand.getUpdatedAt(),
+                null
+        );
+    }
+
+    public DemandResponseDTO mapToResponseDTO(Demand demand, Double distance) {
+        return new DemandResponseDTO(
+                demand.getId(),
+                demand.getTitle(),
+                demand.getDescription(),
+                demand.getSubject(),
+                demand.getGradeLevel(),
+                demand.getPupilAmount(),
+                demand.getStatus(),
+                demand.getClassDate(),
+                demand.getTotalHours(),
+                demand.getRoom(),
+                demand.getDifficultyLevel(),
+                demand.isArchived(),
+                demand.getPendingClassDate(),
+                demand.getPendingRoom(),
+                demand.getSchool().getId(),
+                demand.getSchool().getName(),
+                demand.getSchool().getAddress(),
+                demand.getSchool().getLatitude(),
+                demand.getSchool().getLongitude(),
+                demand.getDirector().getId(),
+                demand.getDirector().getName(),
+                demand.getStudent() != null ? demand.getStudent().getId() : null,
+                demand.getStudent() != null ? demand.getStudent().getName() : null,
+                demand.getCandidates().stream()
+                        .map(c -> new DemandResponseDTO.CandidateResponseDTO(c.getId(), c.getName()))
+                        .collect(Collectors.toList()),
+                demand.getStudentHistory().stream()
+                        .map(h -> new DemandResponseDTO.HistoryResponseDTO(
+                                h.getStudent().getId(),
+                                h.getStudent().getName(),
+                                h.isActive(),
+                                h.getLinkedAt(),
+                                h.getUnlinkedAt()
+                        ))
+                        .collect(Collectors.toList()),
+                demand.getCreatedAt(),
+                demand.getUpdatedAt(),
+                distance
         );
     }
 
@@ -79,7 +123,44 @@ public class DemandMapper {
                         .map(c -> new DemandStudentDTO.CandidateResponseDTO(c.getId(), c.getName()))
                         .collect(Collectors.toList()),
                 demand.getCreatedAt(),
-                demand.getUpdatedAt()
+                demand.getUpdatedAt(),
+                null,
+                null,
+                null
+        );
+    }
+
+    public DemandStudentDTO mapToStudentDTO(Demand demand, Double recommendationScore, Double distance) {
+        return new DemandStudentDTO(
+                demand.getId(),
+                demand.getTitle(),
+                demand.getDescription(),
+                demand.getSubject(),
+                demand.getGradeLevel(),
+                demand.getPupilAmount(),
+                demand.getStatus(),
+                demand.getClassDate(),
+                demand.getTotalHours(),
+                demand.getRoom(),
+                demand.getDifficultyLevel(),
+                demand.isArchived(),
+                demand.getSchool().getId(),
+                demand.getSchool().getName(),
+                demand.getSchool().getAddress(),
+                demand.getSchool().getLatitude(),
+                demand.getSchool().getLongitude(),
+                demand.getDirector().getId(),
+                demand.getDirector().getName(),
+                demand.getStudent() != null ? demand.getStudent().getId() : null,
+                demand.getStudent() != null ? demand.getStudent().getName() : null,
+                demand.getCandidates().stream()
+                        .map(c -> new DemandStudentDTO.CandidateResponseDTO(c.getId(), c.getName()))
+                        .collect(Collectors.toList()),
+                demand.getCreatedAt(),
+                demand.getUpdatedAt(),
+                recommendationScore,
+                distance,
+                recommendationScore != null && recommendationScore >= 100
         );
     }
 }

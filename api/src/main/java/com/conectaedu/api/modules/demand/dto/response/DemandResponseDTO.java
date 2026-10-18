@@ -33,7 +33,8 @@ public record DemandResponseDTO(
         List<CandidateResponseDTO> candidates,
         List<HistoryResponseDTO> studentHistory,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        Double distance
 ) {
     public record CandidateResponseDTO(UUID id, String name) {}
     public record HistoryResponseDTO(UUID studentId, String studentName, boolean active, LocalDateTime linkedAt, LocalDateTime unlinkedAt) {}

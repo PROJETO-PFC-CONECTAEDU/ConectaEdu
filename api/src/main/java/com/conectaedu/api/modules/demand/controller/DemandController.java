@@ -66,6 +66,13 @@ public class DemandController {
         return ResponseEntity.ok(demandFacade.getAvailableDemandsForStudents());
     }
 
+    @GetMapping("/recommendations")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<List<DemandStudentDTO>> getRecommendedDemands() {
+        UUID studentId = com.conectaedu.api.shared.security.context.SecurityContextHolder.getAuthenticatedUserId();
+        return ResponseEntity.ok(demandFacade.getRecommendedDemands(studentId));
+    }
+
     @PostMapping("/{id}/apply")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<DemandResponseDTO> apply(@PathVariable UUID id) {

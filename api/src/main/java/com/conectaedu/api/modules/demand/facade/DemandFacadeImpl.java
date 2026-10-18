@@ -27,6 +27,7 @@ public class DemandFacadeImpl implements IDemandFacade {
     private final DemandUnlinkStudentService unlinkStudentService;
     private final DemandFinishService finishService;
     private final DemandForStudentService demandForStudentService;
+    private final DemandRecommendationService recommendationService;
 
     @Override
     public DemandResponseDTO createDemand(DemandCreationRequestDTO request) {
@@ -91,5 +92,10 @@ public class DemandFacadeImpl implements IDemandFacade {
     @Override
     public List<DemandStudentDTO> getDemandsByStatusAndStudentId(DemandStatus status, UUID studentId) {
         return getService.getDemandsByStatusAndStudentId(status, studentId);
+    }
+
+    @Override
+    public List<DemandStudentDTO> getRecommendedDemands(UUID studentId) {
+        return recommendationService.getRecommendedDemands(studentId);
     }
 }
