@@ -15,6 +15,10 @@ public record SchoolCreationRequestDTO(
         String director,
 
         @NotBlank(message = "O endereço é obrigatório")
-        String address
+        String address,
+
+        Double latitude,
+
+        Double longitude
 ) {
 }

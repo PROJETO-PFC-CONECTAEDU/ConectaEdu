@@ -12,6 +12,8 @@ import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { MapPin, Users, School as SchoolIcon, Trash2, Plus, ShieldCheck, XCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { AddressAutocomplete } from '../components/map/AddressAutocomplete';
+import { useAuth } from '../context/AuthContext';
 
 interface School {
   id: string;
@@ -20,6 +22,8 @@ interface School {
   director?: string;
   address?: string;
   active: boolean;
+  latitude: number;
+  longitude: number;
 }
 
 const schoolSchema = z.object({
@@ -27,16 +31,19 @@ const schoolSchema = z.object({
   cie: z.string().min(1, 'CIE é obrigatório'),
   director: z.string().min(1, 'Diretor é obrigatório'),
   address: z.string().min(1, 'Endereço é obrigatório'),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 });
 
 type SchoolFormData = z.infer<typeof schoolSchema>;
 
 export function Schools() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<SchoolFormData>({
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<SchoolFormData>({
     resolver: zodResolver(schoolSchema)
   });
   const { data: schools, isLoading, error } = useQuery<School[]>({
@@ -77,6 +84,14 @@ export function Schools() {
     createMutation.mutate(data);
   };
 
+  useState(() => {
+    register('address');
+    register('latitude');
+    register('longitude');
+  });
+
+  const isAdmin = user?.role === 'PLATFORM_ADMIN';
+
   const toggleStatusMutation = useMutation({
     mutationFn: async ({ id, active, cie }: { id: string, active: boolean, cie: string }) => {
       const endpoint = active ? 'deactivate' : 'activate';
@@ -93,14 +108,14 @@ export function Schools() {
       <Header 
         title="Escolas Parceiras" 
         subtitle="Gerencie as instituições de ensino cadastradas." 
-        action={
+        action={isAdmin && (
           <button 
             onClick={() => setIsModalOpen(true)}
             className="bg-brand-primary text-white px-4 py-2 rounded-lg flex items-center gap-2 font-bold hover:bg-brand-primary/90 transition-colors"
           >
             <Plus size={20} /> Nova Escola
           </button>
-        }
+        )}
       />
 
       <Modal
@@ -127,11 +142,13 @@ export function Schools() {
             error={errors.director?.message}
             {...register('director')}
           />
-          <Input
-            label="Endereço"
-            placeholder="Endereço completo"
+          <AddressAutocomplete
+            onAddressSelect={(address, lat, lng) => {
+              setValue('address', address, { shouldValidate: true });
+              if (lat) setValue('latitude', lat);
+              if (lng) setValue('longitude', lng);
+            }}
             error={errors.address?.message}
-            {...register('address')}
           />
           
           <div className="flex gap-3 pt-2">
@@ -183,12 +200,14 @@ export function Schools() {
                       <p className="text-xs text-text-muted">CIE: {school.cie}</p>
                     </div>
                   </div>
-                  <button 
-                    onClick={() => setDeletingId(school.id)}
-                    className="text-text-muted hover:text-red-500 p-1"
-                  >
-                    <Trash2 size={18} />
-                  </button>
+                  {isAdmin && (
+                    <button 
+                      onClick={() => setDeletingId(school.id)}
+                      className="text-text-muted hover:text-red-500 p-1"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  )}
                 </div>
 
                 <div className="space-y-3 pt-4 border-t border-border-default">
@@ -209,7 +228,7 @@ export function Schools() {
                     {school.active ? 'Ativa' : 'Pendente'}
                   </span>
                   
-                  {!school.active && (
+                  {!school.active && isAdmin && (
                     <button 
                       onClick={() => toggleStatusMutation.mutate({ id: school.id, active: school.active, cie: school.cie })}
                       className="text-emerald-500 hover:text-emerald-600 transition-colors"
@@ -225,13 +244,15 @@ export function Schools() {
                         <ShieldCheck size={14} />
                         Verificada
                       </div>
-                      <button 
-                        onClick={() => toggleStatusMutation.mutate({ id: school.id, active: school.active, cie: school.cie })}
-                        className="text-text-muted hover:text-red-500 transition-colors"
-                        title="Desativar"
-                      >
-                        <XCircle size={20} />
-                      </button>
+                      {isAdmin && (
+                        <button 
+                          onClick={() => toggleStatusMutation.mutate({ id: school.id, active: school.active, cie: school.cie })}
+                          className="text-text-muted hover:text-red-500 transition-colors"
+                          title="Desativar"
+                        >
+                          <XCircle size={20} />
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>

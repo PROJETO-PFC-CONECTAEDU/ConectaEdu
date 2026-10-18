@@ -17,6 +17,7 @@ public interface ISchoolFacade {
     SchoolResponseDTO getSchoolById(UUID id);
     SchoolResponseDTO getSchoolByCie(String cie);
     List<SchoolResponseDTO> getAllSchools();
+    List<SchoolResponseDTO> listActiveSchools();
     SchoolResponseDTO activateSchool(UUID id, SchoolValidationRequestDTO request);
     SchoolResponseDTO deactivateSchool(UUID id, SchoolValidationRequestDTO request);
 }

@@ -42,6 +42,9 @@ public class StudentGetService {
                 student.getUniversity() != null ? student.getUniversity().getName() : "Sem Universidade",
                 student.getStatus(),
                 student.getAvailability(),
+                student.getAddress(),
+                student.getLatitude(),
+                student.getLongitude(),
                 student.getInterestAreas()
         );
     }

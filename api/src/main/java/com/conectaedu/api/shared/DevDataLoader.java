@@ -1,5 +1,7 @@
 package com.conectaedu.api.shared;
 
+import com.conectaedu.api.modules.demand.domain.Demand;
+import com.conectaedu.api.modules.demand.repository.DemandRepository;
 import com.conectaedu.api.modules.school.domain.School;
 import com.conectaedu.api.modules.school.repository.SchoolRepository;
 import com.conectaedu.api.modules.university.domain.University;
@@ -28,6 +30,7 @@ public class DevDataLoader implements CommandLineRunner {
     private final UserRepository userRepository;
     private final UniversityRepository universityRepository;
     private final SchoolRepository schoolRepository;
+    private final DemandRepository demandRepository;
     private final PasswordEncoder passwordEncoder;
 
 
@@ -38,8 +41,10 @@ public class DevDataLoader implements CommandLineRunner {
         School school = createDefaultSchool();
         
         createUniversityAdmin("Admin Uni", "uni_admin@conectaedu.com", "123456", university);
-        createSchoolDirector("Diretor Escola", "director@conectaedu.com", "123456", school);
+        SchoolDirector director = createSchoolDirector("Diretor Escola", "director@conectaedu.com", "123456", school);
         createStudent("Estudante Teste", "student@conectaedu.com", "123456", university);
+
+        createDefaultDemands(school, director);
     }
 
 
@@ -82,6 +87,8 @@ public class DevDataLoader implements CommandLineRunner {
             school.setName("Escola Estadual Padrão");
             school.setCie(cie);
             school.setAddress("Rua das Escolas, 500");
+            school.setLatitude(-23.55052);
+            school.setLongitude(-46.633308);
             school.setDirector("Maria Oliveira");
             school.setStatus(SchoolStatus.ACTIVE);
             school.setActive(true);
@@ -108,8 +115,8 @@ public class DevDataLoader implements CommandLineRunner {
         }
     }
 
-    private void createSchoolDirector(String name, String email, String password, School school) {
-        if (!userRepository.existsByEmail(email)) {
+    private SchoolDirector createSchoolDirector(String name, String email, String password, School school) {
+        return (SchoolDirector) userRepository.findByEmail(email).orElseGet(() -> {
             SchoolDirector user = new SchoolDirector();
             user.setName(name);
             user.setEmail(email);
@@ -121,6 +128,46 @@ public class DevDataLoader implements CommandLineRunner {
             user.setUpdatedAt(LocalDateTime.now());
             userRepository.save(user);
             System.out.println("[DEV] Usuário School Director criado: " + email);
+            return user;
+        });
+    }
+
+    private void createDefaultDemands(School school, SchoolDirector director) {
+        if (demandRepository.count() == 0) {
+            Demand demand1 = new Demand();
+            demand1.setTitle("Reforço em Matemática - 6º Ano");
+            demand1.setDescription("Necessidade de monitoria para alunos com dificuldade em frações e decimais.");
+            demand1.setSubject("Matemática");
+            demand1.setGradeLevel("6º Ano");
+            demand1.setPupilAmount(15);
+            demand1.setRoom("Sala 12");
+            demand1.setDifficultyLevel("Médio");
+            demand1.setStatus(DemandStatus.WAITING);
+            demand1.setClassDate(LocalDateTime.now().plusDays(7));
+            demand1.setTotalHours("2h");
+            demand1.setSchool(school);
+            demand1.setDirector(director);
+            demand1.setCreatedAt(LocalDateTime.now());
+            demand1.setUpdatedAt(LocalDateTime.now());
+
+            Demand demand2 = new Demand();
+            demand2.setTitle("Oficina de Leitura - 8º Ano");
+            demand2.setDescription("Apoio pedagógico para incentivo à leitura e interpretação de texto.");
+            demand2.setSubject("Português");
+            demand2.setGradeLevel("8º Ano");
+            demand2.setPupilAmount(10);
+            demand2.setRoom("Biblioteca");
+            demand2.setDifficultyLevel("Fácil");
+            demand2.setStatus(DemandStatus.WAITING);
+            demand2.setClassDate(LocalDateTime.now().plusDays(10));
+            demand2.setTotalHours("1h30");
+            demand2.setSchool(school);
+            demand2.setDirector(director);
+            demand2.setCreatedAt(LocalDateTime.now());
+            demand2.setUpdatedAt(LocalDateTime.now());
+
+            demandRepository.saveAll(List.of(demand1, demand2));
+            System.out.println("[DEV] Demandas de teste criadas.");
         }
     }
 

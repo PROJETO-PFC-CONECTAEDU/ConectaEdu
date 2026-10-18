@@ -11,7 +11,9 @@ public enum AuditEntityType {
     USER("Usuário"),
     STUDENT("Estudante"),
     SCHOOL_DIRECTOR("Diretor de Escola"),
-    UNIVERSITY_ADMIN("Administrador de Universidade");
+    UNIVERSITY_ADMIN("Administrador de Universidade"),
+    DEMAND("Demanda"),
+    LESSON("Aula");
 
     private final String label;
 }
