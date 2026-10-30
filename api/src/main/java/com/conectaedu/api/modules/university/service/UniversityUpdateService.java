@@ -29,17 +29,26 @@ public class UniversityUpdateService {
         String beforeName = university.getName();
         String beforeCoordinator = university.getCoordinator();
         String beforeAddress = university.getAddress();
+        Integer beforeRequiredHours = university.getRequiredInternshipHours();
 
         university.setName(request.name());
         university.setCoordinator(request.coordinator());
         university.setAddress(request.address());
+
+        //Os três acima são obrigatórios e chegam sempre, a carga é opcional.
+
+        if (request.requiredInternshipHours() != null) {
+            university.setRequiredInternshipHours(request.requiredInternshipHours());
+        }
 
         universityRepository.save(university);
 
         AuditDiff diff = AuditDiff.create()
                 .field("name", beforeName, university.getName())
                 .field("coordinator", beforeCoordinator, university.getCoordinator())
-                .field("address", beforeAddress, university.getAddress());
+                .field("address", beforeAddress, university.getAddress())
+                .field("requiredInternshipHours", beforeRequiredHours,
+                        university.getRequiredInternshipHours());
         auditService.logUpdate(AuditEntityType.UNIVERSITY, university.getId(), university.getName(), diff);
 
         return new UniversityResponseDTO(university);
