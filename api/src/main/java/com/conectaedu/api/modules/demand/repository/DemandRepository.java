@@ -4,6 +4,7 @@ import com.conectaedu.api.modules.demand.domain.Demand;
 import com.conectaedu.api.shared.enums.DemandStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;

@@ -37,22 +37,25 @@ public class DemandFinishService {
         }
 
         var beforeStatus = demand.getStatus();
+        LocalDateTime now = LocalDateTime.now();
 
         demand.setStatus(DemandStatus.FINISHED);
-        demand.setUpdatedAt(LocalDateTime.now());
+        demand.setFinishedAt(now);
+        demand.setUpdatedAt(now);
 
         // Update history
         demand.getStudentHistory().stream()
                 .filter(DemandStudent::isActive)
                 .forEach(h -> {
                     h.setActive(false);
-                    h.setUnlinkedAt(LocalDateTime.now());
+                    h.setUnlinkedAt(now);
                 });
 
         demandRepository.save(demand);
 
         AuditDiff diff = AuditDiff.create()
-                .field("status", beforeStatus, demand.getStatus());
+                .field("status", beforeStatus, demand.getStatus())
+                .field("concluída em", null, demand.getFinishedAt());
 
         auditService.logUpdate(AuditEntityType.DEMAND, demand.getId(), demand.getTitle(), diff);
 
