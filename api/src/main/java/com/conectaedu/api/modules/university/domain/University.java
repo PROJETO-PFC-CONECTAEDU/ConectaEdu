@@ -42,6 +42,12 @@ public class University {
 
     private String address;
 
+    //Aqui fica a carga de estágio que esta universidade exige dos estudantes
+    //Ficara nulo até ela configurar, e aí vale o padrão guardado no InternshipRules.
+
+    @Column(name = "required_internship_hours")
+    private Integer requiredInternshipHours;
+
     //Situação no fluxo de validação. Nasce PENDING.
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
