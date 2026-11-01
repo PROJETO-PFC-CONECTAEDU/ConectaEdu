@@ -30,13 +30,10 @@ public class EvaluationReminderJob {
         LocalDateTime deadline = LocalDateTime.now().minusDays(FeedbackRules.REMINDER_DAYS);
         LocalDateTime windowStart = deadline.minusDays(1);
 
-        List<Demand> finished = demandRepository.findByStatusAndFinishedAtBefore(DemandStatus.FINISHED, deadline);
+        List<Demand> pending = demandRepository.findByStatusAndFinishedAtBetween(
+                DemandStatus.FINISHED, windowStart, deadline);
 
-        for (Demand demand : finished) {
-            if (demand.getFinishedAt().isBefore(windowStart)) {
-                continue;
-            }
-
+        for (Demand demand : pending) {
             if (studentEvaluationRepository.existsByDemand_Id(demand.getId())) {
                 continue;
             }

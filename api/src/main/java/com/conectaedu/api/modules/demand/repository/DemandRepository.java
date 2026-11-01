@@ -38,4 +38,6 @@ public interface DemandRepository extends JpaRepository<Demand, UUID> {
     long countActiveStudentsByUniversityId(UUID universityId);
     
     java.util.Optional<Demand> findFirstByStudentIdAndStatus(UUID studentId, DemandStatus status);
+
+    List<Demand> findByStatusAndFinishedAtBetween(DemandStatus status, LocalDateTime start, LocalDateTime end);
 }
