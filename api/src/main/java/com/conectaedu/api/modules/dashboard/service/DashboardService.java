@@ -3,6 +3,7 @@ package com.conectaedu.api.modules.dashboard.service;
 import com.conectaedu.api.modules.dashboard.dto.DashboardStatsDTO;
 import com.conectaedu.api.modules.demand.domain.Demand;
 import com.conectaedu.api.modules.demand.repository.DemandRepository;
+import com.conectaedu.api.modules.internship.interfaces.IInternshipFacade;
 import com.conectaedu.api.modules.school.repository.SchoolRepository;
 import com.conectaedu.api.modules.university.repository.UniversityRepository;
 import com.conectaedu.api.modules.user.genericUser.domain.User;
@@ -16,6 +17,7 @@ import com.conectaedu.api.shared.enums.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -28,6 +30,7 @@ public class DashboardService {
     private final UniversityRepository universityRepository;
     private final StudentRepository studentRepository;
     private final DemandRepository demandRepository;
+    private final IInternshipFacade internshipFacade;
 
     public DashboardStatsDTO getStats(User user) {
         Map<String, Object> stats = new HashMap<>();
@@ -42,6 +45,12 @@ public class DashboardService {
             var universityId = admin.getUniversity().getId();
             stats.put("myStudentsCount", studentRepository.countByUniversityId(universityId));
             stats.put("activeStudentsCount", demandRepository.countActiveStudentsByUniversityId(universityId));
+
+            BigDecimal totalHours = internshipFacade.getHoursByUniversity(universityId).students().stream()
+                    .map(com.conectaedu.api.modules.internship.dto.response.InternshipHoursResponseDTO::totalHours)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            stats.put("totalHours", totalHours);
+
             
             double totalHours = demandRepository.findAllTotalHoursByUniversityId(universityId)
                     .stream()
@@ -57,6 +66,8 @@ public class DashboardService {
             stats.put("ongoingClassesCount", demandRepository.countBySchoolIdAndStatus(schoolId, DemandStatus.ONGOING));
             stats.put("successfulDemandsCount", demandRepository.countBySchoolIdAndStatus(schoolId, DemandStatus.FINISHED));
         } else if (user instanceof Student student) {
+            BigDecimal myHours = internshipFacade.getHoursByStudent(student.getId()).totalHours();
+            stats.put("myHours", myHours);
             double myHours = demandRepository.findAllTotalHoursByStudentId(student.getId())
                     .stream()
                     .mapToDouble(this::parseHours)

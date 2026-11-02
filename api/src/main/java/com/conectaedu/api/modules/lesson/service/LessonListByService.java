@@ -5,8 +5,17 @@ import com.conectaedu.api.modules.lesson.dto.response.LessonHoursResponseDTO;
 import com.conectaedu.api.modules.lesson.dto.response.LessonResponseDTO;
 import com.conectaedu.api.modules.lesson.mapper.LessonMapper;
 import com.conectaedu.api.modules.lesson.repository.LessonRepository;
+import com.conectaedu.api.modules.user.student.domain.Student;
+import com.conectaedu.api.modules.user.student.repository.StudentRepository;
+import com.conectaedu.api.modules.user.university_admin.domain.UniversityAdmin;
+import com.conectaedu.api.modules.user.university_admin.repository.UniversityAdminRepository;
 import com.conectaedu.api.shared.enums.LessonStatus;
+import com.conectaedu.api.shared.enums.UserRole;
+import com.conectaedu.api.shared.exceptions.UserNotFoundException;
+import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.domain.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,12 +35,19 @@ public class LessonListByService {
 
     private final LessonRepository lessonRepository;
     private final LessonMapper lessonMapper;
+    private final StudentRepository studentRepository;
+    private final UniversityAdminRepository universityAdminRepository;
 
     //Alimenta a tela da agenda.
 
     @Transactional(readOnly = true)
     public List<LessonResponseDTO> listByStudent(UUID studentId, LocalDateTime from,
                                                  LocalDateTime to, LessonStatus status) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado!"));
+
+        checkAccess(student);
+
         LocalDateTime start = from == null ? MIN_DATE : from;
         LocalDateTime end = to == null ? MAX_DATE : to;
 
@@ -48,6 +64,11 @@ public class LessonListByService {
 
     @Transactional(readOnly = true)
     public LessonHoursResponseDTO totalValidatedHours(UUID studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado!"));
+
+        checkAccess(student);
+
         List<Lesson> validated = lessonRepository.findByStudent_IdAndStatus(studentId, LessonStatus.VALIDATED);
 
         long minutes = validated.stream()
@@ -55,5 +76,33 @@ public class LessonListByService {
                 .sum();
 
         return new LessonHoursResponseDTO(studentId, minutes, validated.size());
+    }
+
+    private void checkAccess(Student student) {
+        UUID actorId = SecurityContextHolder.getAuthenticatedUserId();
+
+        if (student.getId().equals(actorId)) {
+            return;
+        }
+
+        if (hasRole(UserRole.PLATFORM_ADMIN)) {
+            return;
+        }
+
+        UniversityAdmin admin = universityAdminRepository.findById(actorId).orElse(null);
+        boolean sameUniversity = admin != null
+                && admin.getUniversity() != null
+                && student.getUniversity() != null
+                && admin.getUniversity().getId().equals(student.getUniversity().getId());
+
+        if (!sameUniversity) {
+            throw new AccessDeniedException("Você não tem acesso aos dados deste estudante.");
+        }
+    }
+
+    private boolean hasRole(UserRole role) {
+        AuthenticatedUser user = SecurityContextHolder.getAuthenticatedUser();
+        return user != null && user.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_" + role.name()));
     }
 }

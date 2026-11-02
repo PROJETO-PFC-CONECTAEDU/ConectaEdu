@@ -24,4 +24,9 @@ public class SecurityContextHolder {
         AuthenticatedUser user = getAuthenticatedUser();
         return user != null ? user.getUsername() : null;
     }
+
+    public static UUID getAuthenticatedUniversityId() {
+        AuthenticatedUser user = getAuthenticatedUser();
+        return user != null ? user.getUniversityId() : null;
+    }
 }

@@ -20,11 +20,6 @@ public class DashboardExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ProblemDetail accessDenied(AccessDeniedException ex) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Acesso negado às estatísticas.");
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ProblemDetail handleGeneral(Exception ex) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao processar estatísticas do dashboard.");
+        return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
     }
 }
