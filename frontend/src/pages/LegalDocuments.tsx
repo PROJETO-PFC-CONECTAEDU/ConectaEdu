@@ -7,6 +7,7 @@ import { Card } from '../components/ui/Card';
 import toast from 'react-hot-toast';
 import { ShieldAlert, History, Calendar, CheckCircle, Archive } from 'lucide-react';
 import { Header } from '../components/layout/Header';
+import { formatLegalDocumentStatus, formatLegalDocumentType } from '../utils/format';
 
 interface LegalDocument {
   id: string;
@@ -87,14 +88,14 @@ export function LegalDocuments() {
       return (
         <span className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-200 uppercase">
           <CheckCircle size={10} />
-          Em vigor
+          {formatLegalDocumentStatus(status)}
         </span>
       );
     }
     return (
       <span className="flex items-center gap-1 text-[10px] font-bold text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-200 uppercase">
         <Archive size={10} />
-        Arquivado
+        {formatLegalDocumentStatus(status)}
       </span>
     );
   };
@@ -187,7 +188,7 @@ export function LegalDocuments() {
                           {getStatusBadge(doc.status)}
                         </div>
                         <p className="text-xs text-text-body">
-                          {doc.documentType === 'TERMS_OF_USE' ? 'Termos de Uso' : 'Política de Privacidade'} • Versão {doc.version}
+                          {formatLegalDocumentType(doc.documentType)} • Versão {doc.version}
                         </p>
                       </div>
                       <div className="text-right shrink-0">

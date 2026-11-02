@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { Header } from '../components/layout/Header';
@@ -20,10 +21,18 @@ import {
   AlertCircle,
   Trash2,
   Info,
-  MapPin
+  MapPin,
+  Plus
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { SchoolMap } from '../components/map/SchoolMap';
+import { Modal } from '../components/ui/Modal';
+import { Input } from '../components/ui/Input';
+import { formatDemandStatus, formatLessonStatus } from '../utils/format';
+import type { Lesson } from './Schedule';
 
 interface Candidate {
   id: string;
@@ -58,6 +67,21 @@ interface Demand {
   isRecommended?: boolean;
 }
 
+const schedulingSchema = z.object({
+  scheduledStart: z.string().min(1, 'Início é obrigatório').refine((val) => {
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() + 2);
+    return new Date(val) >= minDate;
+  }, 'A aula deve ser agendada com no mínimo 2 dias de antecedência'),
+  scheduledEnd: z.string().min(1, 'Término é obrigatório'),
+  enrolledCount: z.number().min(3, 'Mínimo de 3 alunos').max(10, 'Máximo de 10 alunos'),
+}).refine((data) => new Date(data.scheduledEnd) > new Date(data.scheduledStart), {
+  message: "O término deve ser após o início",
+  path: ["scheduledEnd"],
+});
+
+type SchedulingFormData = z.infer<typeof schedulingSchema>;
+
 export function DemandDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -67,6 +91,14 @@ export function DemandDetail() {
   const isDirector = user?.role === 'SCHOOL_DIRECTOR';
   const isStudent = user?.role === 'STUDENT';
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<SchedulingFormData>({
+    resolver: zodResolver(schedulingSchema),
+    defaultValues: {
+      enrolledCount: 3
+    }
+  });
 
   const { data: demand, isLoading, error } = useQuery<Demand>({
     queryKey: ['demand', id],
@@ -74,6 +106,50 @@ export function DemandDetail() {
       const response = await api.get(`/demands/${id}`);
       return response.data;
     },
+  });
+
+  const { data: lessons } = useQuery<Lesson[]>({
+    queryKey: ['demand-lessons', id, demand?.studentId],
+    queryFn: async () => {
+      if (!demand?.studentId) return [];
+      const response = await api.get(`/lessons/student/${demand.studentId}`);
+      return response.data.filter((l: Lesson) => l.demandId === id);
+    },
+    enabled: !!demand?.studentId,
+  });
+
+  const scheduleMutation = useMutation({
+    mutationFn: async (data: SchedulingFormData) => {
+      await api.post('/lessons', {
+        ...data,
+        demandId: id,
+        origin: 'NEW'
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demand-lessons', id] });
+      toast.success('Aula agendada com sucesso!');
+      setIsScheduleModalOpen(false);
+      reset();
+    },
+    onError: (err: unknown) => {
+      const message = axios.isAxiosError(err) ? (err.response?.data?.message || 'Erro ao agendar aula.') : 'Erro ao agendar aula.';
+      toast.error(message);
+    }
+  });
+
+  const signMutation = useMutation({
+    mutationFn: async (lessonId: string) => {
+      await api.patch(`/lessons/${lessonId}/sign`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demand-lessons', id] });
+      toast.success('Aula assinada com sucesso!');
+    },
+    onError: (err: unknown) => {
+      const message = axios.isAxiosError(err) ? (err.response?.data?.message || 'Erro ao assinar aula.') : 'Erro ao assinar aula.';
+      toast.error(message);
+    }
   });
 
   const applyMutation = useMutation({
@@ -84,8 +160,8 @@ export function DemandDetail() {
       queryClient.invalidateQueries({ queryKey: ['demand', id] });
       toast.success('Candidatura realizada com sucesso!');
     },
-    onError: (err: any) => {
-      const message = err.response?.data?.message || 'Erro ao realizar candidatura.';
+    onError: (err: unknown) => {
+      const message = axios.isAxiosError(err) ? (err.response?.data?.message || 'Erro ao realizar candidatura.') : 'Erro ao realizar candidatura.';
       toast.error(message);
     }
   });
@@ -98,8 +174,8 @@ export function DemandDetail() {
       queryClient.invalidateQueries({ queryKey: ['demand', id] });
       toast.success('Candidato aprovado com sucesso!');
     },
-    onError: (err: any) => {
-      const message = err.response?.data?.message || 'Erro ao aprovar candidato.';
+    onError: (err: unknown) => {
+      const message = axios.isAxiosError(err) ? (err.response?.data?.message || 'Erro ao aprovar candidato.') : 'Erro ao aprovar candidato.';
       toast.error(message);
     }
   });
@@ -125,8 +201,8 @@ export function DemandDetail() {
       queryClient.invalidateQueries({ queryKey: ['demand', id] });
       toast.success('Alterações confirmadas com sucesso!');
     },
-    onError: (err: any) => {
-      const message = err.response?.data?.message || 'Erro ao confirmar alterações.';
+    onError: (err: unknown) => {
+      const message = axios.isAxiosError(err) ? (err.response?.data?.message || 'Erro ao confirmar alterações.') : 'Erro ao confirmar alterações.';
       toast.error(message);
     }
   });
@@ -141,16 +217,6 @@ export function DemandDetail() {
     }
   };
 
-  const translateStatus = (status: string) => {
-    switch (status) {
-      case 'WAITING': return 'Inscrições Abertas';
-      case 'ONGOING': return 'Em Andamento';
-      case 'FINISHED': return 'Concluída';
-      case 'ARCHIVED': return 'Arquivada';
-      default: return status;
-    }
-  };
-
   const formatDate = (dateString: string) => {
     try {
       return new Intl.DateTimeFormat('pt-BR', {
@@ -160,7 +226,7 @@ export function DemandDetail() {
         hour: '2-digit',
         minute: '2-digit'
       }).format(new Date(dateString));
-    } catch (e) {
+    } catch (_) {
       return dateString;
     }
   };
@@ -252,7 +318,7 @@ export function DemandDetail() {
                       <div className="flex items-center gap-3 flex-wrap">
                         <div className="flex gap-2 flex-wrap">
                           <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(demand.status)}`}>
-                            {translateStatus(demand.status)}
+                            {formatDemandStatus(demand.status)}
                           </span>
                           {isStudent && demand.status === 'WAITING' && (
                             demand.isRecommended ? (
@@ -337,7 +403,7 @@ export function DemandDetail() {
                     )}
                     <div className="flex gap-2 flex-wrap">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(demand.status)}`}>
-                        {translateStatus(demand.status)}
+                        {formatDemandStatus(demand.status)}
                       </span>
                     </div>
                   </div>
@@ -391,7 +457,7 @@ export function DemandDetail() {
                       <p className="text-xs text-text-muted font-medium">Status</p>
                       <div className="flex items-center gap-2 text-sm text-text-heading font-semibold">
                         <CheckCircle2 size={16} className="text-brand-primary" />
-                        {translateStatus(demand.status)}
+                        {formatDemandStatus(demand.status)}
                       </div>
                     </div>
                   </div>
@@ -458,10 +524,65 @@ export function DemandDetail() {
                         : 'Responsável pela execução desta demanda'}
                     </p>
                   </div>
-                  <div className="ml-auto">
+                  <div className="ml-auto flex items-center gap-2">
+                    {isDirector && !demand.isArchived && (
+                      <Button 
+                        size="sm" 
+                        onClick={() => setIsScheduleModalOpen(true)}
+                        className="flex items-center gap-2"
+                      >
+                        <Plus size={16} /> Agendar Aula
+                      </Button>
+                    )}
                     <CheckCircle2 size={32} className="text-emerald-500" />
                   </div>
                 </div>
+
+                {/* Listagem de Aulas da Demanda */}
+                {lessons && lessons.length > 0 && (
+                  <div className="mt-8 space-y-4">
+                    <h4 className="font-bold text-text-heading flex items-center gap-2">
+                      <Calendar size={18} className="text-brand-primary" />
+                      Aulas Agendadas
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {lessons.map((lesson) => (
+                        <div key={lesson.id} className="p-4 bg-white rounded-xl border border-border-default hover:border-brand-primary/50 transition-colors">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                              lesson.status === 'SCHEDULED' ? 'bg-blue-100 text-blue-700' :
+                              lesson.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
+                              lesson.status === 'REGISTERED' ? 'bg-purple-100 text-purple-700' :
+                              'bg-emerald-100 text-emerald-700'
+                            }`}>
+                              {formatLessonStatus(lesson.status)}
+                            </span>
+                            <span className="text-xs text-text-muted">
+                              {new Date(lesson.scheduledStart).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm font-bold text-text-heading mb-1">
+                            <Clock size={14} className="text-brand-primary" />
+                            {new Date(lesson.scheduledStart).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - 
+                            {new Date(lesson.scheduledEnd).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                          </div>
+                          <p className="text-xs text-text-muted mb-3">{lesson.enrolledCount} alunos previstos</p>
+                          
+                          {isDirector && lesson.status === 'REGISTERED' && (
+                            <Button 
+                              size="sm" 
+                              className="w-full text-xs h-8"
+                              onClick={() => signMutation.mutate(lesson.id)}
+                              isLoading={signMutation.isPending}
+                            >
+                              Validar e Assinar
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {demand.studentId === user?.id && (
                   <div className="mt-6 p-4 bg-emerald-100/50 rounded-lg flex gap-3 text-emerald-800 text-sm">
                     <Info size={20} className="shrink-0" />
@@ -602,6 +723,44 @@ export function DemandDetail() {
         description="Tem certeza que deseja remover esta demanda? Esta ação não pode ser desfeita e todos os candidatos serão notificados."
         isLoading={deleteMutation.isPending}
       />
+
+      <Modal
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+        title="Agendar Nova Aula"
+      >
+        <form onSubmit={handleSubmit((data) => scheduleMutation.mutate(data))} className="space-y-4">
+          <p className="text-sm text-text-muted mb-4">
+            Defina o horário da aula. Lembre-se que deve ser com no mínimo 2 dias de antecedência.
+          </p>
+          
+          <Input
+            label="Início da Aula"
+            type="datetime-local"
+            {...register('scheduledStart')}
+            error={errors.scheduledStart?.message}
+          />
+
+          <Input
+            label="Término da Aula"
+            type="datetime-local"
+            {...register('scheduledEnd')}
+            error={errors.scheduledEnd?.message}
+          />
+
+          <Input
+            label="Quantidade de Alunos"
+            type="number"
+            {...register('enrolledCount', { valueAsNumber: true })}
+            error={errors.enrolledCount?.message}
+          />
+
+          <div className="flex justify-end gap-3 mt-6">
+            <Button variant="outline" onClick={() => setIsScheduleModalOpen(false)}>Cancelar</Button>
+            <Button type="submit" isLoading={scheduleMutation.isPending}>Confirmar Agendamento</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

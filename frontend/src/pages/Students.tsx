@@ -13,6 +13,7 @@ import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Users, Mail, GraduationCap, Trash2, ShieldCheck, XCircle, Plus, MapPin } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { AddressAutocomplete } from '../components/map/AddressAutocomplete';
+import { formatStudentStatus } from '../utils/format';
 
 interface Student {
   id: string;
@@ -292,8 +293,7 @@ export function Students() {
                   student.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
                   'bg-amber-100 text-amber-700'
                 }`}>
-                  {student.status === 'VALIDATED' ? 'Validado' : 
-                   student.status === 'REJECTED' ? 'Rejeitado' : 'Pendente'}
+                  {formatStudentStatus(student.status)}
                 </span>
                 
                 {student.status === 'PENDING' && (

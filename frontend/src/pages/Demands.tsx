@@ -14,6 +14,7 @@ import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { ClipboardList, Trash2, Plus, Calendar, Users, Clock, Building2, User as UserIcon, Check, MapPin } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { formatDemandStatus } from '../utils/format';
 
 interface Candidate {
   id: string;
@@ -162,16 +163,6 @@ export function Demands() {
     }
   };
 
-  const translateStatus = (status: string) => {
-    switch (status) {
-      case 'WAITING': return 'Aguardando';
-      case 'ONGOING': return 'Em Andamento';
-      case 'FINISHED': return 'Concluída';
-      case 'ARCHIVED': return 'Arquivada';
-      default: return status;
-    }
-  };
-
   const formatDate = (dateString: string) => {
     try {
       return new Intl.DateTimeFormat('pt-BR', {
@@ -181,7 +172,7 @@ export function Demands() {
         hour: '2-digit',
         minute: '2-digit'
       }).format(new Date(dateString));
-    } catch (e) {
+    } catch (_) {
       return dateString;
     }
   };
@@ -386,7 +377,7 @@ export function Demands() {
                 <div className="mt-6 flex items-center justify-between gap-4 flex-wrap">
                   <div className="flex gap-2 flex-wrap">
                     <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${getStatusColor(demand.status)}`}>
-                      {translateStatus(demand.status)}
+                      {formatDemandStatus(demand.status)}
                     </span>
                     {isStudent && demand.status === 'WAITING' && (
                       demand.isRecommended ? (
