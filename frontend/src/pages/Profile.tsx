@@ -8,7 +8,7 @@ import { Modal } from '../components/ui/Modal';
 import { Header } from '../components/layout/Header';
 import toast from 'react-hot-toast';
 import { User, Shield, CheckCircle, XCircle } from 'lucide-react';
-import { formatRole } from '../utils/format';
+import { formatRole, formatLegalDocumentType, formatDateTime } from '../utils/format';
 
 interface ConsentRecord {
   id: string;
@@ -74,7 +74,7 @@ export function Profile() {
     try {
       const response = await api.get(`/legal-documents/${consent.legalDocumentId}`);
       setViewingDoc({
-        title: `${consent.documentType === 'TERMS_OF_USE' ? 'Termos de Uso' : 'Política de Privacidade'} v${consent.documentVersion}`,
+        title: `${formatLegalDocumentType(consent.documentType)} v${consent.documentVersion}`,
         content: response.data.content
       });
     } catch (error) {
@@ -124,15 +124,15 @@ export function Profile() {
                         onClick={() => handleViewDocument(consent)}
                         className="font-bold text-text-heading hover:text-brand-primary transition-colors text-left"
                       >
-                        {consent.documentType === 'TERMS_OF_USE' ? 'Termos de Uso' : 'Política de Privacidade'}
+                        {formatLegalDocumentType(consent.documentType)}
                         <span className="ml-2 text-sm font-normal text-text-muted">v{consent.documentVersion}</span>
                       </button>
                       <p className="text-xs text-text-body">
-                        Aceito em: {new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(consent.acceptedAt))}
+                        Aceito em: {formatDateTime(consent.acceptedAt)}
                       </p>
                       {consent.withdrawnAt && (
                         <p className="text-xs text-brand-accent font-medium">
-                          Revogado em: {new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(consent.withdrawnAt))}
+                          Revogado em: {formatDateTime(consent.withdrawnAt)}
                         </p>
                       )}
                     </div>

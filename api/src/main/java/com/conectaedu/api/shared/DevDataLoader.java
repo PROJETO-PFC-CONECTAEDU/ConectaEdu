@@ -2,6 +2,12 @@ package com.conectaedu.api.shared;
 
 import com.conectaedu.api.modules.demand.domain.Demand;
 import com.conectaedu.api.modules.demand.repository.DemandRepository;
+import com.conectaedu.api.modules.feedback.domain.ClassEvaluation;
+import com.conectaedu.api.modules.feedback.domain.StudentEvaluation;
+import com.conectaedu.api.modules.feedback.repository.ClassEvaluationRepository;
+import com.conectaedu.api.modules.feedback.repository.StudentEvaluationRepository;
+import com.conectaedu.api.modules.lesson.domain.Lesson;
+import com.conectaedu.api.modules.lesson.repository.LessonRepository;
 import com.conectaedu.api.modules.school.domain.School;
 import com.conectaedu.api.modules.school.repository.SchoolRepository;
 import com.conectaedu.api.modules.university.domain.University;
@@ -31,20 +37,24 @@ public class DevDataLoader implements CommandLineRunner {
     private final UniversityRepository universityRepository;
     private final SchoolRepository schoolRepository;
     private final DemandRepository demandRepository;
+    private final LessonRepository lessonRepository;
+    private final StudentEvaluationRepository studentEvaluationRepository;
+    private final ClassEvaluationRepository classEvaluationRepository;
     private final PasswordEncoder passwordEncoder;
 
 
     public void run(String... args) throws Exception{
         createAdminUser("João Salustiano", "admin@conectaedu.com", "123456");
-        
+
         University university = createDefaultUniversity();
         School school = createDefaultSchool();
-        
+
         createUniversityAdmin("Admin Uni", "uni_admin@conectaedu.com", "123456", university);
         SchoolDirector director = createSchoolDirector("Diretor Escola", "director@conectaedu.com", "123456", school);
-        createStudent("Estudante Teste", "student@conectaedu.com", "123456", university);
+        Student student = createStudent("Estudante Teste", "student@conectaedu.com", "123456", university);
 
         createDefaultDemands(school, director);
+        createInternshipFlowData(school, director, student);
     }
 
 
@@ -73,6 +83,7 @@ public class DevDataLoader implements CommandLineRunner {
             university.setCoordinator("Dr. Carlos Silva");
             university.setStatus(UniversityStatus.APPROVED);
             university.setActive(true);
+            university.setRequiredInternshipHours(120);
             university.setCreatedAt(LocalDateTime.now());
             university.setUpdatedAt(LocalDateTime.now());
             System.out.println("[DEV] Universidade criada: " + university.getName());
@@ -171,8 +182,8 @@ public class DevDataLoader implements CommandLineRunner {
         }
     }
 
-    private void createStudent(String name, String email, String password, University university) {
-        if (!userRepository.existsByEmail(email)) {
+    private Student createStudent(String name, String email, String password, University university) {
+        return (Student) userRepository.findByEmail(email).orElseGet(() -> {
             Student user = new Student();
             user.setName(name);
             user.setEmail(email);
@@ -187,7 +198,104 @@ public class DevDataLoader implements CommandLineRunner {
             user.setUpdatedAt(LocalDateTime.now());
             userRepository.save(user);
             System.out.println("[DEV] Usuário Student criado: " + email);
-        }
+            return user;
+        });
+    }
+
+    private void createInternshipFlowData(School school, SchoolDirector director, Student student) {
+        if (lessonRepository.count() > 0) return;
+
+        // 1. Demanda ONGOING (Em andamento) para o estudante avaliar a turma
+        Demand ongoingDemand = new Demand();
+        ongoingDemand.setTitle("Reforço de Química - 2º Ano Médio");
+        ongoingDemand.setDescription("Monitoria de química orgânica.");
+        ongoingDemand.setSubject("Química");
+        ongoingDemand.setGradeLevel("2º Ano Médio");
+        ongoingDemand.setPupilAmount(12);
+        ongoingDemand.setRoom("Laboratório 2");
+        ongoingDemand.setDifficultyLevel("Médio");
+        ongoingDemand.setStatus(DemandStatus.ONGOING);
+        ongoingDemand.setClassDate(LocalDateTime.now().minusDays(2));
+        ongoingDemand.setTotalHours("20h");
+        ongoingDemand.setSchool(school);
+        ongoingDemand.setDirector(director);
+        ongoingDemand.setStudent(student);
+        ongoingDemand.setCreatedAt(LocalDateTime.now().minusDays(10));
+        ongoingDemand.setUpdatedAt(LocalDateTime.now());
+        demandRepository.save(ongoingDemand);
+
+        // 2. Aulas para compor o progresso de horas (Estágio)
+        // Aula Validada (Soma horas)
+        Lesson lesson1 = new Lesson();
+        lesson1.setSubject("Química");
+        lesson1.setScheduledStart(LocalDateTime.now().minusDays(5).withHour(14).withMinute(0));
+        lesson1.setScheduledEnd(LocalDateTime.now().minusDays(5).withHour(16).withMinute(0));
+        lesson1.setStatus(LessonStatus.VALIDATED);
+        lesson1.setDemand(ongoingDemand);
+        lesson1.setStudent(student);
+        lesson1.setSchool(school);
+        lesson1.setSignedAt(LocalDateTime.now().minusDays(4));
+        lesson1.setSignedBy(director.getId());
+        lesson1.setCreatedAt(LocalDateTime.now().minusDays(5));
+        lessonRepository.save(lesson1);
+
+        // Aula Pendente de Assinatura (Status COMPLETED)
+        Lesson lesson2 = new Lesson();
+        lesson2.setSubject("Química");
+        lesson2.setScheduledStart(LocalDateTime.now().minusDays(3).withHour(14).withMinute(0));
+        lesson2.setScheduledEnd(LocalDateTime.now().minusDays(3).withHour(16).withMinute(0));
+        lesson2.setStatus(LessonStatus.COMPLETED);
+        lesson2.setDemand(ongoingDemand);
+        lesson2.setStudent(student);
+        lesson2.setSchool(school);
+        lesson2.setCreatedAt(LocalDateTime.now().minusDays(3));
+        lessonRepository.save(lesson2);
+
+        // 3. Demanda FINISHED (Concluída) com avaliações
+        Demand finishedDemand = new Demand();
+        finishedDemand.setTitle("Projeto Robótica - 9º Ano");
+        finishedDemand.setDescription("Introdução a Arduino.");
+        finishedDemand.setSubject("Ciências");
+        finishedDemand.setGradeLevel("9º Ano");
+        finishedDemand.setPupilAmount(8);
+        finishedDemand.setRoom("Maker Space");
+        finishedDemand.setDifficultyLevel("Difícil");
+        finishedDemand.setStatus(DemandStatus.FINISHED);
+        finishedDemand.setFinishedAt(LocalDateTime.now().minusDays(15));
+        finishedDemand.setTotalHours("10h");
+        finishedDemand.setSchool(school);
+        finishedDemand.setDirector(director);
+        finishedDemand.setStudent(student);
+        finishedDemand.setCreatedAt(LocalDateTime.now().minusDays(30));
+        finishedDemand.setUpdatedAt(LocalDateTime.now().minusDays(15));
+        demandRepository.save(finishedDemand);
+
+        // Avaliação do Diretor sobre o Estudante (Feedback Recebido)
+        StudentEvaluation studentEval = new StudentEvaluation();
+        studentEval.setDemand(finishedDemand);
+        studentEval.setStudent(student);
+        studentEval.setEvaluatedBy(director.getId());
+        studentEval.setKnowledge(9);
+        studentEval.setPunctuality(10);
+        studentEval.setTeaching(8);
+        studentEval.setCommitment(10);
+        studentEval.setEmpathy(9);
+        studentEval.setComments("O estudante demonstrou excelente domínio técnico e ótima relação com os alunos.");
+        studentEval.setCreatedAt(LocalDateTime.now().minusDays(14));
+        studentEvaluationRepository.save(studentEval);
+
+        // Avaliação do Estudante sobre a Turma (Feedback Enviado)
+        ClassEvaluation classEval = new ClassEvaluation();
+        classEval.setDemand(finishedDemand);
+        classEval.setStudent(student);
+        classEval.setEngagement(8);
+        classEval.setProgress(7);
+        classEval.setInfrastructure(9);
+        classEval.setComments("A escola ofereceu ótimos recursos, embora os alunos tenham tido alguma dificuldade inicial com a lógica.");
+        classEval.setCreatedAt(LocalDateTime.now().minusDays(14));
+        classEvaluationRepository.save(classEval);
+
+        System.out.println("[DEV] Dados de fluxo de estágio e feedback criados.");
     }
 
 }

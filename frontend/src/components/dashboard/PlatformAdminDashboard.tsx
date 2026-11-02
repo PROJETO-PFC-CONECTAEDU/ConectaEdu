@@ -1,4 +1,3 @@
-import React from 'react';
 import { School as SchoolIcon, Building2, Users, CheckCircle, Clock } from 'lucide-react';
 import { MetricCard } from '../ui/MetricCard';
 
