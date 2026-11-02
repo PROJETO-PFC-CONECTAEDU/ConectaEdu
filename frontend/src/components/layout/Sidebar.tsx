@@ -8,7 +8,9 @@ import {
   FileText,
   Building2,
   ClipboardList,
-  Calendar
+  Calendar,
+  Clock,
+  Star,
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -19,14 +21,16 @@ function cn(...inputs: ClassValue[]) {
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', roles: ['PLATFORM_ADMIN', 'UNIVERSITY_ADMIN', 'STUDENT', 'SCHOOL_DIRECTOR'] },
+  { icon: ClipboardList, label: 'Oportunidades', path: '/demandas', roles: ['STUDENT'] },
+  { icon: ClipboardList, label: 'Demandas', path: '/demandas', roles: ['SCHOOL_DIRECTOR'] },
   { icon: MapIcon, label: 'Mapa', path: '/mapa', roles: ['PLATFORM_ADMIN', 'UNIVERSITY_ADMIN', 'STUDENT', 'SCHOOL_DIRECTOR'] },
+  { icon: Calendar, label: 'Agenda', path: '/agenda', roles: ['STUDENT', 'SCHOOL_DIRECTOR'] },
+  { icon: Clock, label: 'Horas', path: '/horas', roles: ['STUDENT'] },
+  { icon: Star, label: 'Avaliações', path: '/avaliacoes', roles: ['STUDENT'] },
   { icon: Users, label: 'Estudantes', path: '/estudantes', roles: ['PLATFORM_ADMIN'] },
   { icon: School, label: 'Escolas', path: '/oportunidades', roles: ['PLATFORM_ADMIN'] },
   { icon: Building2, label: 'Universidades', path: '/universidades', roles: ['PLATFORM_ADMIN'] },
   { icon: FileText, label: 'Documentação', path: '/documentos-legais', roles: ['PLATFORM_ADMIN'] },
-  { icon: Calendar, label: 'Agenda', path: '/agenda', roles: ['STUDENT', 'SCHOOL_DIRECTOR'] },
-  { icon: ClipboardList, label: 'Oportunidades', path: '/demandas', roles: ['STUDENT'] },
-  { icon: ClipboardList, label: 'Demandas', path: '/demandas', roles: ['SCHOOL_DIRECTOR'] },
 ];
 
 export function Sidebar() {

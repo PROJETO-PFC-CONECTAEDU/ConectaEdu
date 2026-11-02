@@ -1,4 +1,3 @@
-import React from 'react';
 import { ClipboardList, DoorOpen, Activity, Trophy } from 'lucide-react';
 import { MetricCard } from '../ui/MetricCard';
 

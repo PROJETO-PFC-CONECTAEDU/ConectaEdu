@@ -25,6 +25,12 @@ public interface DemandRepository extends JpaRepository<Demand, UUID> {
     @org.springframework.data.jpa.repository.Query("SELECT COUNT(d) FROM Demand d JOIN d.candidates c WHERE c.id = :studentId")
     long countByCandidateId(UUID studentId);
 
+    @org.springframework.data.jpa.repository.Query("SELECT d.totalHours FROM Demand d WHERE d.student.id = :studentId AND d.status = 'FINISHED'")
+    List<String> findAllTotalHoursByStudentId(UUID studentId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT d.totalHours FROM Demand d WHERE d.student.university.id = :universityId AND d.status = 'FINISHED'")
+    List<String> findAllTotalHoursByUniversityId(UUID universityId);
+
     @org.springframework.data.jpa.repository.Query("SELECT COUNT(d) FROM Demand d WHERE d.student.university.id = :universityId AND d.status = 'FINISHED'")
     long countFinishedDemandsByUniversityId(UUID universityId);
 

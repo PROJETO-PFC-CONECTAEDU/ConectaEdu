@@ -51,6 +51,13 @@ public class DashboardService {
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             stats.put("totalHours", totalHours);
 
+            
+            double totalHours = demandRepository.findAllTotalHoursByUniversityId(universityId)
+                    .stream()
+                    .mapToDouble(this::parseHours)
+                    .sum();
+            stats.put("totalHours", totalHours);
+            
             stats.put("completedDemands", demandRepository.countFinishedDemandsByUniversityId(universityId));
         } else if (user instanceof SchoolDirector director) {
             var schoolId = director.getSchool().getId();
@@ -61,6 +68,12 @@ public class DashboardService {
         } else if (user instanceof Student student) {
             BigDecimal myHours = internshipFacade.getHoursByStudent(student.getId()).totalHours();
             stats.put("myHours", myHours);
+            double myHours = demandRepository.findAllTotalHoursByStudentId(student.getId())
+                    .stream()
+                    .mapToDouble(this::parseHours)
+                    .sum();
+            stats.put("myHours", myHours);
+            
             stats.put("applicationsCount", demandRepository.countByCandidateId(student.getId()));
             stats.put("interestAreas", student.getInterestAreas());
             
@@ -74,5 +87,26 @@ public class DashboardService {
         }
 
         return DashboardStatsDTO.builder().statistics(stats).build();
+    }
+    private double parseHours(String totalHours) {
+        if (totalHours == null || totalHours.isBlank()) return 0.0;
+        try {
+            // Remove espaços e converte para minúsculo
+            String h = totalHours.toLowerCase().trim();
+            
+            if (h.contains("h")) {
+                String[] parts = h.split("h");
+                double hours = Double.parseDouble(parts[0].trim());
+                double minutes = 0;
+                if (parts.length > 1 && !parts[1].replaceAll("[^0-9]", "").isBlank()) {
+                    minutes = Double.parseDouble(parts[1].replaceAll("[^0-9]", "").trim()) / 60.0;
+                }
+                return hours + minutes;
+            }
+            
+            return Double.parseDouble(h.replaceAll("[^0-9.]", ""));
+        } catch (Exception e) {
+            return 0.0;
+        }
     }
 }

@@ -14,7 +14,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Input } from '../components/ui/Input';
-import { formatLessonStatus } from '../utils/format';
+import { formatLessonStatus, formatDate, formatDateTime, formatTime } from '../utils/format';
 
 export interface Lesson {
   id: string;
@@ -201,7 +201,7 @@ export function Schedule() {
                 </span>
                 <div className="flex items-center text-text-muted text-sm font-medium">
                   <Calendar size={14} className="mr-1" />
-                  {new Date(lesson.scheduledStart).toLocaleDateString()}
+                  {formatDate(lesson.scheduledStart)}
                 </div>
               </div>
 
@@ -215,8 +215,8 @@ export function Schedule() {
                 <div className="flex items-center text-sm text-text-dark">
                   <Clock size={16} className="mr-3 text-brand-primary" />
                   <span className="font-medium">
-                    {new Date(lesson.scheduledStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
-                    {new Date(lesson.scheduledEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {formatTime(lesson.scheduledStart)} - 
+                    {formatTime(lesson.scheduledEnd)}
                   </span>
                 </div>
                 <div className="flex items-center text-sm text-text-dark">
@@ -346,7 +346,7 @@ export function Schedule() {
         onClose={() => setConfirmingId(null)}
         onConfirm={() => confirmMutation.mutate(confirmingId!)}
         title="Confirmar Aula"
-        message="Você confirma que poderá realizar esta aula no horário agendado?"
+        description="Você confirma que poderá realizar esta aula no horário agendado?"
         confirmText="Sim, confirmar"
         isLoading={confirmMutation.isPending}
       />
