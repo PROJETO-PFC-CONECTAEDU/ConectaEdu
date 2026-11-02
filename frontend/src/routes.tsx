@@ -11,6 +11,8 @@ import { LegalDocumentView } from './pages/LegalDocumentView';
 import { Demands } from './pages/Demands';
 import { DemandDetail } from './pages/DemandDetail';
 import { Schedule } from './pages/Schedule';
+import { InternshipHours } from './pages/InternshipHours';
+import { Evaluations } from './pages/Evaluations';
 import { Layout } from './components/layout/Layout';
 import { RoleProtectedRoute } from './components/auth/RoleProtectedRoute';
 
@@ -78,6 +80,14 @@ export const router = createBrowserRouter([
           {
             path: '/agenda',
             element: <Schedule />,
+          },
+          {
+            path: '/horas',
+            element: <InternshipHours />,
+          },
+          {
+            path: '/avaliacoes',
+            element: <Evaluations />,
           }
         ]
       }

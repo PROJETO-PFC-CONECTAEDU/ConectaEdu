@@ -1,4 +1,3 @@
-import React from 'react';
 import { Users, Activity, Clock, CheckCircle } from 'lucide-react';
 import { MetricCard } from '../ui/MetricCard';
 

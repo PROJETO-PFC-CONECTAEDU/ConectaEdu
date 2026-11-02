@@ -1,4 +1,3 @@
-import React from 'react';
 import { Clock, Send, Star, BookOpen, Activity } from 'lucide-react';
 import { MetricCard } from '../ui/MetricCard';
 import { Card } from '../ui/Card';
