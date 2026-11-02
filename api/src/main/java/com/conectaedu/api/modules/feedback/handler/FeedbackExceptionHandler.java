@@ -4,6 +4,7 @@ import com.conectaedu.api.shared.exceptions.DemandNotFoundException;
 import com.conectaedu.api.shared.exceptions.EvaluationAlreadySubmittedException;
 import com.conectaedu.api.shared.exceptions.EvaluationNotFoundException;
 import com.conectaedu.api.shared.exceptions.InvalidDemandStatusException;
+import com.conectaedu.api.shared.exceptions.UserNotFoundException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -24,7 +25,8 @@ public class FeedbackExceptionHandler {
     //404
     @ExceptionHandler({
             EvaluationNotFoundException.class,
-            DemandNotFoundException.class
+            DemandNotFoundException.class,
+            UserNotFoundException.class
     })
     public ProblemDetail notFound(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());

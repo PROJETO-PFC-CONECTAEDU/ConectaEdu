@@ -7,6 +7,7 @@ public record StudentEvaluationResponseDTO(
         UUID id,
         UUID demandId,
         String demandTitle,
+        UUID schoolId,
         UUID studentId,
         String studentName,
         UUID evaluatedBy,

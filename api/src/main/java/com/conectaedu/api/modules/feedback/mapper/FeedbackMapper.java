@@ -14,6 +14,7 @@ public class FeedbackMapper {
                 evaluation.getId(),
                 evaluation.getDemand().getId(),
                 evaluation.getDemand().getTitle(),
+                evaluation.getDemand().getSchool().getId(),
                 evaluation.getStudent().getId(),
                 evaluation.getStudent().getName(),
                 evaluation.getEvaluatedBy(),

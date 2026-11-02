@@ -3,6 +3,7 @@ package com.conectaedu.api.modules.dashboard.service;
 import com.conectaedu.api.modules.dashboard.dto.DashboardStatsDTO;
 import com.conectaedu.api.modules.demand.domain.Demand;
 import com.conectaedu.api.modules.demand.repository.DemandRepository;
+import com.conectaedu.api.modules.internship.interfaces.IInternshipFacade;
 import com.conectaedu.api.modules.school.repository.SchoolRepository;
 import com.conectaedu.api.modules.university.repository.UniversityRepository;
 import com.conectaedu.api.modules.user.genericUser.domain.User;
@@ -16,6 +17,7 @@ import com.conectaedu.api.shared.enums.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -28,6 +30,7 @@ public class DashboardService {
     private final UniversityRepository universityRepository;
     private final StudentRepository studentRepository;
     private final DemandRepository demandRepository;
+    private final IInternshipFacade internshipFacade;
 
     public DashboardStatsDTO getStats(User user) {
         Map<String, Object> stats = new HashMap<>();
@@ -42,7 +45,12 @@ public class DashboardService {
             var universityId = admin.getUniversity().getId();
             stats.put("myStudentsCount", studentRepository.countByUniversityId(universityId));
             stats.put("activeStudentsCount", demandRepository.countActiveStudentsByUniversityId(universityId));
-            stats.put("totalHours", Optional.ofNullable(demandRepository.sumTotalHoursByUniversityId(universityId)).orElse(0.0));
+
+            BigDecimal totalHours = internshipFacade.getHoursByUniversity(universityId).students().stream()
+                    .map(com.conectaedu.api.modules.internship.dto.response.InternshipHoursResponseDTO::totalHours)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            stats.put("totalHours", totalHours);
+
             stats.put("completedDemands", demandRepository.countFinishedDemandsByUniversityId(universityId));
         } else if (user instanceof SchoolDirector director) {
             var schoolId = director.getSchool().getId();
@@ -51,7 +59,8 @@ public class DashboardService {
             stats.put("ongoingClassesCount", demandRepository.countBySchoolIdAndStatus(schoolId, DemandStatus.ONGOING));
             stats.put("successfulDemandsCount", demandRepository.countBySchoolIdAndStatus(schoolId, DemandStatus.FINISHED));
         } else if (user instanceof Student student) {
-            stats.put("myHours", Optional.ofNullable(demandRepository.sumTotalHoursByStudentId(student.getId())).orElse(0.0));
+            BigDecimal myHours = internshipFacade.getHoursByStudent(student.getId()).totalHours();
+            stats.put("myHours", myHours);
             stats.put("applicationsCount", demandRepository.countByCandidateId(student.getId()));
             stats.put("interestAreas", student.getInterestAreas());
             

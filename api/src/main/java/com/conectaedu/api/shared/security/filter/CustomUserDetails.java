@@ -1,6 +1,8 @@
 package com.conectaedu.api.shared.security.filter;
 
 import com.conectaedu.api.modules.user.genericUser.repository.UserRepository;
+import com.conectaedu.api.modules.user.student.domain.Student;
+import com.conectaedu.api.modules.user.university_admin.domain.UniversityAdmin;
 import com.conectaedu.api.shared.security.domain.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -25,10 +27,22 @@ public class CustomUserDetails implements UserDetailsService {
 
         var authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getUserRole().name()));
 
+        java.util.UUID universityId = null;
+        if (user instanceof Student student) {
+            if (student.getUniversity() != null) {
+                universityId = student.getUniversity().getId();
+            }
+        } else if (user instanceof UniversityAdmin admin) {
+            if (admin.getUniversity() != null) {
+                universityId = admin.getUniversity().getId();
+            }
+        }
+
         return new AuthenticatedUser(
                 user.getId(),
                 user.getEmail(),
                 user.getPassword(),
+                universityId,
                 authorities);
     }
 }
