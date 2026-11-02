@@ -2,6 +2,7 @@ import React from 'react';
 import { Clock, Send, Star, BookOpen, Activity } from 'lucide-react';
 import { MetricCard } from '../ui/MetricCard';
 import { Card } from '../ui/Card';
+import { formatDemandStatus } from '../../utils/format';
 
 interface Props {
   stats: any;
@@ -43,7 +44,7 @@ export function StudentDashboard({ stats }: Props) {
               <p className="text-sm text-text-body mt-1">{stats.currentProject.schoolName}</p>
               <div className="mt-4 flex items-center justify-between">
                 <span className="text-xs font-medium px-2.5 py-0.5 rounded bg-blue-100 text-blue-800 uppercase">
-                  {stats.currentProject.status}
+                  {formatDemandStatus(stats.currentProject.status)}
                 </span>
                 <a href={`/demands/${stats.currentProject.id}`} className="text-brand-primary text-sm font-bold hover:underline">
                   Ver detalhes
