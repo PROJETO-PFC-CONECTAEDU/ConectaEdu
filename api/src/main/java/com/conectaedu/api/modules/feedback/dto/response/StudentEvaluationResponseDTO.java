@@ -18,4 +18,5 @@ public record StudentEvaluationResponseDTO(
         Integer empathy,
         Double average,
         String comments,
-        LocalDateTime createdAt) {}
+        LocalDateTime createdAt,
+        LocalDateTime finishedAt) {}
