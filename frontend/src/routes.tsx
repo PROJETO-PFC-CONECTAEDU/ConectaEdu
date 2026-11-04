@@ -13,6 +13,7 @@ import { DemandDetail } from './pages/DemandDetail';
 import { Schedule } from './pages/Schedule';
 import { InternshipHours } from './pages/InternshipHours';
 import { Evaluations } from './pages/Evaluations';
+import { Reports } from './pages/Reports';
 import { Layout } from './components/layout/Layout';
 import { RoleProtectedRoute } from './components/auth/RoleProtectedRoute';
 
@@ -88,6 +89,10 @@ export const router = createBrowserRouter([
           {
             path: '/avaliacoes',
             element: <Evaluations />,
+          },
+          {
+            path: '/relatorios',
+            element: <Reports />,
           }
         ]
       }
