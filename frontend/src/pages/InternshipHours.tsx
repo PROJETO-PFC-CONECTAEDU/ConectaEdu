@@ -5,10 +5,8 @@ import api from '../lib/api';
 import { Card } from '../components/ui/Card';
 import { MetricCard } from '../components/ui/MetricCard';
 import { ProgressRing } from '../components/ui/ProgressRing';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
-import { formatLessonStatus, formatDate, formatTime } from '../utils/format';
+import { formatLessonStatus, formatDate } from '../utils/format';
 
 interface InternshipHoursData {
   totalHours: number;
