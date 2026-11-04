@@ -11,6 +11,7 @@ import {
   Calendar,
   Clock,
   Star,
+  BarChart3,
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -27,6 +28,7 @@ const menuItems = [
   { icon: Calendar, label: 'Agenda', path: '/agenda', roles: ['STUDENT', 'SCHOOL_DIRECTOR'] },
   { icon: Clock, label: 'Horas', path: '/horas', roles: ['STUDENT'] },
   { icon: Star, label: 'Avaliações', path: '/avaliacoes', roles: ['STUDENT'] },
+  { icon: BarChart3, label: 'Relatórios', path: '/relatorios', roles: ['STUDENT'] },
   { icon: Users, label: 'Estudantes', path: '/estudantes', roles: ['PLATFORM_ADMIN'] },
   { icon: School, label: 'Escolas', path: '/oportunidades', roles: ['PLATFORM_ADMIN'] },
   { icon: Building2, label: 'Universidades', path: '/universidades', roles: ['PLATFORM_ADMIN'] },
