@@ -25,7 +25,8 @@ public class FeedbackMapper {
                 evaluation.getEmpathy(),
                 average(evaluation),
                 evaluation.getComments(),
-                evaluation.getCreatedAt()
+                evaluation.getCreatedAt(),
+                evaluation.getDemand().getFinishedAt()
         );
     }
 
