@@ -1,20 +1,24 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import axios from 'axios';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
-import { Header } from '../components/layout/Header';
+// import { Header } from '../components/layout/Header'; // Usando header customizado conforme spec
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { Calendar, Clock, BookOpen, Building2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Search, Bell } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Input } from '../components/ui/Input';
-import { formatLessonStatus, formatDate, formatDateTime, formatTime } from '../utils/format';
+import { MonthCalendar } from '../components/calendar/MonthCalendar';
+import { SessionRow } from '../components/schedule/SessionRow';
+import { parseISO, isSameDay, format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { clsx } from 'clsx';
 
 export interface Lesson {
   id: string;
@@ -49,7 +53,11 @@ type CancellationFormData = z.infer<typeof cancellationSchema>;
 export function Schedule() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [filterStatus, setFilterStatus] = useState<string>('');
+  const [filterStatus, setFilterStatus] = useState<string>('ALL');
+  const [currentDate, setCurrentDate] = useState(new Date(2026, 9, 22));
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
   const [registeringLesson, setRegisteringLesson] = useState<Lesson | null>(null);
   const [cancellingLesson, setCancellingLesson] = useState<Lesson | null>(null);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
@@ -57,11 +65,9 @@ export function Schedule() {
   const isStudent = user?.role === 'STUDENT';
 
   const { data: lessons, isLoading } = useQuery<Lesson[]>({
-    queryKey: ['lessons', user?.id, filterStatus],
+    queryKey: ['lessons', user?.id],
     queryFn: async () => {
-      const response = await api.get(`/lessons/student/${user?.id}`, {
-        params: filterStatus ? { status: filterStatus } : {}
-      });
+      const response = await api.get(`/lessons/student/${user?.id}`);
       return response.data;
     },
     enabled: !!user?.id,
@@ -129,142 +135,172 @@ export function Schedule() {
     resolver: zodResolver(cancellationSchema)
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'SCHEDULED': return 'bg-blue-100 text-blue-800';
-      case 'CONFIRMED': return 'bg-green-100 text-green-800';
-      case 'CANCELED': return 'bg-red-100 text-red-800';
-      case 'REGISTERED': return 'bg-purple-100 text-purple-800';
-      case 'SIGNED': return 'bg-emerald-100 text-emerald-800';
-      case 'VALIDATED': return 'bg-emerald-100 text-emerald-700';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  const eventDates = useMemo(() => {
+    if (!lessons) return [];
+    return lessons.map(l => parseISO(l.scheduledStart));
+  }, [lessons]);
 
-  const getStatusLabel = (status: string) => {
-    return formatLessonStatus(status);
-  };
+  const filteredLessons = useMemo(() => {
+    if (!lessons) return [];
+    return lessons.filter(lesson => {
+      const lessonDate = parseISO(lesson.scheduledStart);
+      const matchesStatus = filterStatus === 'ALL' || lesson.status === filterStatus;
+      const matchesSearch = !searchQuery || 
+        lesson.schoolName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        lesson.subject.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesDate = !selectedDay || isSameDay(lessonDate, selectedDay);
+      return matchesStatus && matchesSearch && matchesDate;
+    }).sort((a, b) => new Date(a.scheduledStart).getTime() - new Date(b.scheduledStart).getTime());
+  }, [lessons, filterStatus, searchQuery, selectedDay]);
+
+  const tabs = [
+    { id: 'ALL', label: 'Todas' },
+    { id: 'CONFIRMED', label: 'Confirmadas' },
+    { id: 'SCHEDULED', label: 'Pendentes' },
+    { id: 'CANCELED', label: 'Canceladas' },
+  ];
 
   return (
-    <div className="flex-1">
-      <Header 
-        title="Agenda de Aulas" 
-        subtitle="Acompanhe e gerencie suas aulas de reforço"
-      />
-
-      <div className="p-8 space-y-8">
-        <div className="flex gap-2 overflow-x-auto pb-2">
-        <Button 
-          variant={filterStatus === '' ? 'primary' : 'outline'} 
-          onClick={() => setFilterStatus('')}
-          size="sm"
-        >
-          Todas
-        </Button>
-        <Button 
-          variant={filterStatus === 'SCHEDULED' ? 'primary' : 'outline'} 
-          onClick={() => setFilterStatus('SCHEDULED')}
-          size="sm"
-        >
-          Agendadas
-        </Button>
-        <Button 
-          variant={filterStatus === 'CONFIRMED' ? 'primary' : 'outline'} 
-          onClick={() => setFilterStatus('CONFIRMED')}
-          size="sm"
-        >
-          Confirmadas
-        </Button>
-        <Button 
-          variant={filterStatus === 'REGISTERED' ? 'primary' : 'outline'} 
-          onClick={() => setFilterStatus('REGISTERED')}
-          size="sm"
-        >
-          Registradas
-        </Button>
+    <div className="flex-1 bg-page-bg min-h-screen pb-20 md:pb-0">
+      {/* Desktop Header */}
+      <div className="hidden md:block">
+        <header className="h-[81px] bg-surface border-b border-border-default px-10 flex items-center justify-between">
+          <div>
+            <h1 className="text-text-heading font-display font-bold text-[20px]">Minha Agenda</h1>
+            <p className="text-text-body font-sans text-[12px]">Organize e visualize seus atendimentos e compromissos pedagógicos.</p>
+          </div>
+          <div className="flex items-center gap-5">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-body" size={14} />
+              <input 
+                type="text"
+                placeholder="Buscar escolas, matérias..."
+                className="w-[280px] h-8 bg-page-bg rounded-pill pl-9 pr-4 text-[12px] font-sans focus:outline-none border border-transparent focus:border-brand-primary"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <button className="text-text-heading p-1 hover:bg-slate-100 rounded-full">
+              <Bell size={20} />
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary font-bold">
+                {user?.name?.charAt(0)}
+              </div>
+              <span className="text-text-heading font-sans font-semibold text-[14px]">
+                {user?.name ? (
+                  <>
+                    {user.name.split(' ')[0]} {user.name.split(' ').length > 1 ? user.name.split(' ')[1].charAt(0) + '.' : ''}
+                  </>
+                ) : 'Usuário'}
+              </span>
+            </div>
+          </div>
+        </header>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {isLoading ? (
-          <p>Carregando aulas...</p>
-        ) : lessons?.length === 0 ? (
-          <div className="col-span-full flex flex-col items-center justify-center py-12 text-text-muted bg-white rounded-xl border border-dashed border-gray-300">
-            <Calendar size={48} className="mb-4 opacity-20" />
-            <p>Nenhuma aula encontrada.</p>
+      {/* Mobile Header */}
+      <div className="md:hidden bg-surface border-b border-border-default p-[16px_20px]">
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-brand-primary rounded-[6px] flex items-center justify-center">
+              <CalendarIcon size={16} className="text-white" />
+            </div>
+            <h1 className="text-text-heading font-display font-bold text-[20px]">Minha Agenda</h1>
           </div>
-        ) : (
-          lessons?.map((lesson) => (
-            <Card key={lesson.id} className="flex flex-col h-full hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-4">
-                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(lesson.status)}`}>
-                  {getStatusLabel(lesson.status)}
-                </span>
-                <div className="flex items-center text-text-muted text-sm font-medium">
-                  <Calendar size={14} className="mr-1" />
-                  {formatDate(lesson.scheduledStart)}
-                </div>
+          <div className="w-8 h-8 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary text-xs font-bold">
+            {user?.name?.charAt(0)}
+          </div>
+        </div>
+        <p className="text-text-body font-sans text-[12px]">Controle seus compromissos e horários</p>
+      </div>
+
+      <div className="p-4 md:p-10">
+        <div className="flex flex-col md:flex-row gap-8 md:gap-[32px] items-start">
+          {/* Calendar Card */}
+          <Card className="w-full md:w-[415px] p-4 md:p-6 rounded-xl border-border-default shadow-none bg-surface">
+            <MonthCalendar 
+              currentDate={currentDate} 
+              onDateChange={setCurrentDate}
+              eventDates={eventDates}
+              selectedDate={selectedDay}
+              onSelectDate={setSelectedDay}
+            />
+          </Card>
+
+          {/* Schedule Card */}
+          <div className="flex-1 w-full">
+            <Card className="w-full min-h-[428px] rounded-xl border-border-default shadow-none flex flex-col bg-surface">
+              {/* Tabs - Desktop Only */}
+              <div className="hidden md:flex px-6 pt-6 border-b border-border-default gap-2">
+                {tabs.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setFilterStatus(tab.id)}
+                    className={clsx(
+                      "px-4 py-2 text-[13px] font-sans font-semibold transition-colors mb-[-1px]",
+                      filterStatus === tab.id 
+                        ? "bg-brand-primary text-white rounded-pill mb-2" 
+                        : "text-text-body hover:text-text-heading"
+                    )}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
               </div>
 
-              <h3 className="text-lg font-bold mb-2 text-text-heading">{lesson.subject}</h3>
-              <p className="text-text-muted text-sm mb-4 flex items-center">
-                <Building2 size={14} className="mr-1" />
-                {lesson.schoolName}
-              </p>
+              <div className="p-4 md:p-6">
+                <h3 className="md:hidden text-text-heading font-display font-bold text-[16px] mb-4">
+                  {selectedDay 
+                    ? `Aulas de ${format(selectedDay, "dd 'de' MMM", { locale: ptBR })}`
+                    : `Aulas do Dia - ${format(currentDate, "dd 'Out'", { locale: ptBR })}`
+                  }
+                </h3>
 
-              <div className="space-y-3 mb-6 flex-1">
-                <div className="flex items-center text-sm text-text-dark">
-                  <Clock size={16} className="mr-3 text-brand-primary" />
-                  <span className="font-medium">
-                    {formatTime(lesson.scheduledStart)} - 
-                    {formatTime(lesson.scheduledEnd)}
-                  </span>
+                <div className="space-y-3">
+                  {isLoading ? (
+                    <p className="text-center py-10 text-text-body">Carregando...</p>
+                  ) : filteredLessons.length > 0 ? (
+                    filteredLessons.map(lesson => (
+                      <div key={lesson.id} className="relative group">
+                        <SessionRow 
+                          session={lesson as any} 
+                          onClick={() => {
+                            if (lesson.status === 'SCHEDULED' && isStudent) {
+                                setConfirmingId(lesson.id);
+                            } else if (lesson.status === 'CONFIRMED' && isStudent) {
+                                setRegisteringLesson(lesson);
+                            }
+                          }}
+                        />
+                        {/* Ações rápidas no hover */}
+                        {['SCHEDULED', 'CONFIRMED'].includes(lesson.status) && (
+                            <button 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCancellingLesson(lesson);
+                                }}
+                                className="hidden group-hover:flex absolute top-1 right-2 bg-white shadow-sm border border-red-100 text-red-500 p-1 rounded-md text-[10px] hover:bg-red-50"
+                            >
+                                Cancelar
+                            </button>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-20 text-text-body">
+                      <p>Nenhum compromisso encontrado</p>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center text-sm text-text-dark">
-                  <BookOpen size={16} className="mr-3 text-brand-primary" />
-                  <span>{lesson.enrolledCount} alunos previstos</span>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                {lesson.status === 'SCHEDULED' && isStudent && (
-                  <Button 
-                    className="w-full" 
-                    size="sm"
-                    onClick={() => setConfirmingId(lesson.id)}
-                  >
-                    Confirmar Aula
-                  </Button>
-                )}
-                {lesson.status === 'CONFIRMED' && isStudent && (
-                  <Button 
-                    className="w-full" 
-                    size="sm"
-                    onClick={() => setRegisteringLesson(lesson)}
-                  >
-                    Registrar Realização
-                  </Button>
-                )}
-                {['SCHEDULED', 'CONFIRMED'].includes(lesson.status) && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="text-red-600 hover:bg-red-50 hover:border-red-200"
-                    onClick={() => setCancellingLesson(lesson)}
-                  >
-                    Cancelar
-                  </Button>
-                )}
-                {lesson.status === 'REGISTERED' && (
-                   <p className="text-xs text-center text-text-muted italic">Aguardando assinatura da escola</p>
-                )}
               </div>
             </Card>
-          ))
-        )}
+          </div>
+        </div>
       </div>
-    </div>
 
-    <Modal
+      {/* Modais Originais */}
+      <Modal
         isOpen={!!registeringLesson}
         onClose={() => setRegisteringLesson(null)}
         title="Registrar Realização da Aula"
