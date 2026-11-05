@@ -111,4 +111,14 @@ public class DemandController {
         }
         return ResponseEntity.ok(demandFacade.getDemandsByStatusAndStudentId(DemandStatus.ONGOING, targetStudentId));
     }
+
+    @GetMapping("/completed")
+    @PreAuthorize("hasAnyRole('STUDENT', 'PLATFORM_ADMIN')")
+    public ResponseEntity<List<DemandStudentDTO>> getCompletedDemandsByStudentId(@RequestParam(required = false) UUID studentId) {
+        UUID targetStudentId = studentId;
+        if (targetStudentId == null) {
+            targetStudentId = com.conectaedu.api.shared.security.context.SecurityContextHolder.getAuthenticatedUserId();
+        }
+        return ResponseEntity.ok(demandFacade.getDemandsByStatusAndStudentId(DemandStatus.FINISHED, targetStudentId));
+    }
 }

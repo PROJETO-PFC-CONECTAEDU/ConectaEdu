@@ -13,6 +13,7 @@ import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Users, Mail, GraduationCap, Trash2, ShieldCheck, XCircle, Plus, MapPin } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { AddressAutocomplete } from '../components/map/AddressAutocomplete';
+import { useAuth } from '../context/AuthContext';
 import { formatStudentStatus } from '../utils/format';
 
 interface Student {
@@ -49,11 +50,15 @@ type StudentFormData = z.infer<typeof studentSchema>;
 
 export function Students() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  const isUniAdmin = user?.role === 'UNIVERSITY_ADMIN';
+
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<StudentFormData>({
-    resolver: zodResolver(studentSchema)
+    resolver: zodResolver(studentSchema),
+    defaultValues: isUniAdmin ? { universityId: user.universityId } : undefined
   });
 
   useState(() => {
@@ -181,25 +186,27 @@ export function Students() {
             {...register('password')}
           />
           
-          <div className="w-full space-y-1.5">
-            <label className="text-sm font-medium text-text-heading">
-              Universidade
-            </label>
-            <select
-              {...register('universityId')}
-              className={`flex h-11 w-full rounded-lg border bg-white px-3 py-2 text-sm text-text-heading focus:outline-none focus:ring-2 focus:ring-brand-primary/20 ${
-                errors.universityId ? 'border-red-500 focus:ring-red-500/20' : 'border-border-default'
-              }`}
-            >
-              <option value="">Selecione uma universidade</option>
-              {universities?.map(uni => (
-                <option key={uni.id} value={uni.id}>{uni.name}</option>
-              ))}
-            </select>
-            {errors.universityId && (
-              <p className="text-xs text-red-500">{errors.universityId.message}</p>
-            )}
-          </div>
+          {!isUniAdmin && (
+            <div className="w-full space-y-1.5">
+              <label className="text-sm font-medium text-text-heading">
+                Universidade
+              </label>
+              <select
+                {...register('universityId')}
+                className={`flex h-11 w-full rounded-lg border bg-white px-3 py-2 text-sm text-text-heading focus:outline-none focus:ring-2 focus:ring-brand-primary/20 ${
+                  errors.universityId ? 'border-red-500 focus:ring-red-500/20' : 'border-border-default'
+                }`}
+              >
+                <option value="">Selecione uma universidade</option>
+                {universities?.map(uni => (
+                  <option key={uni.id} value={uni.id}>{uni.name}</option>
+                ))}
+              </select>
+              {errors.universityId && (
+                <p className="text-xs text-red-500">{errors.universityId.message}</p>
+              )}
+            </div>
+          )}
 
           <Input
             label="Disponibilidade"

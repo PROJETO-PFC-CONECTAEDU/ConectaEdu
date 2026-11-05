@@ -31,12 +31,25 @@ public class AuthLoginService {
 
         String token = generateToken.generateToken(userEntity);
 
+        java.util.UUID universityId = null;
+        java.util.UUID schoolId = null;
+
+        if (userEntity instanceof com.conectaedu.api.modules.user.student.domain.Student student && student.getUniversity() != null) {
+            universityId = student.getUniversity().getId();
+        } else if (userEntity instanceof com.conectaedu.api.modules.user.university_admin.domain.UniversityAdmin admin && admin.getUniversity() != null) {
+            universityId = admin.getUniversity().getId();
+        } else if (userEntity instanceof com.conectaedu.api.modules.user.school_director.domain.SchoolDirector director && director.getSchool() != null) {
+            schoolId = director.getSchool().getId();
+        }
+
         return new LoginResponseDTO(
                 token,
                 userEntity.getId(),
                 userEntity.getName(),
                 userEntity.getEmail(),
-                userEntity.getUserRole().name()
+                userEntity.getUserRole().name(),
+                universityId,
+                schoolId
         );
     }
 }

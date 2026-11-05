@@ -12,7 +12,7 @@ import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { ClipboardList, Trash2, Plus, Calendar, Users, Clock, Building2, User as UserIcon, Check, MapPin } from 'lucide-react';
+import { ClipboardList, Trash2, Plus, Users, Clock, Building2, User as UserIcon, Check, MapPin } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { formatDemandStatus } from '../utils/format';
 
@@ -49,10 +49,10 @@ const demandSchema = z.object({
   subject: z.string().min(2, 'Disciplina é obrigatória'),
   gradeLevel: z.string().min(1, 'Nível de escolaridade é obrigatório'),
   pupilAmount: z.number().min(3, 'Quantidade de alunos deve ser pelo menos 3'),
-  classDate: z.string().min(1, 'Data da aula é obrigatória'),
   totalHours: z.string().min(1, 'Total de horas é obrigatório'),
   room: z.string().min(1, 'Sala é obrigatória'),
   difficultyLevel: z.string().min(1, 'Grau de dificuldade é obrigatório'),
+  classDate: z.string().min(1, 'Data da aula é obrigatória'),
 });
 
 type DemandFormData = z.infer<typeof demandSchema>;
@@ -62,7 +62,6 @@ export function Demands() {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
 
   const isDirector = user?.role === 'SCHOOL_DIRECTOR';
   const isStudent = user?.role === 'STUDENT';
@@ -129,7 +128,7 @@ export function Demands() {
       reset();
     },
     onError: (err: any) => {
-      const message = err.response?.data?.message || 'Erro ao criar demanda.';
+      const message = err.response?.data?.detail || err.response?.data?.message || 'Erro ao criar demanda.';
       toast.error(message);
     }
   });
@@ -143,7 +142,7 @@ export function Demands() {
       toast.success('Candidatura realizada com sucesso!');
     },
     onError: (err: any) => {
-      const message = err.response?.data?.message || 'Erro ao realizar candidatura.';
+      const message = err.response?.data?.detail || err.response?.data?.message || 'Erro ao realizar candidatura.';
       toast.error(message);
     }
   });
@@ -163,34 +162,13 @@ export function Demands() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    try {
-      return new Intl.DateTimeFormat('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      }).format(new Date(dateString));
-    } catch (_) {
-      return dateString;
-    }
-  };
-
-  const filteredDemands = demands?.filter(demand => 
-    demand.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    demand.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    demand.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    demand.schoolName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredDemands = demands;
 
   return (
     <div className="flex-1">
       <Header 
         title="Demandas de Estágio" 
         subtitle={isDirector ? "Gerencie as solicitações de estagiários para sua escola." : "Visualize e candidate-se às oportunidades de estágio disponíveis."}
-        searchValue={searchTerm}
-        onSearchChange={setSearchTerm}
         action={
           isDirector && (
             <button 
@@ -256,20 +234,22 @@ export function Demands() {
             />
           </div>
 
-          <Input
-            label="Total de Horas"
-            placeholder="Ex: 4h"
-            error={errors.totalHours?.message}
-            {...register('totalHours')}
-          />
-          
           <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Total de Horas"
+              placeholder="Ex: 40h"
+              error={errors.totalHours?.message}
+              {...register('totalHours')}
+            />
             <Input
               label="Sala"
               placeholder="Ex: Sala 102"
               error={errors.room?.message}
               {...register('room')}
             />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
             <Input
               label="Grau de Dificuldade"
               placeholder="Ex: Médio"
@@ -347,10 +327,6 @@ export function Demands() {
                   <div className="flex items-center gap-2 text-xs text-text-body">
                     <Building2 size={14} className="text-text-muted shrink-0" />
                     <span className="font-medium">{demand.schoolName}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-text-body">
-                    <Calendar size={14} className="text-text-muted shrink-0" />
-                    <span>{formatDate(demand.classDate)}</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-text-body">
                     <Users size={14} className="text-text-muted shrink-0" />

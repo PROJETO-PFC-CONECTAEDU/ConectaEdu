@@ -16,6 +16,7 @@ export const lessonStatusTranslations: Record<string, string> = {
   'SCHEDULED': 'Agendada',
   'CONFIRMED': 'Confirmada',
   'CANCELED': 'Cancelada',
+  'COMPLETED': 'Registrada',
   'REGISTERED': 'Registrada',
   'SIGNED': 'Assinada',
   'VALIDATED': 'Validada',

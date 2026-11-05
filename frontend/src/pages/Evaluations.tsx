@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
+import { Header } from '../components/layout/Header';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { RatingSlider } from '../components/evaluations/RatingSlider';
@@ -46,7 +47,7 @@ export function Evaluations() {
       if (!user) return;
       try {
         const [demandsResponse, historyResponse] = await Promise.all([
-          api.get('/demands/ongoing'),
+          api.get('/demands/completed'),
           api.get(`/evaluations/student/${user.id}`)
         ]);
         setDemands(demandsResponse.data);
@@ -97,11 +98,13 @@ export function Evaluations() {
   }
 
   return (
-    <div className="p-8 max-w-4xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-text-heading font-display">Avaliações</h1>
-        <p className="text-text-body">Envie feedback sobre suas experiências ou veja o que dizem sobre você.</p>
-      </div>
+    <div className="flex-1">
+      <Header 
+        title="Avaliações" 
+        subtitle="Envie feedback sobre suas experiências ou veja o que dizem sobre você."
+      />
+
+      <div className="p-8 max-w-4xl mx-auto space-y-8">
 
       <div className="flex border-b border-border-default">
         <button
@@ -211,6 +214,7 @@ export function Evaluations() {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }

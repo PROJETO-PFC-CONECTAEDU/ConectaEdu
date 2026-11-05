@@ -4,6 +4,7 @@ import com.conectaedu.api.modules.dashboard.dto.DashboardStatsDTO;
 import com.conectaedu.api.modules.demand.domain.Demand;
 import com.conectaedu.api.modules.demand.repository.DemandRepository;
 import com.conectaedu.api.modules.internship.interfaces.IInternshipFacade;
+import com.conectaedu.api.modules.lesson.repository.LessonRepository;
 import com.conectaedu.api.modules.school.repository.SchoolRepository;
 import com.conectaedu.api.modules.university.repository.UniversityRepository;
 import com.conectaedu.api.modules.user.genericUser.domain.User;
@@ -30,6 +31,7 @@ public class DashboardService {
     private final UniversityRepository universityRepository;
     private final StudentRepository studentRepository;
     private final DemandRepository demandRepository;
+    private final LessonRepository lessonRepository;
     private final IInternshipFacade internshipFacade;
 
     public DashboardStatsDTO getStats(User user) {
@@ -52,18 +54,27 @@ public class DashboardService {
             stats.put("totalHours", totalHours);
 
             stats.put("completedDemands", demandRepository.countFinishedDemandsByUniversityId(universityId));
+
+            // Gráfico para Universidade: aulas por período
+            stats.put("lessonsByPeriod", lessonRepository.countByUniversityAndPeriod(universityId));
         } else if (user instanceof SchoolDirector director) {
             var schoolId = director.getSchool().getId();
             stats.put("myDemandsCount", demandRepository.countBySchoolId(schoolId));
             stats.put("openVacanciesCount", demandRepository.countBySchoolIdAndStatus(schoolId, DemandStatus.WAITING));
             stats.put("ongoingClassesCount", demandRepository.countBySchoolIdAndStatus(schoolId, DemandStatus.ONGOING));
             stats.put("successfulDemandsCount", demandRepository.countBySchoolIdAndStatus(schoolId, DemandStatus.FINISHED));
+
+            // Gráfico para Diretor: barra por período e demanda
+            stats.put("lessonsByPeriodAndDemand", lessonRepository.countBySchoolAndPeriodAndDemand(schoolId));
         } else if (user instanceof Student student) {
             BigDecimal myHours = internshipFacade.getHoursByStudent(student.getId()).totalHours();
             stats.put("myHours", myHours);
             
             stats.put("applicationsCount", demandRepository.countByCandidateId(student.getId()));
             stats.put("interestAreas", student.getInterestAreas());
+
+            // Gráfico para Estudante: aulas realizadas no período
+            stats.put("lessonsByPeriod", lessonRepository.countByStudentAndPeriod(student.getId()));
             
             Optional<Demand> currentDemand = demandRepository.findFirstByStudentIdAndStatus(student.getId(), DemandStatus.ONGOING);
             currentDemand.ifPresent(demand -> stats.put("currentProject", Map.of(
