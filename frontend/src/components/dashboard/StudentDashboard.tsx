@@ -1,13 +1,27 @@
-import { Clock, Send, Star, BookOpen, Activity } from 'lucide-react';
+import { Clock, Send, Star, BookOpen, Activity, BarChart3 } from 'lucide-react';
 import { MetricCard } from '../ui/MetricCard';
 import { Card } from '../ui/Card';
 import { formatDemandStatus } from '../../utils/format';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer 
+} from 'recharts';
 
 interface Props {
   stats: any;
 }
 
 export function StudentDashboard({ stats }: Props) {
+  const chartData = stats.lessonsByPeriod?.map((item: any) => ({
+    period: item.PERIOD,
+    count: item.COUNT
+  })) || [];
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -45,7 +59,7 @@ export function StudentDashboard({ stats }: Props) {
                 <span className="text-xs font-medium px-2.5 py-0.5 rounded bg-blue-100 text-blue-800 uppercase">
                   {formatDemandStatus(stats.currentProject.status)}
                 </span>
-                <a href={`/demands/${stats.currentProject.id}`} className="text-brand-primary text-sm font-bold hover:underline">
+                <a href={`/demandas/${stats.currentProject.id}`} className="text-brand-primary text-sm font-bold hover:underline">
                   Ver detalhes
                 </a>
               </div>
@@ -73,6 +87,33 @@ export function StudentDashboard({ stats }: Props) {
           </div>
         </Card>
       </div>
+
+      <Card className="p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <BarChart3 className="text-brand-primary" size={20} />
+          <h3 className="text-lg font-bold text-text-heading">Aulas Realizadas por Período</h3>
+        </div>
+        
+        <div className="h-[250px] w-full">
+          {chartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="period" />
+                <YAxis />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                />
+                <Bar dataKey="count" fill="#f97316" radius={[4, 4, 0, 0]} name="Aulas" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-full flex items-center justify-center text-text-muted italic text-sm">
+              Histórico de aulas aparecerá aqui conforme você as realizar.
+            </div>
+          )}
+        </div>
+      </Card>
     </div>
   );
 }

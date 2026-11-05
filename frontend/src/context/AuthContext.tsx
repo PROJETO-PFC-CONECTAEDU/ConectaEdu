@@ -5,6 +5,8 @@ interface User {
   name: string;
   email: string;
   role: string;
+  universityId?: string;
+  schoolId?: string;
 }
 
 interface AuthContextData {

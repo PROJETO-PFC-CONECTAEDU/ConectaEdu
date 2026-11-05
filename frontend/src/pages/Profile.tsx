@@ -60,7 +60,8 @@ export function Profile() {
       toast.success('Consentimento revogado com sucesso!');
       fetchConsents();
       setIsModalOpen(false);
-      
+      localStorage.removeItem('@ConectaEdu:token');
+      localStorage.removeItem('@ConectaEdu:user');
       // Força a recarga para que o ConsentGuard verifique o novo status e bloqueie o acesso se necessário
       setTimeout(() => {
         window.location.reload();

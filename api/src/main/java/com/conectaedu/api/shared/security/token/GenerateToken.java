@@ -34,6 +34,8 @@ public class GenerateToken {
                 builder.withClaim("universityId", student.getUniversity().getId().toString());
             } else if (user instanceof UniversityAdmin admin && admin.getUniversity() != null) {
                 builder.withClaim("universityId", admin.getUniversity().getId().toString());
+            } else if (user instanceof com.conectaedu.api.modules.user.school_director.domain.SchoolDirector director && director.getSchool() != null) {
+                builder.withClaim("schoolId", director.getSchool().getId().toString());
             }
 
             return builder.sign(algorithm);

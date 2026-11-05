@@ -58,6 +58,11 @@ public class LessonFacadeImpl implements ILessonFacade {
     }
 
     @Override
+    public List<LessonResponseDTO> getLessonsBySchool(UUID schoolId) {
+        return lessonListByService.listBySchool(schoolId);
+    }
+
+    @Override
     public LessonHoursResponseDTO getValidatedHoursByStudent(UUID studentId) {
         return lessonListByService.totalValidatedHours(studentId);
     }

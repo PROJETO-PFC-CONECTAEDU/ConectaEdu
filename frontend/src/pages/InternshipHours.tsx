@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Clock, Calendar, CheckCircle, TrendingUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
+import { Header } from '../components/layout/Header';
 import { Card } from '../components/ui/Card';
 import { MetricCard } from '../components/ui/MetricCard';
 import { ProgressRing } from '../components/ui/ProgressRing';
@@ -62,6 +63,7 @@ export function InternshipHours() {
     const statusMap: Record<string, { className: string }> = {
       'SCHEDULED': { className: 'bg-blue-100 text-blue-700' },
       'CONFIRMED': { className: 'bg-green-100 text-green-700' },
+      'COMPLETED': { className: 'bg-purple-100 text-purple-700' },
       'REGISTERED': { className: 'bg-purple-100 text-purple-700' },
       'SIGNED': { className: 'bg-emerald-100 text-emerald-800' },
       'VALIDATED': { className: 'bg-emerald-100 text-emerald-700' },
@@ -94,11 +96,13 @@ export function InternshipHours() {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-text-heading font-display">Horas de Estágio</h1>
-        <p className="text-text-body">Acompanhe seu progresso e histórico de atividades.</p>
-      </div>
+    <div className="flex-1">
+      <Header 
+        title="Horas de Estágio" 
+        subtitle="Acompanhe seu progresso e histórico de atividades."
+      />
+
+      <div className="p-8 max-w-7xl mx-auto space-y-8">
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="lg:col-span-1 flex flex-col items-center justify-center p-8 gap-4">
@@ -188,6 +192,7 @@ export function InternshipHours() {
           </table>
         </div>
       </Card>
+      </div>
     </div>
   );
 }

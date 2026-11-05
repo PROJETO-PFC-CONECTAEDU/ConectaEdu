@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import api from '../lib/api';
@@ -21,8 +21,7 @@ import {
   AlertCircle,
   Trash2,
   Info,
-  MapPin,
-  Plus
+  MapPin
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
@@ -31,6 +30,8 @@ import * as z from 'zod';
 import { SchoolMap } from '../components/map/SchoolMap';
 import { Modal } from '../components/ui/Modal';
 import { Input } from '../components/ui/Input';
+import { MonthCalendar } from '../components/calendar/MonthCalendar';
+import { isSameDay, startOfDay, format } from 'date-fns';
 import { formatDemandStatus, formatLessonStatus } from '../utils/format';
 import type { Lesson } from './Schedule';
 
@@ -92,6 +93,12 @@ export function DemandDetail() {
   const isStudent = user?.role === 'STUDENT';
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
+  const [startTime, setStartTime] = useState('08:00');
+  const [endTime, setEndTime] = useState('13:00');
+  const [pupilAmount, setPupilAmount] = useState(3);
+  const pupilAmountError = (pupilAmount < 3 || pupilAmount > 10) ? 'Mínimo 3 e máximo 10 alunos' : undefined;
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<SchedulingFormData>({
     resolver: zodResolver(schedulingSchema),
@@ -107,6 +114,12 @@ export function DemandDetail() {
       return response.data;
     },
   });
+
+  useEffect(() => {
+    if (demand?.pupilAmount) {
+      setPupilAmount(demand.pupilAmount);
+    }
+  }, [demand?.pupilAmount]);
 
   const { data: lessons } = useQuery<Lesson[]>({
     queryKey: ['demand-lessons', id, demand?.studentId],
@@ -133,10 +146,62 @@ export function DemandDetail() {
       reset();
     },
     onError: (err: unknown) => {
-      const message = axios.isAxiosError(err) ? (err.response?.data?.message || 'Erro ao agendar aula.') : 'Erro ao agendar aula.';
+      const message = axios.isAxiosError(err) 
+        ? (err.response?.data?.detail || err.response?.data?.message || 'Erro ao agendar aula.') 
+        : 'Erro ao agendar aula.';
       toast.error(message);
     }
   });
+
+  const scheduleMultipleMutation = useMutation({
+    mutationFn: async () => {
+      if (selectedDates.length === 0) throw new Error('Selecione ao menos um dia');
+      if (pupilAmount < 3 || pupilAmount > 10) throw new Error('A quantidade de alunos deve estar entre 3 e 10');
+      
+      const promises = selectedDates.map(date => {
+        const start = new Date(date);
+        const [startH, startM] = startTime.split(':').map(Number);
+        start.setHours(startH, startM, 0, 0);
+
+        const end = new Date(date);
+        const [endH, endM] = endTime.split(':').map(Number);
+        end.setHours(endH, endM, 0, 0);
+
+        return api.post('/lessons', {
+          demandId: id,
+          scheduledStart: format(start, "yyyy-MM-dd'T'HH:mm:ss"),
+          scheduledEnd: format(end, "yyyy-MM-dd'T'HH:mm:ss"),
+          enrolledCount: pupilAmount,
+          origin: 'NEW'
+        });
+      });
+
+      await Promise.all(promises);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demand-lessons', id] });
+      toast.success(`${selectedDates.length} aula(s) agendada(s) com sucesso!`);
+      setSelectedDates([]);
+    },
+    onError: (err: any) => {
+      const message = axios.isAxiosError(err)
+        ? (err.response?.data?.detail || err.response?.data?.message || err.message || 'Erro ao agendar aulas.')
+        : (err.message || 'Erro ao agendar aulas.');
+      toast.error(message);
+    }
+  });
+
+  const toggleDate = (date: Date | null) => {
+    if (!date) return;
+    const dateOnly = startOfDay(date);
+    setSelectedDates(prev => {
+      const exists = prev.find(d => isSameDay(d, dateOnly));
+      if (exists) {
+        return prev.filter(d => !isSameDay(d, dateOnly));
+      }
+      return [...prev, dateOnly];
+    });
+  };
 
   const signMutation = useMutation({
     mutationFn: async (lessonId: string) => {
@@ -147,7 +212,9 @@ export function DemandDetail() {
       toast.success('Aula assinada com sucesso!');
     },
     onError: (err: unknown) => {
-      const message = axios.isAxiosError(err) ? (err.response?.data?.message || 'Erro ao assinar aula.') : 'Erro ao assinar aula.';
+      const message = axios.isAxiosError(err) 
+        ? (err.response?.data?.detail || err.response?.data?.message || 'Erro ao assinar aula.') 
+        : 'Erro ao assinar aula.';
       toast.error(message);
     }
   });
@@ -524,19 +591,70 @@ export function DemandDetail() {
                         : 'Responsável pela execução desta demanda'}
                     </p>
                   </div>
-                  <div className="ml-auto flex items-center gap-2">
-                    {isDirector && !demand.isArchived && (
-                      <Button 
-                        size="sm" 
-                        onClick={() => setIsScheduleModalOpen(true)}
-                        className="flex items-center gap-2"
-                      >
-                        <Plus size={16} /> Agendar Aula
-                      </Button>
-                    )}
-                    <CheckCircle2 size={32} className="text-emerald-500" />
-                  </div>
                 </div>
+
+                {/* Agenda da Demanda para Diretor */}
+                {isDirector && demand.studentId && (
+                  <div className="mt-8 space-y-6">
+                    <h3 className="text-lg font-bold text-text-heading flex items-center gap-2">
+                      <Calendar size={20} className="text-brand-primary" />
+                      Definir Agenda de Reforço
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <Card className="p-6">
+                        <MonthCalendar 
+                          currentDate={currentCalendarDate}
+                          onDateChange={setCurrentCalendarDate}
+                          eventDates={selectedDates}
+                          onSelectDate={toggleDate}
+                        />
+                        <div className="mt-4 flex flex-wrap gap-1">
+                          {selectedDates.sort((a,b) => a.getTime() - b.getTime()).map(date => (
+                            <span key={date.toISOString()} className="px-2 py-1 bg-brand-primary/10 text-brand-primary rounded text-[10px] font-bold">
+                              {date.toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})}
+                            </span>
+                          ))}
+                        </div>
+                      </Card>
+                      <Card className="p-6 space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <Input 
+                            label="Horário Início"
+                            type="time"
+                            value={startTime}
+                            onChange={e => setStartTime(e.target.value)}
+                          />
+                          <Input 
+                            label="Horário Término"
+                            type="time"
+                            value={endTime}
+                            onChange={e => setEndTime(e.target.value)}
+                          />
+                        </div>
+                          <Input
+                            label="Quantidade de Alunos"
+                            type="number"
+                            min={3}
+                            max={10}
+                            value={pupilAmount}
+                            onChange={e => setPupilAmount(Number(e.target.value))}
+                            error={pupilAmountError}
+                          />
+                        <p className="text-xs text-text-muted italic">
+                          O horário selecionado será aplicado a todos os dias marcados no calendário.
+                        </p>
+                        <Button 
+                          className="w-full mt-4"
+                          disabled={selectedDates.length === 0 || !!pupilAmountError || scheduleMultipleMutation.isPending}
+                          onClick={() => scheduleMultipleMutation.mutate()}
+                          isLoading={scheduleMultipleMutation.isPending}
+                        >
+                          Gerar {selectedDates.length} Aula(s) na Agenda
+                        </Button>
+                      </Card>
+                    </div>
+                  </div>
+                )}
 
                 {/* Listagem de Aulas da Demanda */}
                 {lessons && lessons.length > 0 && (
@@ -552,7 +670,7 @@ export function DemandDetail() {
                             <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
                               lesson.status === 'SCHEDULED' ? 'bg-blue-100 text-blue-700' :
                               lesson.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
-                              lesson.status === 'REGISTERED' ? 'bg-purple-100 text-purple-700' :
+                              (lesson.status === 'REGISTERED' || lesson.status === 'COMPLETED') ? 'bg-purple-100 text-purple-700' :
                               'bg-emerald-100 text-emerald-700'
                             }`}>
                               {formatLessonStatus(lesson.status)}
@@ -568,7 +686,7 @@ export function DemandDetail() {
                           </div>
                           <p className="text-xs text-text-muted mb-3">{lesson.enrolledCount} alunos previstos</p>
                           
-                          {isDirector && lesson.status === 'REGISTERED' && (
+                          {isDirector && (lesson.status === 'REGISTERED' || lesson.status === 'COMPLETED') && (
                             <Button 
                               size="sm" 
                               className="w-full text-xs h-8"

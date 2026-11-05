@@ -1,6 +1,6 @@
 import { clsx } from 'clsx';
 
-export type SessionStatus = 'SCHEDULED' | 'CONFIRMED' | 'PENDING' | 'RESCHEDULED' | 'CANCELED' | 'REGISTERED' | 'SIGNED' | 'VALIDATED';
+export type SessionStatus = 'SCHEDULED' | 'CONFIRMED' | 'PENDING' | 'RESCHEDULED' | 'CANCELED' | 'COMPLETED' | 'REGISTERED' | 'SIGNED' | 'VALIDATED';
 
 interface StatusBadgeProps {
   status: SessionStatus;
@@ -14,6 +14,7 @@ export function StatusBadge({ status, variant = 'pill' }: StatusBadgeProps) {
     PENDING: { label: 'Pendente', bg: 'bg-status-pending-bg', fg: 'text-status-pending-fg' },
     RESCHEDULED: { label: 'Reagendada', bg: 'bg-status-rescheduled-bg', fg: 'text-status-rescheduled-fg' },
     CANCELED: { label: 'Cancelada', bg: 'bg-status-cancelled-bg', fg: 'text-status-cancelled-fg' },
+    COMPLETED: { label: 'Registrada', bg: 'bg-purple-100', fg: 'text-purple-800' },
     REGISTERED: { label: 'Registrada', bg: 'bg-purple-100', fg: 'text-purple-800' },
     SIGNED: { label: 'Assinada', bg: 'bg-emerald-100', fg: 'text-emerald-800' },
     VALIDATED: { label: 'Validada', bg: 'bg-emerald-100', fg: 'text-emerald-700' },

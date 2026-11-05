@@ -70,4 +70,11 @@ public class LessonController {
             @RequestParam(required = false) LessonStatus status) {
         return ResponseEntity.ok(lessonFacade.getLessonsByStudent(studentId, from, to, status));
     }
+
+    @GetMapping("/school/{schoolId}")
+    @PreAuthorize("hasAnyRole('SCHOOL_DIRECTOR', 'PLATFORM_ADMIN')")
+    public ResponseEntity<List<LessonResponseDTO>> getBySchool(
+            @PathVariable UUID schoolId) {
+        return ResponseEntity.ok(lessonFacade.getLessonsBySchool(schoolId));
+    }
 }

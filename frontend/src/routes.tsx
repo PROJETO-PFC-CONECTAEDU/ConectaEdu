@@ -47,12 +47,17 @@ export const router = createBrowserRouter([
         element: <MapPage />,
       },
       {
-        element: <RoleProtectedRoute allowedRoles={['PLATFORM_ADMIN']} />,
+        element: <RoleProtectedRoute allowedRoles={['PLATFORM_ADMIN', 'UNIVERSITY_ADMIN']} />,
         children: [
           {
             path: '/estudantes',
             element: <Students />,
           },
+        ]
+      },
+      {
+        element: <RoleProtectedRoute allowedRoles={['PLATFORM_ADMIN']} />,
+        children: [
           {
             path: '/oportunidades',
             element: <Schools />,

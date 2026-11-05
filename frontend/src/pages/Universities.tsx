@@ -10,8 +10,9 @@ import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { Building2, Users, MapPin, ShieldCheck, Trash2, Plus, XCircle } from 'lucide-react';
+import { Building2, Users, MapPin, ShieldCheck, Trash2, Plus, XCircle, Edit2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { AddressAutocomplete } from '../components/map/AddressAutocomplete';
 
 interface University {
   id: string;
@@ -34,9 +35,10 @@ type UniversityFormData = z.infer<typeof universitySchema>;
 export function Universities() {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingUni, setEditingUni] = useState<University | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<UniversityFormData>({
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<UniversityFormData>({
     resolver: zodResolver(universitySchema)
   });
   const { data: universities, isLoading, error } = useQuery<University[]>({
@@ -73,8 +75,44 @@ export function Universities() {
     }
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async (data: UniversityFormData) => {
+      if (!editingUni) return;
+      await api.put(`/universities/${editingUni.id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['universities'] });
+      toast.success('Universidade atualizada com sucesso!');
+      setIsModalOpen(false);
+      setEditingUni(null);
+      reset();
+    },
+    onError: () => {
+      toast.error('Erro ao atualizar universidade.');
+    }
+  });
+
   const onSubmit = (data: UniversityFormData) => {
-    createMutation.mutate(data);
+    if (editingUni) {
+      updateMutation.mutate(data);
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
+  const handleEdit = (uni: University) => {
+    setEditingUni(uni);
+    setValue('name', uni.name);
+    setValue('cnpj', uni.cnpj);
+    setValue('coordinator', uni.coordinator || '');
+    setValue('address', uni.address || '');
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingUni(null);
+    reset();
   };
 
   const validateMutation = useMutation({
@@ -106,8 +144,8 @@ export function Universities() {
 
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Nova Universidade"
+        onClose={handleCloseModal}
+        title={editingUni ? "Editar Universidade" : "Nova Universidade"}
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Input
@@ -128,11 +166,14 @@ export function Universities() {
             error={errors.coordinator?.message}
             {...register('coordinator')}
           />
-          <Input
-            label="Endereço"
-            placeholder="Endereço completo"
+          <AddressAutocomplete
+            key={editingUni?.id || 'new'}
+            onAddressSelect={(address) => {
+              setValue('address', address, { shouldValidate: true });
+            }}
             error={errors.address?.message}
-            {...register('address')}
+            placeholder="Endereço da universidade..."
+            defaultValue={editingUni?.address}
           />
           
           <div className="flex gap-3 pt-2">
@@ -140,16 +181,19 @@ export function Universities() {
               type="button" 
               variant="outline" 
               className="flex-1"
-              onClick={() => setIsModalOpen(false)}
+              onClick={handleCloseModal}
             >
               Cancelar
             </Button>
             <Button 
               type="submit" 
               className="flex-1"
-              disabled={createMutation.isPending}
+              disabled={createMutation.isPending || updateMutation.isPending}
             >
-              {createMutation.isPending ? 'Criando...' : 'Criar Universidade'}
+              {editingUni 
+                ? (updateMutation.isPending ? 'Salvando...' : 'Salvar Alterações')
+                : (createMutation.isPending ? 'Criando...' : 'Criar Universidade')
+              }
             </Button>
           </div>
         </form>
@@ -184,12 +228,22 @@ export function Universities() {
                       <p className="text-xs text-text-muted">CNPJ: {uni.cnpj}</p>
                     </div>
                   </div>
-                  <button 
-                    onClick={() => setDeletingId(uni.id)}
-                    className="text-text-muted hover:text-red-500 p-1"
-                  >
-                    <Trash2 size={18} />
-                  </button>
+                  <div className="flex gap-1">
+                    <button 
+                      onClick={() => handleEdit(uni)}
+                      className="text-text-muted hover:text-brand-primary p-1"
+                      title="Editar"
+                    >
+                      <Edit2 size={18} />
+                    </button>
+                    <button 
+                      onClick={() => setDeletingId(uni.id)}
+                      className="text-text-muted hover:text-red-500 p-1"
+                      title="Remover"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-3 pt-4 border-t border-border-default">

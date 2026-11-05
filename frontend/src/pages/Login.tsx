@@ -43,7 +43,9 @@ export function Login() {
           id: data.id,
           name: data.name,
           email: data.email,
-          role: data.role
+          role: data.role,
+          universityId: data.universityId,
+          schoolId: data.schoolId
         }
       });
       toast.success('Bem-vindo ao ConectaEdu!');
@@ -63,16 +65,17 @@ export function Login() {
       {/* Painel de Marca */}
       <div className="hidden w-1/2 flex-col justify-between bg-brand-dark p-12 text-white lg:flex">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-brand-primary" />
-          <span className="text-2xl font-bold font-display tracking-tight">ConectaEdu</span>
+          <h1 className="text-[20px] text-white font-display font-bold tracking-tight">
+            Conecta<span className="text-brand-accent">Edu</span>
+          </h1>
         </div>
 
         <div className="space-y-6">
-          <h1 className="text-5xl font-bold leading-tight font-display">
+          <h1 className="text-5xl font-bold text-white leading-tight font-display">
             Sua jornada pedagógica começa <span className="text-brand-primary">aqui</span>
           </h1>
           <p className="text-xl text-text-muted max-w-md">
-            Conectando estudantes de Pedagogia às melhores oportunidades em escolas parceiras.
+            Conectando estudantes de Pedagogia às melhores oportunidades em escolas.
           </p>
         </div>
       </div>

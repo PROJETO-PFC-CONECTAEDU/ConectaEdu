@@ -14,6 +14,7 @@ import { MapPin, Users, School as SchoolIcon, Trash2, Plus, ShieldCheck, XCircle
 import { toast } from 'react-hot-toast';
 import { AddressAutocomplete } from '../components/map/AddressAutocomplete';
 import { useAuth } from '../context/AuthContext';
+import { Edit2 } from 'lucide-react';
 
 interface School {
   id: string;
@@ -41,6 +42,7 @@ export function Schools() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingSchool, setEditingSchool] = useState<School | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<SchoolFormData>({
@@ -80,8 +82,46 @@ export function Schools() {
     }
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async (data: SchoolFormData) => {
+      if (!editingSchool) return;
+      await api.put(`/schools/${editingSchool.id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schools'] });
+      toast.success('Escola atualizada com sucesso!');
+      setIsModalOpen(false);
+      setEditingSchool(null);
+      reset();
+    },
+    onError: () => {
+      toast.error('Erro ao atualizar escola.');
+    }
+  });
+
   const onSubmit = (data: SchoolFormData) => {
-    createMutation.mutate(data);
+    if (editingSchool) {
+      updateMutation.mutate(data);
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
+  const handleEdit = (school: School) => {
+    setEditingSchool(school);
+    setValue('name', school.name);
+    setValue('cie', school.cie);
+    setValue('director', school.director || '');
+    setValue('address', school.address || '');
+    setValue('latitude', school.latitude);
+    setValue('longitude', school.longitude);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingSchool(null);
+    reset();
   };
 
   useState(() => {
@@ -120,8 +160,8 @@ export function Schools() {
 
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Nova Escola"
+        onClose={handleCloseModal}
+        title={editingSchool ? "Editar Escola" : "Nova Escola"}
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Input
@@ -143,12 +183,14 @@ export function Schools() {
             {...register('director')}
           />
           <AddressAutocomplete
+            key={editingSchool?.id || 'new'}
             onAddressSelect={(address, lat, lng) => {
               setValue('address', address, { shouldValidate: true });
               if (lat) setValue('latitude', lat);
               if (lng) setValue('longitude', lng);
             }}
             error={errors.address?.message}
+            defaultValue={editingSchool?.address}
           />
           
           <div className="flex gap-3 pt-2">
@@ -156,16 +198,19 @@ export function Schools() {
               type="button" 
               variant="outline" 
               className="flex-1"
-              onClick={() => setIsModalOpen(false)}
+              onClick={handleCloseModal}
             >
               Cancelar
             </Button>
             <Button 
               type="submit" 
               className="flex-1"
-              disabled={createMutation.isPending}
+              disabled={createMutation.isPending || updateMutation.isPending}
             >
-              {createMutation.isPending ? 'Criando...' : 'Criar Escola'}
+              {editingSchool 
+                ? (updateMutation.isPending ? 'Salvando...' : 'Salvar Alterações')
+                : (createMutation.isPending ? 'Criando...' : 'Criar Escola')
+              }
             </Button>
           </div>
         </form>
@@ -201,12 +246,22 @@ export function Schools() {
                     </div>
                   </div>
                   {isAdmin && (
-                    <button 
-                      onClick={() => setDeletingId(school.id)}
-                      className="text-text-muted hover:text-red-500 p-1"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    <div className="flex gap-1">
+                      <button 
+                        onClick={() => handleEdit(school)}
+                        className="text-text-muted hover:text-brand-primary p-1"
+                        title="Editar"
+                      >
+                        <Edit2 size={18} />
+                      </button>
+                      <button 
+                        onClick={() => setDeletingId(school.id)}
+                        className="text-text-muted hover:text-red-500 p-1"
+                        title="Remover"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   )}
                 </div>
 

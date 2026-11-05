@@ -3,12 +3,11 @@ import { useState, useMemo } from 'react';
 import axios from 'axios';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
-// import { Header } from '../components/layout/Header'; // Usando header customizado conforme spec
+import { Header } from '../components/layout/Header';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { Calendar as CalendarIcon, Search, Bell } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,12 +26,15 @@ export interface Lesson {
   subject: string;
   scheduledStart: string;
   scheduledEnd: string;
-  status: 'SCHEDULED' | 'CONFIRMED' | 'CANCELED' | 'REGISTERED' | 'SIGNED' | 'VALIDATED';
+  status: 'SCHEDULED' | 'CONFIRMED' | 'CANCELED' | 'COMPLETED' | 'REGISTERED' | 'SIGNED' | 'VALIDATED';
   enrolledCount: number;
   presentCount?: number;
   confirmedAt?: string;
   registeredAt?: string;
   signedAt?: string;
+  contentTaught?: string;
+  nineBoxPerformance?: number;
+  nineBoxPotential?: number;
 }
 
 const registrationSchema = z.object({
@@ -56,18 +58,21 @@ export function Schedule() {
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
   const [currentDate, setCurrentDate] = useState(new Date(2026, 9, 22));
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
   const [registeringLesson, setRegisteringLesson] = useState<Lesson | null>(null);
+  const [viewingLesson, setViewingLesson] = useState<Lesson | null>(null);
   const [cancellingLesson, setCancellingLesson] = useState<Lesson | null>(null);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   const isStudent = user?.role === 'STUDENT';
 
   const { data: lessons, isLoading } = useQuery<Lesson[]>({
-    queryKey: ['lessons', user?.id],
+    queryKey: ['lessons', user?.id, user?.role],
     queryFn: async () => {
-      const response = await api.get(`/lessons/student/${user?.id}`);
+      const endpoint = user?.role === 'SCHOOL_DIRECTOR' 
+        ? `/lessons/school/${user?.schoolId}` 
+        : `/lessons/student/${user?.id}`;
+      const response = await api.get(endpoint);
       return response.data;
     },
     enabled: !!user?.id,
@@ -145,13 +150,10 @@ export function Schedule() {
     return lessons.filter(lesson => {
       const lessonDate = parseISO(lesson.scheduledStart);
       const matchesStatus = filterStatus === 'ALL' || lesson.status === filterStatus;
-      const matchesSearch = !searchQuery || 
-        lesson.schoolName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        lesson.subject.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesDate = !selectedDay || isSameDay(lessonDate, selectedDay);
-      return matchesStatus && matchesSearch && matchesDate;
+      return matchesStatus && matchesDate;
     }).sort((a, b) => new Date(a.scheduledStart).getTime() - new Date(b.scheduledStart).getTime());
-  }, [lessons, filterStatus, searchQuery, selectedDay]);
+  }, [lessons, filterStatus, selectedDay]);
 
   const tabs = [
     { id: 'ALL', label: 'Todas' },
@@ -161,59 +163,11 @@ export function Schedule() {
   ];
 
   return (
-    <div className="flex-1 bg-page-bg min-h-screen pb-20 md:pb-0">
-      {/* Desktop Header */}
-      <div className="hidden md:block">
-        <header className="h-[81px] bg-surface border-b border-border-default px-10 flex items-center justify-between">
-          <div>
-            <h1 className="text-text-heading font-display font-bold text-[20px]">Minha Agenda</h1>
-            <p className="text-text-body font-sans text-[12px]">Organize e visualize seus atendimentos e compromissos pedagógicos.</p>
-          </div>
-          <div className="flex items-center gap-5">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-body" size={14} />
-              <input 
-                type="text"
-                placeholder="Buscar escolas, matérias..."
-                className="w-[280px] h-8 bg-page-bg rounded-pill pl-9 pr-4 text-[12px] font-sans focus:outline-none border border-transparent focus:border-brand-primary"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <button className="text-text-heading p-1 hover:bg-slate-100 rounded-full">
-              <Bell size={20} />
-            </button>
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary font-bold">
-                {user?.name?.charAt(0)}
-              </div>
-              <span className="text-text-heading font-sans font-semibold text-[14px]">
-                {user?.name ? (
-                  <>
-                    {user.name.split(' ')[0]} {user.name.split(' ').length > 1 ? user.name.split(' ')[1].charAt(0) + '.' : ''}
-                  </>
-                ) : 'Usuário'}
-              </span>
-            </div>
-          </div>
-        </header>
-      </div>
-
-      {/* Mobile Header */}
-      <div className="md:hidden bg-surface border-b border-border-default p-[16px_20px]">
-        <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-brand-primary rounded-[6px] flex items-center justify-center">
-              <CalendarIcon size={16} className="text-white" />
-            </div>
-            <h1 className="text-text-heading font-display font-bold text-[20px]">Minha Agenda</h1>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary text-xs font-bold">
-            {user?.name?.charAt(0)}
-          </div>
-        </div>
-        <p className="text-text-body font-sans text-[12px]">Controle seus compromissos e horários</p>
-      </div>
+    <div className="flex-1">
+      <Header 
+        title="Minha Agenda" 
+        subtitle="Organize e visualize seus atendimentos e compromissos pedagógicos."
+      />
 
       <div className="p-4 md:p-10">
         <div className="flex flex-col md:flex-row gap-8 md:gap-[32px] items-start">
@@ -266,10 +220,18 @@ export function Schedule() {
                         <SessionRow 
                           session={lesson as any} 
                           onClick={() => {
-                            if (lesson.status === 'SCHEDULED' && isStudent) {
-                                setConfirmingId(lesson.id);
-                            } else if (lesson.status === 'CONFIRMED' && isStudent) {
-                                setRegisteringLesson(lesson);
+                            if (isStudent) {
+                                if (lesson.status === 'SCHEDULED') {
+                                    setConfirmingId(lesson.id);
+                                } else if (lesson.status === 'CONFIRMED') {
+                                    setRegisteringLesson(lesson);
+                                } else if (['COMPLETED', 'SIGNED', 'VALIDATED'].includes(lesson.status)) {
+                                    setViewingLesson(lesson);
+                                }
+                            } else if (user?.role === 'SCHOOL_DIRECTOR') {
+                                if (['COMPLETED', 'SIGNED', 'VALIDATED'].includes(lesson.status)) {
+                                    setViewingLesson(lesson);
+                                }
                             }
                           }}
                         />
@@ -375,6 +337,60 @@ export function Schedule() {
             <Button type="submit" variant="primary" className="bg-red-600 hover:bg-red-700" isLoading={cancelMutation.isPending}>Confirmar Cancelamento</Button>
           </div>
         </form>
+      </Modal>
+
+      <Modal
+        isOpen={!!viewingLesson}
+        onClose={() => setViewingLesson(null)}
+        title="Detalhes da Aula"
+      >
+        {viewingLesson && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-slate-50 p-4 rounded-lg border border-border-default">
+                <p className="text-xs text-text-muted mb-1 font-medium uppercase tracking-wider">Status</p>
+                <p className="text-sm font-bold text-text-heading">{viewingLesson.status}</p>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-lg border border-border-default">
+                <p className="text-xs text-text-muted mb-1 font-medium uppercase tracking-wider">Presença</p>
+                <p className="text-sm font-bold text-text-heading">{viewingLesson.presentCount} de {viewingLesson.enrolledCount} alunos</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 p-4 rounded-lg border border-border-default">
+              <p className="text-xs text-text-muted mb-2 font-medium uppercase tracking-wider">Conteúdo Lecionado</p>
+              <p className="text-sm text-text-body leading-relaxed whitespace-pre-wrap italic">
+                "{viewingLesson.contentTaught || 'Não informado'}"
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-xs text-text-muted font-medium uppercase tracking-wider px-1">Avaliação NineBox</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-brand-primary/5 p-4 rounded-lg border border-brand-primary/10">
+                  <p className="text-[10px] text-brand-primary font-bold uppercase mb-1">Desempenho</p>
+                  <p className="text-sm font-semibold text-text-heading">
+                    {viewingLesson.nineBoxPerformance === 1 ? 'Abaixo do esperado' : 
+                     viewingLesson.nineBoxPerformance === 2 ? 'Atende ao esperado' : 
+                     viewingLesson.nineBoxPerformance === 3 ? 'Acima do esperado' : 'Não informado'}
+                  </p>
+                </div>
+                <div className="bg-brand-primary/5 p-4 rounded-lg border border-brand-primary/10">
+                  <p className="text-[10px] text-brand-primary font-bold uppercase mb-1">Potencial</p>
+                  <p className="text-sm font-semibold text-text-heading">
+                    {viewingLesson.nineBoxPotential === 1 ? 'Baixo' : 
+                     viewingLesson.nineBoxPotential === 2 ? 'Médio' : 
+                     viewingLesson.nineBoxPotential === 3 ? 'Alto' : 'Não informado'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <Button onClick={() => setViewingLesson(null)}>Fechar</Button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       <ConfirmModal

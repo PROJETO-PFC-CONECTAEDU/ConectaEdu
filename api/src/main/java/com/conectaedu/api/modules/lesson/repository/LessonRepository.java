@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface LessonRepository extends JpaRepository<Lesson, UUID> {
@@ -30,6 +31,37 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
             UUID studentId, LessonStatus status, LocalDateTime from, LocalDateTime to);
 
     List<Lesson> findByStudent_IdAndStatus(UUID studentId, LessonStatus status);
+
+    List<Lesson> findBySchool_IdOrderByScheduledStartAsc(UUID schoolId);
+
+    @Query(value = """
+            SELECT FORMATDATETIME(l.scheduled_start, 'MM/yyyy') as period, COUNT(l.id) as count
+            FROM lesson l
+            INNER JOIN student s ON l.student_id = s.id
+            WHERE s.university_id = :universityId AND l.status = 'VALIDATED'
+            GROUP BY period
+            ORDER BY period DESC
+            """, nativeQuery = true)
+    List<Map<String, Object>> countByUniversityAndPeriod(@Param("universityId") UUID universityId);
+
+    @Query(value = """
+            SELECT FORMATDATETIME(l.scheduled_start, 'MM/yyyy') as period, d.title as demand, COUNT(l.id) as count
+            FROM lesson l
+            INNER JOIN demand d ON l.demand_id = d.id
+            WHERE l.school_id = :schoolId AND l.status = 'VALIDATED'
+            GROUP BY period, demand
+            ORDER BY period DESC
+            """, nativeQuery = true)
+    List<Map<String, Object>> countBySchoolAndPeriodAndDemand(@Param("schoolId") UUID schoolId);
+
+    @Query(value = """
+            SELECT FORMATDATETIME(l.scheduled_start, 'MM/yyyy') as period, COUNT(l.id) as count
+            FROM lesson l
+            WHERE l.student_id = :studentId AND l.status = 'VALIDATED'
+            GROUP BY period
+            ORDER BY period DESC
+            """, nativeQuery = true)
+    List<Map<String, Object>> countByStudentAndPeriod(@Param("studentId") UUID studentId);
 
     //O prazo de confirmação é o menor entre 3 dias do agendamento e 24h antes da aula.
     //Venceu se passou de um dos dois, e é esse OR que a consulta derivada não escreve.
