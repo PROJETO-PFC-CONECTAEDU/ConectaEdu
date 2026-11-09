@@ -92,6 +92,7 @@ export function DemandDetail() {
   const isDirector = user?.role === 'SCHOOL_DIRECTOR';
   const isStudent = user?.role === 'STUDENT';
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
@@ -122,13 +123,12 @@ export function DemandDetail() {
   }, [demand?.pupilAmount]);
 
   const { data: lessons } = useQuery<Lesson[]>({
-    queryKey: ['demand-lessons', id, demand?.studentId],
+    queryKey: ['demand-lessons', id],
     queryFn: async () => {
-      if (!demand?.studentId) return [];
-      const response = await api.get(`/lessons/student/${demand.studentId}`);
-      return response.data.filter((l: Lesson) => l.demandId === id);
+      const response = await api.get(`/lessons/demand/${id}`);
+      return response.data;
     },
-    enabled: !!demand?.studentId,
+    enabled: !!id,
   });
 
   const scheduleMutation = useMutation({
@@ -233,6 +233,20 @@ export function DemandDetail() {
     }
   });
 
+  const publishMutation = useMutation({
+    mutationFn: async () => {
+      await api.post(`/demands/${id}/publish`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demand', id] });
+      toast.success('Demanda publicada com sucesso!');
+    },
+    onError: (err: unknown) => {
+      const message = axios.isAxiosError(err) ? (err.response?.data?.message || 'Erro ao publicar demanda.') : 'Erro ao publicar demanda.';
+      toast.error(message);
+    }
+  });
+
   const approveMutation = useMutation({
     mutationFn: async (studentId: string) => {
       await api.post(`/demands/${id}/approve/${studentId}`);
@@ -257,6 +271,23 @@ export function DemandDetail() {
     },
     onError: () => {
       toast.error('Erro ao remover demanda.');
+    }
+  });
+
+  const finishMutation = useMutation({
+    mutationFn: async () => {
+      await api.post(`/demands/${id}/finish`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demand', id] });
+      toast.success('Demanda encerrada com sucesso!');
+      setIsFinishModalOpen(false);
+    },
+    onError: (err: unknown) => {
+      const message = axios.isAxiosError(err) 
+        ? (err.response?.data?.message || 'Erro ao encerrar demanda.') 
+        : 'Erro ao encerrar demanda.';
+      toast.error(message);
     }
   });
   
@@ -459,6 +490,19 @@ export function DemandDetail() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 flex-wrap">
+                    {isDirector && demand.status === 'DRAFT' && !demand.isArchived && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="bg-brand-primary text-white gap-2"
+                        onClick={() => publishMutation.mutate()}
+                        disabled={publishMutation.isPending}
+                        isLoading={publishMutation.isPending}
+                      >
+                        <CheckCircle2 size={18} />
+                        Publicar Demanda
+                      </Button>
+                    )}
                     {isDirector && demand.status === 'WAITING' && !demand.isArchived && (
                       <button 
                         onClick={() => setIsDeleteModalOpen(true)}
@@ -467,6 +511,17 @@ export function DemandDetail() {
                       >
                         <Trash2 size={20} />
                       </button>
+                    )}
+                    {isDirector && demand.status === 'ONGOING' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 gap-2"
+                        onClick={() => setIsFinishModalOpen(true)}
+                      >
+                        <CheckCircle2 size={18} />
+                        Encerrar Demanda
+                      </Button>
                     )}
                     <div className="flex gap-2 flex-wrap">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(demand.status)}`}>
@@ -574,27 +629,35 @@ export function DemandDetail() {
               </Card>
             )}
 
-            {demand.studentName && (
+            {(demand.studentName || isDirector || (lessons && lessons.length > 0)) && (
               <Card className={`p-8 border-brand-primary/20 ${demand.studentId === user?.id ? 'bg-emerald-50 border-emerald-200' : 'bg-brand-primary/[0.02]'}`}>
-                <h3 className="text-lg font-bold text-text-heading mb-4">
-                  {demand.studentId === user?.id ? 'Seu Estágio' : 'Estudante Alocado'}
-                </h3>
-                <div className="flex items-center gap-4 p-4 bg-white rounded-xl border border-brand-primary/10">
-                  <div className="w-12 h-12 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary">
-                    <UserIcon size={24} />
-                  </div>
-                  <div>
-                    <p className="font-bold text-text-heading text-lg">{demand.studentName}</p>
-                    <p className="text-sm text-text-muted">
-                      {demand.studentId === user?.id 
-                        ? 'Você é o responsável pela execução desta demanda' 
-                        : 'Responsável pela execução desta demanda'}
-                    </p>
-                  </div>
-                </div>
+                {demand.studentName ? (
+                  <>
+                    <h3 className="text-lg font-bold text-text-heading mb-4">
+                      {demand.studentId === user?.id ? 'Seu Estágio' : 'Estudante Alocado'}
+                    </h3>
+                    <div className="flex items-center gap-4 p-4 bg-white rounded-xl border border-brand-primary/10">
+                      <div className="w-12 h-12 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary">
+                        <UserIcon size={24} />
+                      </div>
+                      <div>
+                        <p className="font-bold text-text-heading text-lg">{demand.studentName}</p>
+                        <p className="text-sm text-text-muted">
+                          {demand.studentId === user?.id 
+                            ? 'Você é o responsável pela execução desta demanda' 
+                            : 'Responsável pela execução desta demanda'}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <h3 className="text-lg font-bold text-text-heading mb-4">
+                    Agenda da Demanda
+                  </h3>
+                )}
 
                 {/* Agenda da Demanda para Diretor */}
-                {isDirector && demand.studentId && (
+                {isDirector && !demand.isArchived && (demand.status === 'DRAFT' || demand.status === 'WAITING' || demand.status === 'ONGOING') && (
                   <div className="mt-8 space-y-6">
                     <h3 className="text-lg font-bold text-text-heading flex items-center gap-2">
                       <Calendar size={20} className="text-brand-primary" />
@@ -840,6 +903,17 @@ export function DemandDetail() {
         title="Remover Demanda"
         description="Tem certeza que deseja remover esta demanda? Esta ação não pode ser desfeita e todos os candidatos serão notificados."
         isLoading={deleteMutation.isPending}
+      />
+
+      <ConfirmModal
+        isOpen={isFinishModalOpen}
+        onClose={() => setIsFinishModalOpen(false)}
+        onConfirm={() => finishMutation.mutate()}
+        title="Encerrar Demanda"
+        description="Tem certeza que deseja encerrar esta demanda? Isso marcará o projeto como concluído e não permitirá novos agendamentos."
+        isLoading={finishMutation.isPending}
+        confirmText="Sim, Encerrar"
+        variant="info"
       />
 
       <Modal

@@ -51,12 +51,14 @@ public class StudentEvaluationService {
             throw new AccessDeniedException("Apenas o diretor responsável pela Necessidade pode avaliá-la.");
         }
 
-        Student student = demand.getStudentHistory().stream()
-                .map(DemandStudent::getStudent)
-                .filter(s -> s.getId().equals(request.studentId()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "O estudante informado não atendeu esta Necessidade."));
+        Student student = (demand.getStudent() != null && demand.getStudent().getId().equals(request.studentId()))
+                ? demand.getStudent()
+                : demand.getStudentHistory().stream()
+                    .map(DemandStudent::getStudent)
+                    .filter(s -> s.getId().equals(request.studentId()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "O estudante informado não atendeu esta Necessidade."));
 
         //sem esta checagem, rafazer o envio viraria edição.
 

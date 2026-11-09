@@ -7,7 +7,9 @@ import com.conectaedu.api.shared.audit.support.AuditDiff;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.StudentStatus;
 import com.conectaedu.api.shared.exceptions.UserNotFoundException;
+import com.conectaedu.api.shared.security.context.SecurityContextHolder;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +28,11 @@ public class StudentValidationService {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado!"));
 
+        UUID universityId = SecurityContextHolder.getAuthenticatedUniversityId();
+        if (universityId != null && (student.getUniversity() == null || !student.getUniversity().getId().equals(universityId))) {
+            throw new AccessDeniedException("Você não tem permissão para validar este estudante.");
+        }
+
         StudentStatus beforeStatus = student.getStatus();
 
         student.setValidatedAt(LocalDateTime.now());
@@ -41,9 +48,33 @@ public class StudentValidationService {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado!"));
 
+        UUID universityId = SecurityContextHolder.getAuthenticatedUniversityId();
+        if (universityId != null && (student.getUniversity() == null || !student.getUniversity().getId().equals(universityId))) {
+            throw new AccessDeniedException("Você não tem permissão para rejeitar este estudante.");
+        }
+
         StudentStatus beforeStatus = student.getStatus();
 
         student.setStatus(StudentStatus.REJECTED);
+        studentRepository.save(student);
+
+        AuditDiff diff = AuditDiff.create().field("status", beforeStatus, student.getStatus());
+        auditService.logUpdate(AuditEntityType.STUDENT, student.getId(), student.getName(), diff);
+    }
+
+    @Transactional
+    public void inactivateStudent(UUID studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado!"));
+
+        UUID universityId = SecurityContextHolder.getAuthenticatedUniversityId();
+        if (universityId != null && (student.getUniversity() == null || !student.getUniversity().getId().equals(universityId))) {
+            throw new AccessDeniedException("Você não tem permissão para inativar este estudante.");
+        }
+
+        StudentStatus beforeStatus = student.getStatus();
+
+        student.setStatus(StudentStatus.INACTIVE);
         studentRepository.save(student);
 
         AuditDiff diff = AuditDiff.create().field("status", beforeStatus, student.getStatus());

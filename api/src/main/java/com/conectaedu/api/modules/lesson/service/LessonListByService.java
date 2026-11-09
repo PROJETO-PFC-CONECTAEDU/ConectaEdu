@@ -102,6 +102,12 @@ public class LessonListByService {
         return lessons.stream().map(lessonMapper::mapToResponseDTO).toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<LessonResponseDTO> listByDemand(UUID demandId) {
+        List<Lesson> lessons = lessonRepository.findByDemand_Id(demandId);
+        return lessons.stream().map(lessonMapper::mapToResponseDTO).toList();
+    }
+
     private void checkSchoolAccess(UUID schoolId) {
         UUID actorId = SecurityContextHolder.getAuthenticatedUserId();
 

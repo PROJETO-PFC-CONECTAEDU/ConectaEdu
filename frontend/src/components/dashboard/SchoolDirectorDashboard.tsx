@@ -19,16 +19,20 @@ interface Props {
 export function SchoolDirectorDashboard({ stats }: Props) {
   // Transformar dados para o gráfico se necessário
   const chartData = stats.lessonsByPeriodAndDemand?.reduce((acc: any[], item: any) => {
-    const existing = acc.find(d => d.period === item.PERIOD);
+    const period = item.PERIOD || item.period;
+    const demand = item.DEMAND || item.demand;
+    const count = item.COUNT || item.count;
+    
+    const existing = acc.find(d => d.period === period);
     if (existing) {
-      existing[item.DEMAND] = item.COUNT;
+      existing[demand] = count;
     } else {
-      acc.push({ period: item.PERIOD, [item.DEMAND]: item.COUNT });
+      acc.push({ period: period, [demand]: count });
     }
     return acc;
   }, []) || [];
 
-  const demands = Array.from(new Set(stats.lessonsByPeriodAndDemand?.map((item: any) => item.DEMAND))) as string[];
+  const demands = Array.from(new Set(stats.lessonsByPeriodAndDemand?.map((item: any) => item.DEMAND || item.demand))) as string[];
   const colors = ['#f97316', '#0ea5e9', '#10b981', '#f59e0b', '#6366f1'];
 
   return (
@@ -83,6 +87,7 @@ export function SchoolDirectorDashboard({ stats }: Props) {
                     dataKey={demand} 
                     fill={colors[index % colors.length]} 
                     radius={[4, 4, 0, 0]} 
+                    barSize={32}
                   />
                 ))}
               </BarChart>

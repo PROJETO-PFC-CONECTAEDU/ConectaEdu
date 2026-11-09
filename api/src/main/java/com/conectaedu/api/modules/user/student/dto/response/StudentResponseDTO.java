@@ -13,6 +13,7 @@ public record StudentResponseDTO(
         String universityName,
         StudentStatus status,
         String availability,
+        String course,
         String address,
         Double latitude,
         Double longitude,

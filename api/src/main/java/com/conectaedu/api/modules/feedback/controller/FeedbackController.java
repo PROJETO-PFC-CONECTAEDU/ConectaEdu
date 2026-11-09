@@ -50,6 +50,12 @@ public class FeedbackController {
         return ResponseEntity.ok(feedbackFacade.getEvaluationsByStudent(id, from, to));
     }
 
+    @GetMapping("/director/{id}")
+    @PreAuthorize("hasAnyRole('SCHOOL_DIRECTOR', 'PLATFORM_ADMIN')")
+    public ResponseEntity<List<ClassEvaluationResponseDTO>> getByDirector(@PathVariable UUID id) {
+        return ResponseEntity.ok(feedbackFacade.getEvaluationsByDirector(id));
+    }
+
     @GetMapping("/demand/{id}")
     @PreAuthorize("hasAnyRole('SCHOOL_DIRECTOR', 'PLATFORM_ADMIN')")
     public ResponseEntity<DemandEvaluationsResponseDTO> getByDemand(@PathVariable UUID id) {

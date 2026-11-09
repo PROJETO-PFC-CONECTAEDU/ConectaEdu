@@ -28,5 +28,7 @@ public interface ILessonFacade {
 
     List<LessonResponseDTO> getLessonsBySchool(UUID schoolId);
 
+    List<LessonResponseDTO> getLessonsByDemand(UUID demandId);
+
     LessonHoursResponseDTO getValidatedHoursByStudent(UUID studentId);
 }

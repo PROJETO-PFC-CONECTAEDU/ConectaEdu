@@ -48,12 +48,14 @@ public class ClassEvaluationService {
         }
 
         //vale para quem passou pela necessidade, mesmo que tenha sido desvinculado antes do fim.
-        Student student = demand.getStudentHistory().stream()
-                .map(DemandStudent::getStudent)
-                .filter(s -> s.getId().equals(studentId))
-                .findFirst()
-                .orElseThrow(() -> new AccessDeniedException(
-                        "Apenas o estudante que atendeu a necessidade pode avaliar a sala."));
+        Student student = (demand.getStudent() != null && demand.getStudent().getId().equals(studentId))
+                ? demand.getStudent()
+                : demand.getStudentHistory().stream()
+                    .map(DemandStudent::getStudent)
+                    .filter(s -> s.getId().equals(studentId))
+                    .findFirst()
+                    .orElseThrow(() -> new AccessDeniedException(
+                            "Apenas o estudante que atendeu a necessidade pode avaliar a sala."));
 
         //a avaliação não se edita, só se complementa em ciclo posterior.
         if (classEvaluationRepository.existsByDemand_IdAndStudent_Id(demand.getId(), studentId)) {

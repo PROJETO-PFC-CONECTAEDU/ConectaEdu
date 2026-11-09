@@ -15,4 +15,5 @@ public interface IStudentFacade {
     void deleteStudent(UUID id);
     void validateStudent(UUID id);
     void rejectStudent(UUID id);
+    void inactivateStudent(UUID id);
 }

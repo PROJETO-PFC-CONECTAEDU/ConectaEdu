@@ -14,6 +14,8 @@ public interface DemandRepository extends JpaRepository<Demand, UUID> {
 
     List<Demand> findByStatusAndStudentId(DemandStatus status, UUID studentId);
 
+    List<Demand> findByStatusAndDirectorId(DemandStatus status, UUID directorId);
+
     long countByStatus(DemandStatus status);
 
     long countBySchoolId(UUID schoolId);

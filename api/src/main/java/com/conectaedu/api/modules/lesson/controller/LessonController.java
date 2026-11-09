@@ -77,4 +77,11 @@ public class LessonController {
             @PathVariable UUID schoolId) {
         return ResponseEntity.ok(lessonFacade.getLessonsBySchool(schoolId));
     }
+
+    @GetMapping("/demand/{demandId}")
+    @PreAuthorize("hasAnyRole('STUDENT', 'SCHOOL_DIRECTOR', 'PLATFORM_ADMIN')")
+    public ResponseEntity<List<LessonResponseDTO>> getByDemand(
+            @PathVariable UUID demandId) {
+        return ResponseEntity.ok(lessonFacade.getLessonsByDemand(demandId));
+    }
 }

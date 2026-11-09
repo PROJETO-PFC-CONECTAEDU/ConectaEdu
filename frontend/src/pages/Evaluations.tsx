@@ -12,17 +12,25 @@ interface Demand {
   id: string;
   title: string;
   schoolName: string;
+  studentId: string;
+  studentName: string;
+  hasStudentFeedback: boolean;
+  hasDirectorFeedback: boolean;
 }
 
-interface StudentEvaluation {
+interface Evaluation {
   id: string;
   demandTitle: string;
-  evaluatedBy: string; // Isso deve ser o nome do diretor, mas o DTO manda UUID. O backend pode precisar de ajuste ou eu busco o nome.
-  knowledge: number;
-  punctuality: number;
-  teaching: number;
-  commitment: number;
-  empathy: number;
+  studentName?: string;
+  evaluatedBy?: string;
+  engagement?: number;
+  progress?: number;
+  infrastructure?: number;
+  knowledge?: number;
+  punctuality?: number;
+  teaching?: number;
+  commitment?: number;
+  empathy?: number;
   comments: string;
   createdAt: string;
 }
@@ -31,60 +39,105 @@ export function Evaluations() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'evaluate' | 'history'>('evaluate');
   const [demands, setDemands] = useState<Demand[]>([]);
-  const [history, setHistory] = useState<StudentEvaluation[]>([]);
+  const [history, setHistory] = useState<Evaluation[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Form state
   const [selectedDemandId, setSelectedDemandId] = useState('');
+  
+  // Student evaluation of class
   const [engagement, setEngagement] = useState(5);
   const [progress, setProgress] = useState(5);
   const [infrastructure, setInfrastructure] = useState(5);
+  
+  // Director evaluation of student
+  const [knowledge, setKnowledge] = useState(5);
+  const [punctuality, setPunctuality] = useState(5);
+  const [teaching, setTeaching] = useState(5);
+  const [commitment, setCommitment] = useState(5);
+  const [empathy, setEmpathy] = useState(5);
+
   const [comments, setComments] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    async function loadData() {
-      if (!user) return;
-      try {
-        const [demandsResponse, historyResponse] = await Promise.all([
-          api.get('/demands/completed'),
-          api.get(`/evaluations/student/${user.id}`)
-        ]);
-        setDemands(demandsResponse.data);
-        setHistory(historyResponse.data);
-      } catch (error) {
-        console.error('Erro ao carregar dados de avaliações:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
+  const isDirector = user?.role === 'SCHOOL_DIRECTOR';
+  const isStudent = user?.role === 'STUDENT';
 
+  const loadData = React.useCallback(async () => {
+    if (!user) return;
+    try {
+      const demandsResponse = await api.get('/demands/completed');
+      
+      setDemands(demandsResponse.data.filter((d: Demand) => 
+        isStudent ? !d.hasStudentFeedback : !d.hasDirectorFeedback
+      ));
+      
+      if (isStudent) {
+        const historyResponse = await api.get(`/evaluations/student/${user.id}`);
+        setHistory(historyResponse.data);
+      } else if (isDirector) {
+        const historyResponse = await api.get(`/evaluations/director/${user.id}`);
+        setHistory(historyResponse.data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados de avaliações:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user, isStudent]);
+
+  useEffect(() => {
     loadData();
-  }, [user]);
+  }, [loadData]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedDemandId) {
-      alert('Selecione uma vaga para avaliar');
+      alert('Selecione uma opção para avaliar');
       return;
     }
 
+    const selectedDemand = demands.find(d => d.id === selectedDemandId);
+    if (!selectedDemand) return;
+
     setSubmitting(true);
     try {
-      await api.post('/evaluations/class', {
-        demandId: selectedDemandId,
-        engagement,
-        progress,
-        infrastructure,
-        comments
-      });
+      if (isStudent) {
+        await api.post('/evaluations/class', {
+          demandId: selectedDemandId,
+          engagement,
+          progress,
+          infrastructure,
+          comments
+        });
+      } else if (isDirector) {
+        await api.post('/evaluations/student', {
+          demandId: selectedDemandId,
+          studentId: selectedDemand.studentId,
+          knowledge,
+          punctuality,
+          teaching,
+          commitment,
+          empathy,
+          comments
+        });
+      }
+
       alert('Avaliação enviada com sucesso!');
       // Reset form
       setSelectedDemandId('');
       setEngagement(5);
       setProgress(5);
       setInfrastructure(5);
+      setKnowledge(5);
+      setPunctuality(5);
+      setTeaching(5);
+      setCommitment(5);
+      setEmpathy(5);
       setComments('');
+      
+      // Refresh data
+      loadData();
     } catch (error) {
       console.error('Erro ao enviar avaliação:', error);
       alert('Erro ao enviar avaliação. Tente novamente.');
@@ -129,7 +182,7 @@ export function Evaluations() {
         >
           <div className="flex items-center gap-2">
             <History size={18} />
-            Histórico
+            {isStudent ? 'Avaliações Recebidas' : 'Feedback dos Estudantes'}
           </div>
           {activeTab === 'history' && (
             <div className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-primary" />
@@ -141,7 +194,9 @@ export function Evaluations() {
         <Card className="p-8">
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-text-heading">Selecione a Vaga/Escola</label>
+              <label className="text-sm font-medium text-text-heading">
+                {isStudent ? 'Selecione a Vaga/Escola' : 'Selecione a Demanda/Estudante'}
+              </label>
               <select
                 value={selectedDemandId}
                 onChange={(e) => setSelectedDemandId(e.target.value)}
@@ -151,28 +206,60 @@ export function Evaluations() {
                 <option value="">Selecione uma opção...</option>
                 {demands.map((demand) => (
                   <option key={demand.id} value={demand.id}>
-                    {demand.title} - {demand.schoolName}
+                    {demand.title} - {isStudent ? demand.schoolName : demand.studentName}
                   </option>
                 ))}
               </select>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
-              <RatingSlider 
-                label="Engajamento da Turma" 
-                value={engagement} 
-                onChange={setEngagement} 
-              />
-              <RatingSlider 
-                label="Progresso do Conteúdo" 
-                value={progress} 
-                onChange={setProgress} 
-              />
-              <RatingSlider 
-                label="Infraestrutura da Escola" 
-                value={infrastructure} 
-                onChange={setInfrastructure} 
-              />
+              {isStudent ? (
+                <>
+                  <RatingSlider 
+                    label="Engajamento da Turma" 
+                    value={engagement} 
+                    onChange={setEngagement} 
+                  />
+                  <RatingSlider 
+                    label="Progresso do Conteúdo" 
+                    value={progress} 
+                    onChange={setProgress} 
+                  />
+                  <RatingSlider 
+                    label="Infraestrutura da Escola" 
+                    value={infrastructure} 
+                    onChange={setInfrastructure} 
+                  />
+                </>
+              ) : (
+                <>
+                  <RatingSlider 
+                    label="Domínio do Conteúdo (Conhecimento)" 
+                    value={knowledge} 
+                    onChange={setKnowledge} 
+                  />
+                  <RatingSlider 
+                    label="Pontualidade e Frequência" 
+                    value={punctuality} 
+                    onChange={setPunctuality} 
+                  />
+                  <RatingSlider 
+                    label="Didática e Metodologia" 
+                    value={teaching} 
+                    onChange={setTeaching} 
+                  />
+                  <RatingSlider 
+                    label="Comprometimento e Proatividade" 
+                    value={commitment} 
+                    onChange={setCommitment} 
+                  />
+                  <RatingSlider 
+                    label="Empatia e Relacionamento" 
+                    value={empathy} 
+                    onChange={setEmpathy} 
+                  />
+                </>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -196,17 +283,29 @@ export function Evaluations() {
       ) : (
         <div className="space-y-4">
           {history.length > 0 ? (
-            history.map((item) => (
-              <EvaluationCard
-                key={item.id}
-                evaluatorName={item.demandTitle} // Usando título da demanda como identificador da fonte
-                date={item.createdAt}
-                engagement={item.commitment}
-                autonomy={item.knowledge}
-                punctuality={item.punctuality}
-                comments={item.comments}
-              />
-            ))
+            history.map((item) => {
+              const metrics = isStudent ? [
+                { label: 'Conhecimento', value: item.knowledge ?? 0 },
+                { label: 'Pontualidade', value: item.punctuality ?? 0 },
+                { label: 'Didática', value: item.teaching ?? 0 },
+                { label: 'Comprometimento', value: item.commitment ?? 0 },
+                { label: 'Empatia', value: item.empathy ?? 0 },
+              ] : [
+                { label: 'Engajamento', value: item.engagement ?? 0 },
+                { label: 'Progresso', value: item.progress ?? 0 },
+                { label: 'Infraestrutura', value: item.infrastructure ?? 0 },
+              ];
+
+              return (
+                <EvaluationCard
+                  key={item.id}
+                  evaluatorName={isStudent ? item.demandTitle : `${item.studentName} - ${item.demandTitle}`}
+                  date={item.createdAt}
+                  metrics={metrics}
+                  comments={item.comments}
+                />
+              );
+            })
           ) : (
             <div className="text-center py-12 text-text-muted bg-slate-50 rounded-xl border-2 border-dashed border-border-default">
               Nenhuma avaliação recebida ainda.

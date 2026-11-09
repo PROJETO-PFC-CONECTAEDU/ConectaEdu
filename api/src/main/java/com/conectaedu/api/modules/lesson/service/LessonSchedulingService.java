@@ -63,21 +63,22 @@ public class LessonSchedulingService {
         Demand demand = demandRepository.findById(request.demandId())
                 .orElseThrow(() -> new DemandNotFoundException("Demanda não encontrada!"));
 
-        if (demand.getStatus() != DemandStatus.ONGOING) {
+        if (demand.getStatus() != DemandStatus.ONGOING && 
+            demand.getStatus() != DemandStatus.DRAFT && 
+            demand.getStatus() != DemandStatus.WAITING) {
             throw new IllegalArgumentException(
                     "A demanda não aceita novas aulas. Situação atual: " + demand.getStatus());
         }
 
         Student student = demand.getStudent();
-        if (student == null) {
-            throw new IllegalArgumentException("A demanda ainda não tem estudante aprovado.");
-        }
 
         if (demand.getDirector() == null || !demand.getDirector().getId().equals(directorId)) {
             throw new AccessDeniedException("Apenas o diretor responsável pela demanda pode agendar aulas.");
         }
 
-        validateInternshipLink(student, demand.getSchool());
+        if (student != null) {
+            validateInternshipLink(student, demand.getSchool());
+        }
 
         LessonOrigin origin = request.origin() == null ? LessonOrigin.NEW : request.origin();
         if (origin == LessonOrigin.MAKEUP
@@ -88,12 +89,14 @@ public class LessonSchedulingService {
 
         //O fim da nova aula contra, o início da que já existe, e o início da nova contra o fim dela.
 
-        boolean overlaps = lessonRepository
-                .existsByStudent_IdAndStatusInAndScheduledStartLessThanAndScheduledEndGreaterThan(
-                        student.getId(), LessonRules.BUSY_STATUSES,
-                        request.scheduledEnd(), request.scheduledStart());
-        if (overlaps) {
-            throw new LessonOverlapException("O estudante já tem aula marcada neste horário.");
+        if (student != null) {
+            boolean overlaps = lessonRepository
+                    .existsByStudent_IdAndStatusInAndScheduledStartLessThanAndScheduledEndGreaterThan(
+                            student.getId(), LessonRules.BUSY_STATUSES,
+                            request.scheduledEnd(), request.scheduledStart());
+            if (overlaps) {
+                throw new LessonOverlapException("O estudante já tem aula marcada neste horário.");
+            }
         }
 
         Lesson lesson = new Lesson();

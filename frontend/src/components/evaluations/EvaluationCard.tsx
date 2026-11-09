@@ -5,21 +5,20 @@ import { formatDate } from '../../utils/format';
 interface EvaluationCardProps {
   evaluatorName: string;
   date: string;
-  engagement: number;
-  autonomy: number;
-  punctuality: number;
+  metrics: {
+    label: string;
+    value: number;
+  }[];
   comments: string;
 }
 
 export function EvaluationCard({
   evaluatorName,
   date,
-  engagement,
-  autonomy,
-  punctuality,
+  metrics,
   comments,
 }: EvaluationCardProps) {
-  const average = ((engagement + autonomy + punctuality) / 3).toFixed(1);
+  const average = (metrics.reduce((acc, m) => acc + m.value, 0) / metrics.length).toFixed(1);
 
   return (
     <Card className="p-6 space-y-4">
@@ -41,19 +40,13 @@ export function EvaluationCard({
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 py-2 border-y border-slate-50">
-        <div className="text-center">
-          <p className="text-[10px] text-text-muted uppercase">Engajamento</p>
-          <p className="text-sm font-bold text-text-heading">{engagement}</p>
-        </div>
-        <div className="text-center">
-          <p className="text-[10px] text-text-muted uppercase">Autonomia</p>
-          <p className="text-sm font-bold text-text-heading">{autonomy}</p>
-        </div>
-        <div className="text-center">
-          <p className="text-[10px] text-text-muted uppercase">Pontualidade</p>
-          <p className="text-sm font-bold text-text-heading">{punctuality}</p>
-        </div>
+      <div className={`grid grid-cols-${metrics.length} gap-2 py-2 border-y border-slate-50`}>
+        {metrics.map((metric, index) => (
+          <div key={index} className="text-center">
+            <p className="text-[10px] text-text-muted uppercase">{metric.label}</p>
+            <p className="text-sm font-bold text-text-heading">{metric.value}</p>
+          </div>
+        ))}
       </div>
 
       <div className="relative">

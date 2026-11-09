@@ -17,8 +17,8 @@ interface Props {
 
 export function UniversityAdminDashboard({ stats }: Props) {
   const chartData = stats.lessonsByPeriod?.map((item: any) => ({
-    period: item.PERIOD,
-    count: item.COUNT
+    period: item.PERIOD || item.period,
+    count: item.COUNT || item.count
   })) || [];
 
   return (
@@ -66,7 +66,7 @@ export function UniversityAdminDashboard({ stats }: Props) {
                 <Tooltip 
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 />
-                <Bar dataKey="count" fill="#0ea5e9" radius={[4, 4, 0, 0]} name="Aulas" />
+                <Bar dataKey="count" fill="#0ea5e9" radius={[4, 4, 0, 0]} name="Aulas" barSize={32} />
               </BarChart>
             </ResponsiveContainer>
           ) : (

@@ -43,7 +43,7 @@ public class DemandCreationService {
         demand.setTotalHours(request.totalHours());
         demand.setRoom(request.room());
         demand.setDifficultyLevel(request.difficultyLevel());
-        demand.setStatus(DemandStatus.WAITING);
+        demand.setStatus(DemandStatus.DRAFT);
         demand.setCreatedAt(LocalDateTime.now());
         
         demand.setDirector(director);
