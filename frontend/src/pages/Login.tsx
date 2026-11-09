@@ -72,7 +72,7 @@ export function Login() {
 
         <div className="space-y-6">
           <h1 className="text-5xl font-bold text-white leading-tight font-display">
-            Sua jornada pedagógica começa <span className="text-brand-primary">aqui</span>
+            Sua jornada pedagógica começa <span className="text-brand-accent">aqui</span>
           </h1>
           <p className="text-xl text-text-muted max-w-md">
             Conectando estudantes de Pedagogia às melhores oportunidades em escolas.

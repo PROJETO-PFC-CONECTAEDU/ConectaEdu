@@ -17,6 +17,7 @@ import com.conectaedu.api.shared.enums.StudentStatus;
 import com.conectaedu.api.shared.enums.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -34,6 +35,7 @@ public class DashboardService {
     private final LessonRepository lessonRepository;
     private final IInternshipFacade internshipFacade;
 
+    @Transactional(readOnly = true)
     public DashboardStatsDTO getStats(User user) {
         Map<String, Object> stats = new HashMap<>();
 
@@ -44,6 +46,9 @@ public class DashboardService {
             stats.put("waitingDemands", demandRepository.countByStatus(DemandStatus.WAITING));
             stats.put("finishedDemands", demandRepository.countByStatus(DemandStatus.FINISHED));
         } else if (user instanceof UniversityAdmin admin) {
+            if (admin.getUniversity() == null) {
+                return DashboardStatsDTO.builder().statistics(stats).build();
+            }
             var universityId = admin.getUniversity().getId();
             stats.put("myStudentsCount", studentRepository.countByUniversityId(universityId));
             stats.put("activeStudentsCount", demandRepository.countActiveStudentsByUniversityId(universityId));
@@ -58,6 +63,9 @@ public class DashboardService {
             // Gráfico para Universidade: aulas por período
             stats.put("lessonsByPeriod", lessonRepository.countByUniversityAndPeriod(universityId));
         } else if (user instanceof SchoolDirector director) {
+            if (director.getSchool() == null) {
+                return DashboardStatsDTO.builder().statistics(stats).build();
+            }
             var schoolId = director.getSchool().getId();
             stats.put("myDemandsCount", demandRepository.countBySchoolId(schoolId));
             stats.put("openVacanciesCount", demandRepository.countBySchoolIdAndStatus(schoolId, DemandStatus.WAITING));

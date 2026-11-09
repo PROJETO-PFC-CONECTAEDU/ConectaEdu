@@ -14,12 +14,14 @@ import com.conectaedu.api.shared.enums.UserRole;
 import com.conectaedu.api.shared.enums.UserType;
 import com.conectaedu.api.shared.exceptions.EmailAlreadyExistsException;
 import com.conectaedu.api.shared.exceptions.UniversityNotFoundException;
+import com.conectaedu.api.shared.security.context.SecurityContextHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +40,19 @@ public class StudentCreationService {
             throw new EmailAlreadyExistsException("Email já cadastrado!");
         }
 
-        University university = universityRepository.findById(request.universityId())
+        UUID universityId = request.universityId();
+        UUID authenticatedUniversityId = SecurityContextHolder.getAuthenticatedUniversityId();
+
+        // Se for um administrador de universidade, ele só pode cadastrar para a dele
+        if (authenticatedUniversityId != null) {
+            universityId = authenticatedUniversityId;
+        }
+
+        if (universityId == null) {
+            throw new UniversityNotFoundException("Universidade não informada!");
+        }
+
+        University university = universityRepository.findById(universityId)
                 .orElseThrow(() -> new UniversityNotFoundException("Universidade não encontrada!"));
 
         if (!university.isActive()) {
@@ -55,6 +69,7 @@ public class StudentCreationService {
         student.setUniversity(university);
         student.setStatus(StudentStatus.PENDING);
         student.setAvailability(request.availability());
+        student.setCourse(request.course());
         student.setAddress(request.address());
         student.setLatitude(request.latitude());
         student.setLongitude(request.longitude());
@@ -72,6 +87,7 @@ public class StudentCreationService {
                 university.getName(),
                 student.getStatus(),
                 student.getAvailability(),
+                student.getCourse(),
                 student.getAddress(),
                 student.getLatitude(),
                 student.getLongitude(),

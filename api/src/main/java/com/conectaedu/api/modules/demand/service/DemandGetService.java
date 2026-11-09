@@ -5,6 +5,8 @@ import com.conectaedu.api.modules.demand.dto.response.DemandResponseDTO;
 import com.conectaedu.api.modules.demand.dto.response.DemandStudentDTO;
 import com.conectaedu.api.modules.demand.mapper.DemandMapper;
 import com.conectaedu.api.modules.demand.repository.DemandRepository;
+import com.conectaedu.api.modules.feedback.repository.ClassEvaluationRepository;
+import com.conectaedu.api.modules.feedback.repository.StudentEvaluationRepository;
 import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.student.repository.StudentRepository;
 import com.conectaedu.api.shared.enums.DemandStatus;
@@ -21,6 +23,8 @@ import java.util.UUID;
 public class DemandGetService {
     private final DemandRepository demandRepository;
     private final StudentRepository studentRepository;
+    private final ClassEvaluationRepository classEvaluationRepository;
+    private final StudentEvaluationRepository studentEvaluationRepository;
     private final DemandMapper demandMapper;
 
     @Transactional(readOnly = true)
@@ -71,7 +75,27 @@ public class DemandGetService {
     @Transactional(readOnly = true)
     public List<DemandStudentDTO> getDemandsByStatusAndStudentId(DemandStatus status, UUID studentId) {
         return demandRepository.findByStatusAndStudentId(status, studentId).stream()
-                .map(demandMapper::mapToStudentDTO)
+                .map(demand -> {
+                    boolean hasStudentFeedback = classEvaluationRepository.existsByDemand_IdAndStudent_Id(demand.getId(), studentId);
+                    boolean hasDirectorFeedback = studentEvaluationRepository.existsByDemand_IdAndStudent_IdAndEvaluatedBy(
+                            demand.getId(), studentId, demand.getDirector().getId());
+                    
+                    return demandMapper.mapToStudentDTO(demand, null, null, hasStudentFeedback, hasDirectorFeedback);
+                })
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<DemandStudentDTO> getDemandsByStatusAndDirectorId(DemandStatus status, UUID directorId) {
+        return demandRepository.findByStatusAndDirectorId(status, directorId).stream()
+                .map(demand -> {
+                    UUID studentId = demand.getStudent() != null ? demand.getStudent().getId() : null;
+                    boolean hasStudentFeedback = studentId != null && classEvaluationRepository.existsByDemand_IdAndStudent_Id(demand.getId(), studentId);
+                    boolean hasDirectorFeedback = studentId != null && studentEvaluationRepository.existsByDemand_IdAndStudent_IdAndEvaluatedBy(
+                            demand.getId(), studentId, directorId);
+
+                    return demandMapper.mapToStudentDTO(demand, null, null, hasStudentFeedback, hasDirectorFeedback);
+                })
                 .toList();
     }
 }

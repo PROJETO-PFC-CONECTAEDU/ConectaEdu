@@ -5,6 +5,8 @@ import com.conectaedu.api.modules.demand.domain.Demand;
 import com.conectaedu.api.modules.demand.dto.response.DemandResponseDTO;
 import com.conectaedu.api.modules.demand.mapper.DemandMapper;
 import com.conectaedu.api.modules.demand.repository.DemandRepository;
+import com.conectaedu.api.modules.lesson.domain.Lesson;
+import com.conectaedu.api.modules.lesson.repository.LessonRepository;
 import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.student.repository.StudentRepository;
 import com.conectaedu.api.shared.audit.service.AuditService;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -25,6 +28,7 @@ public class DemandApproveService {
 
     private final DemandRepository demandRepository;
     private final StudentRepository studentRepository;
+    private final LessonRepository lessonRepository;
     private final DemandMapper demandMapper;
     private final AuditService auditService;
 
@@ -64,6 +68,15 @@ public class DemandApproveService {
         demand.getStudentHistory().add(history);
         
         demandRepository.save(demand);
+
+        // Vincula as aulas agendadas previamente ao estudante
+        List<Lesson> lessons = lessonRepository.findByDemand_Id(demandId);
+        for (Lesson lesson : lessons) {
+            if (lesson.getStudent() == null) {
+                lesson.setStudent(student);
+            }
+        }
+        lessonRepository.saveAll(lessons);
 
         AuditDiff diff = AuditDiff.create()
                 .field("estudante_aprovado", null, student.getName())

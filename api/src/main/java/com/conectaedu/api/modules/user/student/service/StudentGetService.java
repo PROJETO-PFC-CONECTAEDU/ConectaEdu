@@ -4,7 +4,9 @@ import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.student.dto.response.StudentResponseDTO;
 import com.conectaedu.api.modules.user.student.repository.StudentRepository;
 import com.conectaedu.api.shared.exceptions.UserNotFoundException;
+import com.conectaedu.api.shared.security.context.SecurityContextHolder;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +22,16 @@ public class StudentGetService {
 
     @Transactional(readOnly = true)
     public List<StudentResponseDTO> getAllStudents() {
-        return studentRepository.findAll().stream()
+        UUID universityId = SecurityContextHolder.getAuthenticatedUniversityId();
+        
+        List<Student> students;
+        if (universityId != null) {
+            students = studentRepository.findByUniversityId(universityId);
+        } else {
+            students = studentRepository.findAll();
+        }
+
+        return students.stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -29,6 +40,11 @@ public class StudentGetService {
     public StudentResponseDTO getStudent(UUID id) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado!"));
+
+        UUID universityId = SecurityContextHolder.getAuthenticatedUniversityId();
+        if (universityId != null && (student.getUniversity() == null || !student.getUniversity().getId().equals(universityId))) {
+            throw new AccessDeniedException("Você não tem permissão para acessar este estudante.");
+        }
 
         return mapToResponseDTO(student);
     }
@@ -42,6 +58,7 @@ public class StudentGetService {
                 student.getUniversity() != null ? student.getUniversity().getName() : "Sem Universidade",
                 student.getStatus(),
                 student.getAvailability(),
+                student.getCourse(),
                 student.getAddress(),
                 student.getLatitude(),
                 student.getLongitude(),

@@ -78,6 +78,19 @@ public class EvaluationListByService {
         return new DemandEvaluationsResponseDTO(demandId, studentEvaluations, classEvaluations);
     }
 
+    @Transactional(readOnly = true)
+    public List<ClassEvaluationResponseDTO> listByDirector(UUID directorId) {
+        // Garantir que o ator é o próprio diretor ou admin
+        UUID actorId = SecurityContextHolder.getAuthenticatedUserId();
+        if (!directorId.equals(actorId) && !hasRole(UserRole.PLATFORM_ADMIN)) {
+            throw new AccessDeniedException("Você não tem acesso a estas avaliações.");
+        }
+
+        return classEvaluationRepository
+                .findByDemand_Director_IdOrderByCreatedAtDesc(directorId)
+                .stream().map(feedbackMapper::mapToResponseDTO).toList();
+    }
+
     private void checkAccess(Student student) {
         UUID actorId = SecurityContextHolder.getAuthenticatedUserId();
 

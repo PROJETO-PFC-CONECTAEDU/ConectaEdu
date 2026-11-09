@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface StudentRepository extends JpaRepository<Student, UUID> {
     long countByStatus(StudentStatus status);
     long countByUniversityId(UUID universityId);
+    java.util.List<Student> findByUniversityId(UUID universityId);
 }

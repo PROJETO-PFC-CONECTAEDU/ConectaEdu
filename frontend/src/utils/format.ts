@@ -26,6 +26,7 @@ export const studentStatusTranslations: Record<string, string> = {
   'PENDING': 'Pendente',
   'VALIDATED': 'Validado',
   'REJECTED': 'Rejeitado',
+  'INACTIVE': 'Inativo',
 };
 
 export const genericStatusTranslations: Record<string, string> = {

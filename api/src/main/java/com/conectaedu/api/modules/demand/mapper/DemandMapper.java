@@ -126,7 +126,9 @@ public class DemandMapper {
                 demand.getUpdatedAt(),
                 null,
                 null,
-                null
+                null,
+                false,
+                false
         );
     }
 
@@ -160,7 +162,46 @@ public class DemandMapper {
                 demand.getUpdatedAt(),
                 recommendationScore,
                 distance,
-                recommendationScore != null && recommendationScore >= 100
+                recommendationScore != null && recommendationScore >= 100,
+                false,
+                false
+        );
+    }
+
+    public DemandStudentDTO mapToStudentDTO(Demand demand, Double recommendationScore, Double distance, 
+                                          Boolean hasStudentFeedback, Boolean hasDirectorFeedback) {
+        return new DemandStudentDTO(
+                demand.getId(),
+                demand.getTitle(),
+                demand.getDescription(),
+                demand.getSubject(),
+                demand.getGradeLevel(),
+                demand.getPupilAmount(),
+                demand.getStatus(),
+                demand.getClassDate(),
+                demand.getTotalHours(),
+                demand.getRoom(),
+                demand.getDifficultyLevel(),
+                demand.isArchived(),
+                demand.getSchool().getId(),
+                demand.getSchool().getName(),
+                demand.getSchool().getAddress(),
+                demand.getSchool().getLatitude(),
+                demand.getSchool().getLongitude(),
+                demand.getDirector().getId(),
+                demand.getDirector().getName(),
+                demand.getStudent() != null ? demand.getStudent().getId() : null,
+                demand.getStudent() != null ? demand.getStudent().getName() : null,
+                demand.getCandidates().stream()
+                        .map(c -> new DemandStudentDTO.CandidateResponseDTO(c.getId(), c.getName()))
+                        .collect(Collectors.toList()),
+                demand.getCreatedAt(),
+                demand.getUpdatedAt(),
+                recommendationScore,
+                distance,
+                recommendationScore != null && recommendationScore >= 100,
+                hasStudentFeedback,
+                hasDirectorFeedback
         );
     }
 }

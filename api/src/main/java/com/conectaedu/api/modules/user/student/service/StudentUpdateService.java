@@ -13,7 +13,9 @@ import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.exceptions.EmailAlreadyExistsException;
 import com.conectaedu.api.shared.exceptions.UniversityNotFoundException;
 import com.conectaedu.api.shared.exceptions.UserNotFoundException;
+import com.conectaedu.api.shared.security.context.SecurityContextHolder;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,11 +36,17 @@ public class StudentUpdateService {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado!"));
 
+        UUID authenticatedUniversityId = SecurityContextHolder.getAuthenticatedUniversityId();
+        if (authenticatedUniversityId != null && (student.getUniversity() == null || !student.getUniversity().getId().equals(authenticatedUniversityId))) {
+            throw new AccessDeniedException("Você não tem permissão para editar este estudante.");
+        }
+
         String beforeEmail = student.getEmail();
         String beforeName = student.getName();
         var beforeUserType = student.getUserType();
         var beforeUniversityId = student.getUniversity() != null ? student.getUniversity().getId() : null;
         String beforeAvailability = student.getAvailability();
+        String beforeCourse = student.getCourse();
         String beforeAddress = student.getAddress();
         Double beforeLatitude = student.getLatitude();
         Double beforeLongitude = student.getLongitude();
@@ -74,6 +82,10 @@ public class StudentUpdateService {
             student.setAvailability(request.availability());
         }
 
+        if (request.course() != null) {
+            student.setCourse(request.course());
+        }
+
         if (request.address() != null) {
             student.setAddress(request.address());
         }
@@ -100,6 +112,7 @@ public class StudentUpdateService {
                 .field("userType", beforeUserType, student.getUserType())
                 .field("universityId", beforeUniversityId, afterUniversityId)
                 .field("availability", beforeAvailability, student.getAvailability())
+                .field("course", beforeCourse, student.getCourse())
                 .field("address", beforeAddress, student.getAddress())
                 .field("latitude", beforeLatitude, student.getLatitude())
                 .field("longitude", beforeLongitude, student.getLongitude())
@@ -114,6 +127,7 @@ public class StudentUpdateService {
                 student.getUniversity().getName(),
                 student.getStatus(),
                 student.getAvailability(),
+                student.getCourse(),
                 student.getAddress(),
                 student.getLatitude(),
                 student.getLongitude(),

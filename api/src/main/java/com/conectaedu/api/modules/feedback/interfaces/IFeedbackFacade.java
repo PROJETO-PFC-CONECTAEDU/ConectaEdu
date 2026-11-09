@@ -17,6 +17,8 @@ public interface IFeedbackFacade {
     ClassEvaluationResponseDTO evaluateClass(ClassEvaluationRequestDTO request);
 
     List<StudentEvaluationResponseDTO> getEvaluationsByStudent(UUID studentId, LocalDateTime from, LocalDateTime to);
+    
+    List<ClassEvaluationResponseDTO> getEvaluationsByDirector(UUID directorId);
 
     DemandEvaluationsResponseDTO getEvaluationsByDemand(UUID demandId);
 }

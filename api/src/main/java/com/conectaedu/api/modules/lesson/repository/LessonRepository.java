@@ -23,6 +23,8 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
     //Confirma que a demanda teve algum cancelamento, sem precisar saber qual aula foi.
 
     boolean existsByDemand_IdAndStatus(UUID demandId, LessonStatus status);
+    
+    List<Lesson> findByDemand_Id(UUID demandId);
 
     List<Lesson> findByStudent_IdAndScheduledStartBetweenOrderByScheduledStartAsc(
             UUID studentId, LocalDateTime from, LocalDateTime to);
@@ -37,8 +39,8 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
     @Query(value = """
             SELECT FORMATDATETIME(l.scheduled_start, 'MM/yyyy') as period, COUNT(l.id) as count
             FROM lesson l
-            INNER JOIN student s ON l.student_id = s.id
-            WHERE s.university_id = :universityId AND l.status = 'VALIDATED'
+            INNER JOIN users s ON l.student_id = s.id
+            WHERE s.university_id = :universityId AND l.status = 'VALIDATED' AND s.user_role = 'STUDENT'
             GROUP BY period
             ORDER BY period DESC
             """, nativeQuery = true)

@@ -79,6 +79,12 @@ public class DemandController {
         return ResponseEntity.ok(demandFacade.applyToDemand(id));
     }
 
+    @PostMapping("/{id}/publish")
+    @PreAuthorize("hasRole('SCHOOL_DIRECTOR')")
+    public ResponseEntity<DemandResponseDTO> publish(@PathVariable UUID id) {
+        return ResponseEntity.ok(demandFacade.publishDemand(id));
+    }
+
     @PostMapping("/{id}/approve/{studentId}")
     @PreAuthorize("hasRole('SCHOOL_DIRECTOR')")
     public ResponseEntity<DemandResponseDTO> approve(@PathVariable UUID id, @PathVariable UUID studentId) {
@@ -113,11 +119,17 @@ public class DemandController {
     }
 
     @GetMapping("/completed")
-    @PreAuthorize("hasAnyRole('STUDENT', 'PLATFORM_ADMIN')")
+    @PreAuthorize("hasAnyRole('STUDENT', 'SCHOOL_DIRECTOR', 'PLATFORM_ADMIN')")
     public ResponseEntity<List<DemandStudentDTO>> getCompletedDemandsByStudentId(@RequestParam(required = false) UUID studentId) {
+        UUID authenticatedUserId = com.conectaedu.api.shared.security.context.SecurityContextHolder.getAuthenticatedUserId();
+        
+        if (com.conectaedu.api.shared.security.context.SecurityContextHolder.hasRole("SCHOOL_DIRECTOR")) {
+            return ResponseEntity.ok(demandFacade.getDemandsByStatusAndDirectorId(DemandStatus.FINISHED, authenticatedUserId));
+        }
+        
         UUID targetStudentId = studentId;
         if (targetStudentId == null) {
-            targetStudentId = com.conectaedu.api.shared.security.context.SecurityContextHolder.getAuthenticatedUserId();
+            targetStudentId = authenticatedUserId;
         }
         return ResponseEntity.ok(demandFacade.getDemandsByStatusAndStudentId(DemandStatus.FINISHED, targetStudentId));
     }

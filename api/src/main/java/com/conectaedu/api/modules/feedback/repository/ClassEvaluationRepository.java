@@ -12,4 +12,6 @@ public interface ClassEvaluationRepository extends JpaRepository<ClassEvaluation
     boolean existsByDemand_IdAndStudent_Id(UUID demandId, UUID studentId);
 
     List<ClassEvaluation> findByDemand_IdOrderByCreatedAtDesc(UUID demandId);
+    
+    List<ClassEvaluation> findByDemand_Director_IdOrderByCreatedAtDesc(UUID directorId);
 }

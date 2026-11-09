@@ -41,6 +41,11 @@ public class FeedbackFacadeImpl implements IFeedbackFacade {
     }
 
     @Override
+    public List<ClassEvaluationResponseDTO> getEvaluationsByDirector(UUID directorId) {
+        return evaluationListByService.listByDirector(directorId);
+    }
+
+    @Override
     public DemandEvaluationsResponseDTO getEvaluationsByDemand(UUID demandId) {
         return evaluationListByService.listByDemand(demandId);
     }
