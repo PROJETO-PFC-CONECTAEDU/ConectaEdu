@@ -20,7 +20,7 @@ export function StatusBadge({ status, variant = 'pill' }: StatusBadgeProps) {
     VALIDATED: { label: 'Validada', bg: 'bg-emerald-100', fg: 'text-emerald-700' },
   };
 
-  const { label, bg, fg } = config[status as keyof typeof config] || { label: status, bg: 'bg-gray-100', fg: 'text-gray-800' };
+  const { label, bg, fg } = config[status.toUpperCase() as keyof typeof config] || { label: status, bg: 'bg-gray-100', fg: 'text-gray-800' };
 
   return (
     <span className={clsx(

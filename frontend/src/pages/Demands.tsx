@@ -227,34 +227,25 @@ export function Demands() {
               {...register('pupilAmount', { valueAsNumber: true })}
             />
             <Input
-              label="Data da Aula"
-              type="datetime-local"
-              error={errors.classDate?.message}
-              {...register('classDate')}
+                label="Horas estimadas"
+                placeholder="Ex: 40h"
+                error={errors.totalHours?.message}
+                {...register('totalHours')}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Total de Horas"
-              placeholder="Ex: 40h"
-              error={errors.totalHours?.message}
-              {...register('totalHours')}
-            />
             <Input
               label="Sala"
               placeholder="Ex: Sala 102"
               error={errors.room?.message}
               {...register('room')}
             />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4">
             <Input
-              label="Grau de Dificuldade"
-              placeholder="Ex: Médio"
-              error={errors.difficultyLevel?.message}
-              {...register('difficultyLevel')}
+                label="Grau de Dificuldade"
+                placeholder="Ex: Médio"
+                error={errors.difficultyLevel?.message}
+                {...register('difficultyLevel')}
             />
           </div>
           

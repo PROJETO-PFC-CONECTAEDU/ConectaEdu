@@ -6,6 +6,7 @@ export const roleTranslations: Record<string, string> = {
 };
 
 export const demandStatusTranslations: Record<string, string> = {
+  'DRAFT': 'Rascunho',
   'WAITING': 'Inscrições Abertas',
   'ONGOING': 'Em Andamento',
   'FINISHED': 'Concluída',
@@ -20,6 +21,7 @@ export const lessonStatusTranslations: Record<string, string> = {
   'REGISTERED': 'Registrada',
   'SIGNED': 'Assinada',
   'VALIDATED': 'Validada',
+  'NOT_COMPLETED': 'Não Concluída',
 };
 
 export const studentStatusTranslations: Record<string, string> = {
@@ -52,31 +54,44 @@ export const legalDocumentTypeTranslations: Record<string, string> = {
 
 export const formatRole = (role?: string) => {
   if (!role) return '';
-  return roleTranslations[role] || genericStatusTranslations[role] || role.replace('_', ' ');
+  const normalized = role.toUpperCase();
+  return roleTranslations[normalized] || genericStatusTranslations[normalized] || role.replace('_', ' ');
 };
 
 export const formatDemandStatus = (status: string) => {
-  return demandStatusTranslations[status] || genericStatusTranslations[status] || status;
+  if (!status) return '';
+  const normalized = status.toUpperCase();
+  return demandStatusTranslations[normalized] || genericStatusTranslations[normalized] || status;
 };
 
 export const formatLessonStatus = (status: string) => {
-  return lessonStatusTranslations[status] || genericStatusTranslations[status] || status;
+  if (!status) return '';
+  const normalized = status.toUpperCase();
+  return lessonStatusTranslations[normalized] || genericStatusTranslations[normalized] || status;
 };
 
 export const formatStudentStatus = (status: string) => {
-  return studentStatusTranslations[status] || genericStatusTranslations[status] || status;
+  if (!status) return '';
+  const normalized = status.toUpperCase();
+  return studentStatusTranslations[normalized] || genericStatusTranslations[normalized] || status;
 };
 
 export const formatLegalDocumentStatus = (status: string) => {
-  return legalDocumentStatusTranslations[status] || genericStatusTranslations[status] || status;
+  if (!status) return '';
+  const normalized = status.toUpperCase();
+  return legalDocumentStatusTranslations[normalized] || genericStatusTranslations[normalized] || status;
 };
 
 export const formatGenericStatus = (status: string) => {
-  return genericStatusTranslations[status] || status;
+  if (!status) return '';
+  const normalized = status.toUpperCase();
+  return genericStatusTranslations[normalized] || status;
 };
 
 export const formatLegalDocumentType = (type: string) => {
-  return legalDocumentTypeTranslations[type] || type;
+  if (!type) return '';
+  const normalized = type.toUpperCase();
+  return legalDocumentTypeTranslations[normalized] || type;
 };
 
 export const formatDate = (dateString?: string | number[] | Date | null) => {

@@ -18,6 +18,7 @@ import { SessionRow } from '../components/schedule/SessionRow';
 import { parseISO, isSameDay, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { clsx } from 'clsx';
+import { formatLessonStatus } from '../utils/format';
 
 export interface Lesson {
   id: string;
@@ -349,7 +350,7 @@ export function Schedule() {
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-slate-50 p-4 rounded-lg border border-border-default">
                 <p className="text-xs text-text-muted mb-1 font-medium uppercase tracking-wider">Status</p>
-                <p className="text-sm font-bold text-text-heading">{viewingLesson.status}</p>
+                <p className="text-sm font-bold text-text-heading">{formatLessonStatus(viewingLesson.status)}</p>
               </div>
               <div className="bg-slate-50 p-4 rounded-lg border border-border-default">
                 <p className="text-xs text-text-muted mb-1 font-medium uppercase tracking-wider">Presença</p>
