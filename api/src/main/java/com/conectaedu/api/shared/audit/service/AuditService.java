@@ -42,6 +42,36 @@ public class AuditService {
                 "Registro de %s \"%s\" foi excluído".formatted(type.getLabel(), name));
     }
 
+    @Transactional
+    public void logPasswordResetRequest(UUID userId, String email) {
+        record(AuditEntityType.USER, userId, AuditAction.PASSWORD_RESET_REQUEST,
+                "Solicitação de recuperação de senha para o e-mail: %s".formatted(email));
+    }
+
+    @Transactional
+    public void logPasswordResetSuccess(UUID userId, String email) {
+        record(AuditEntityType.USER, userId, AuditAction.PASSWORD_RESET_SUCCESS,
+                "Senha do usuário %s resetada com sucesso".formatted(email));
+    }
+
+    @Transactional
+    public void logPasswordResetFail(UUID userId, String email, String reason) {
+        record(AuditEntityType.USER, userId, AuditAction.PASSWORD_RESET_FAIL,
+                "Falha no reset de senha para %s: %s".formatted(email, reason));
+    }
+
+    @Transactional
+    public void logEmailConfirmationSuccess(UUID userId, String email) {
+        record(AuditEntityType.USER, userId, AuditAction.EMAIL_CONFIRMATION_SUCCESS,
+                "E-mail do usuário %s confirmado com sucesso".formatted(email));
+    }
+
+    @Transactional
+    public void logEmailConfirmationFail(String token, String reason) {
+        record(AuditEntityType.USER, null, AuditAction.EMAIL_CONFIRMATION_FAIL,
+                "Falha na confirmação de e-mail com token %s: %s".formatted(token, reason));
+    }
+
     private void record(AuditEntityType type, UUID id, AuditAction action, String description) {
         String text = description.length() > MAX ? description.substring(0, MAX) : description;
         String performedBy = SecurityContextHolder.getAuthenticatedUserEmail();
