@@ -2,8 +2,13 @@ package com.conectaedu.api.modules.auth.service;
 
 import com.conectaedu.api.modules.auth.dto.LoginRequestDTO;
 import com.conectaedu.api.modules.auth.dto.LoginResponseDTO;
+import com.conectaedu.api.modules.university.domain.University;
 import com.conectaedu.api.modules.user.genericUser.domain.User;
 import com.conectaedu.api.modules.user.genericUser.repository.UserRepository;
+import com.conectaedu.api.modules.user.school_director.domain.SchoolDirector;
+import com.conectaedu.api.modules.user.student.domain.Student;
+import com.conectaedu.api.modules.user.university_admin.domain.UniversityAdmin;
+import com.conectaedu.api.shared.exceptions.BusinessException;
 import com.conectaedu.api.shared.security.token.GenerateToken;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,16 +34,20 @@ public class AuthLoginService {
         User userEntity = userRepository.findByEmail(data.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
 
+        if (!userEntity.isEmailConfirmed()) {
+            throw new BusinessException("E-mail não confirmado. Verifique sua caixa de entrada.");
+        }
+
         String token = generateToken.generateToken(userEntity);
 
         java.util.UUID universityId = null;
         java.util.UUID schoolId = null;
 
-        if (userEntity instanceof com.conectaedu.api.modules.user.student.domain.Student student && student.getUniversity() != null) {
+        if (userEntity instanceof Student student && student.getUniversity() != null) {
             universityId = student.getUniversity().getId();
-        } else if (userEntity instanceof com.conectaedu.api.modules.user.university_admin.domain.UniversityAdmin admin && admin.getUniversity() != null) {
+        } else if (userEntity instanceof UniversityAdmin admin && admin.getUniversity() != null) {
             universityId = admin.getUniversity().getId();
-        } else if (userEntity instanceof com.conectaedu.api.modules.user.school_director.domain.SchoolDirector director && director.getSchool() != null) {
+        } else if (userEntity instanceof SchoolDirector director && director.getSchool() != null) {
             schoolId = director.getSchool().getId();
         }
 

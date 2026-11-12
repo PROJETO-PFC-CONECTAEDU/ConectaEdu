@@ -36,6 +36,7 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/auth/confirm-email").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/legal-documents/current/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().authenticated()
