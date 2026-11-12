@@ -30,6 +30,11 @@ public class SecurityContextHolder {
         return user != null ? user.getUniversityId() : null;
     }
 
+    public static UUID getAuthenticatedSchoolId() {
+        AuthenticatedUser user = getAuthenticatedUser();
+        return user != null ? user.getSchoolId() : null;
+    }
+
     public static boolean hasRole(String role) {
         Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null) return false;

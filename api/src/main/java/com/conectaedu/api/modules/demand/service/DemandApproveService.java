@@ -14,6 +14,7 @@ import com.conectaedu.api.shared.audit.support.AuditDiff;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.DemandStatus;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,17 +32,14 @@ public class DemandApproveService {
     private final LessonRepository lessonRepository;
     private final DemandMapper demandMapper;
     private final AuditService auditService;
+    private final TenancyValidator tenancyValidator;
 
     @Transactional
     public DemandResponseDTO approve(UUID demandId, UUID studentId) {
-        UUID directorId = SecurityContextHolder.getAuthenticatedUserId();
-
         Demand demand = demandRepository.findById(demandId)
                 .orElseThrow(() -> new RuntimeException("Demanda não encontrada"));
 
-        if (!demand.getDirector().getId().equals(directorId)) {
-            throw new RuntimeException("Apenas o diretor responsável pode aprovar candidatos");
-        }
+        tenancyValidator.validateDemandAccess(demand);
 
         if (demand.getStatus() != DemandStatus.WAITING) {
             throw new RuntimeException("Esta demanda não está em espera");

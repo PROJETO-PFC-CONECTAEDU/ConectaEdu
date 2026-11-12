@@ -16,6 +16,7 @@ import com.conectaedu.api.shared.exceptions.ConsentNotFoundException;
 import com.conectaedu.api.shared.exceptions.InvalidLegalDocumentStatusException;
 import com.conectaedu.api.shared.exceptions.LegalDocumentNotFoundException;
 import com.conectaedu.api.shared.exceptions.UserNotFoundException;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,10 +30,12 @@ public class ConsentAcceptanceService {
     private final ConsentRecordRepository consentRecordRepository;
     private final LegalDocumentRepository legalDocumentRepository;
     private final UserRepository userRepository;
+    private final TenancyValidator tenancyValidator;
 
     //Registra o aceite de uma versão específica.
     @Transactional
     public ConsentRecordResponseDTO acceptDocument(ConsentAcceptanceRequestDTO request) {
+        tenancyValidator.validateUserAccess(request.userId());
 
         User user = userRepository.findById(request.userId())
                 .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado!"));
@@ -69,6 +72,7 @@ public class ConsentAcceptanceService {
     //Revogação do aceite não é apagado, só recebe uma data de fim.
     @Transactional
     public ConsentRecordResponseDTO withdrawConsent(ConsentWithdrawalRequestDTO request) {
+        tenancyValidator.validateUserAccess(request.userId());
 
         ConsentRecord record = consentRecordRepository
                 .findByUser_IdAndLegalDocument_IdAndAction(

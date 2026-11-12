@@ -14,9 +14,9 @@ import com.conectaedu.api.shared.enums.LessonStatus;
 import com.conectaedu.api.shared.exceptions.InvalidLessonStatusException;
 import com.conectaedu.api.shared.exceptions.LessonNotFoundException;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +31,7 @@ public class LessonCancellationService {
     private final LessonMapper lessonMapper;
     private final AuditService auditService;
     private final ApplicationEventPublisher eventPublisher;
+    private final TenancyValidator tenancyValidator;
 
     //Aula cancelada não é apagada, ela fica no histórico da demanda em CANCELED, e é daí
     //que sai a permissão para abrir uma reposição.
@@ -47,12 +48,7 @@ public class LessonCancellationService {
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new LessonNotFoundException("Aula não encontrada!"));
 
-        boolean isStudent = lesson.getStudent().getId().equals(actorId);
-        boolean isDirector = lesson.getDemand().getDirector() != null
-                && lesson.getDemand().getDirector().getId().equals(actorId);
-        if (!isStudent && !isDirector) {
-            throw new AccessDeniedException("Só o estudante da aula ou o diretor da escola podem cancelá-la.");
-        }
+        tenancyValidator.validateLessonAccess(lesson);
 
         if (lesson.getStatus() != LessonStatus.SCHEDULED && lesson.getStatus() != LessonStatus.CONFIRMED) {
             throw new InvalidLessonStatusException(

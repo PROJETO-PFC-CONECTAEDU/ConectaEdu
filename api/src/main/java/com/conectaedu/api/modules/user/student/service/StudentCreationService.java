@@ -15,6 +15,7 @@ import com.conectaedu.api.shared.enums.UserType;
 import com.conectaedu.api.shared.exceptions.EmailAlreadyExistsException;
 import com.conectaedu.api.shared.exceptions.UniversityNotFoundException;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,7 @@ public class StudentCreationService {
     private final UniversityRepository universityRepository;
     private final AuditService auditService;
     private final PasswordEncoder passwordEncoder;
+    private final TenancyValidator tenancyValidator;
 
     @Transactional
     public StudentResponseDTO createStudent(StudentCreationRequestDTO request) {
@@ -41,11 +43,14 @@ public class StudentCreationService {
         }
 
         UUID universityId = request.universityId();
-        UUID authenticatedUniversityId = SecurityContextHolder.getAuthenticatedUniversityId();
 
-        // Se for um administrador de universidade, ele só pode cadastrar para a dele
-        if (authenticatedUniversityId != null) {
-            universityId = authenticatedUniversityId;
+        if (universityId != null) {
+            tenancyValidator.validateUniversity(universityId);
+        } else {
+            UUID authenticatedUniversityId = SecurityContextHolder.getAuthenticatedUniversityId();
+            if (authenticatedUniversityId != null) {
+                universityId = authenticatedUniversityId;
+            }
         }
 
         if (universityId == null) {

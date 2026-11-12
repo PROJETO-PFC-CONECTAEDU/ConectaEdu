@@ -5,19 +5,16 @@ import com.conectaedu.api.modules.lesson.dto.response.LessonHoursResponseDTO;
 import com.conectaedu.api.modules.lesson.dto.response.LessonResponseDTO;
 import com.conectaedu.api.modules.lesson.mapper.LessonMapper;
 import com.conectaedu.api.modules.lesson.repository.LessonRepository;
-import com.conectaedu.api.modules.user.school_director.domain.SchoolDirector;
-import com.conectaedu.api.modules.user.school_director.repository.SchoolDirectorRepository;
+import com.conectaedu.api.modules.demand.domain.Demand;
+import com.conectaedu.api.modules.demand.repository.DemandRepository;
 import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.student.repository.StudentRepository;
-import com.conectaedu.api.modules.user.university_admin.domain.UniversityAdmin;
-import com.conectaedu.api.modules.user.university_admin.repository.UniversityAdminRepository;
 import com.conectaedu.api.shared.enums.LessonStatus;
-import com.conectaedu.api.shared.enums.UserRole;
 import com.conectaedu.api.shared.exceptions.UserNotFoundException;
+import com.conectaedu.api.shared.exceptions.DemandNotFoundException;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
-import com.conectaedu.api.shared.security.domain.AuthenticatedUser;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,8 +35,8 @@ public class LessonListByService {
     private final LessonRepository lessonRepository;
     private final LessonMapper lessonMapper;
     private final StudentRepository studentRepository;
-    private final UniversityAdminRepository universityAdminRepository;
-    private final SchoolDirectorRepository schoolDirectorRepository;
+    private final DemandRepository demandRepository;
+    private final TenancyValidator tenancyValidator;
 
     //Alimenta a tela da agenda.
 
@@ -49,7 +46,7 @@ public class LessonListByService {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado!"));
 
-        checkAccess(student);
+        tenancyValidator.validateStudentAccess(student);
 
         LocalDateTime start = from == null ? MIN_DATE : from;
         LocalDateTime end = to == null ? MAX_DATE : to;
@@ -60,11 +57,9 @@ public class LessonListByService {
                 : lessonRepository.findByStudent_IdAndStatusAndScheduledStartBetweenOrderByScheduledStartAsc(
                 studentId, status, start, end);
 
-        if (hasRole(UserRole.SCHOOL_DIRECTOR) && !hasRole(UserRole.PLATFORM_ADMIN)) {
-            UUID actorId = SecurityContextHolder.getAuthenticatedUserId();
-            SchoolDirector director = schoolDirectorRepository.findById(actorId).orElse(null);
-            if (director != null && director.getSchool() != null) {
-                UUID schoolId = director.getSchool().getId();
+        if (SecurityContextHolder.hasRole("SCHOOL_DIRECTOR") && !SecurityContextHolder.hasRole("PLATFORM_ADMIN")) {
+            UUID schoolId = SecurityContextHolder.getAuthenticatedSchoolId();
+            if (schoolId != null) {
                 return lessons.stream()
                         .filter(l -> l.getSchool().getId().equals(schoolId))
                         .map(lessonMapper::mapToResponseDTO)
@@ -82,7 +77,7 @@ public class LessonListByService {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado!"));
 
-        checkAccess(student);
+        tenancyValidator.validateStudentAccess(student);
 
         List<Lesson> validated = lessonRepository.findByStudent_IdAndStatus(studentId, LessonStatus.VALIDATED);
 
@@ -95,7 +90,7 @@ public class LessonListByService {
 
     @Transactional(readOnly = true)
     public List<LessonResponseDTO> listBySchool(UUID schoolId) {
-        checkSchoolAccess(schoolId);
+        tenancyValidator.validateSchool(schoolId);
 
         List<Lesson> lessons = lessonRepository.findBySchool_IdOrderByScheduledStartAsc(schoolId);
 
@@ -104,52 +99,12 @@ public class LessonListByService {
 
     @Transactional(readOnly = true)
     public List<LessonResponseDTO> listByDemand(UUID demandId) {
+        Demand demand = demandRepository.findById(demandId)
+                .orElseThrow(() -> new DemandNotFoundException("Necessidade não encontrada!"));
+        
+        tenancyValidator.validateDemandAccess(demand);
+
         List<Lesson> lessons = lessonRepository.findByDemand_Id(demandId);
         return lessons.stream().map(lessonMapper::mapToResponseDTO).toList();
-    }
-
-    private void checkSchoolAccess(UUID schoolId) {
-        UUID actorId = SecurityContextHolder.getAuthenticatedUserId();
-
-        if (hasRole(UserRole.PLATFORM_ADMIN)) {
-            return;
-        }
-
-        SchoolDirector director = schoolDirectorRepository.findById(actorId).orElse(null);
-        boolean sameSchool = director != null
-                && director.getSchool() != null
-                && director.getSchool().getId().equals(schoolId);
-
-        if (!sameSchool) {
-            throw new AccessDeniedException("Você não tem acesso aos dados desta escola.");
-        }
-    }
-
-    private void checkAccess(Student student) {
-        UUID actorId = SecurityContextHolder.getAuthenticatedUserId();
-
-        if (student.getId().equals(actorId)) {
-            return;
-        }
-
-        if (hasRole(UserRole.PLATFORM_ADMIN) || hasRole(UserRole.SCHOOL_DIRECTOR)) {
-            return;
-        }
-
-        UniversityAdmin admin = universityAdminRepository.findById(actorId).orElse(null);
-        boolean sameUniversity = admin != null
-                && admin.getUniversity() != null
-                && student.getUniversity() != null
-                && admin.getUniversity().getId().equals(student.getUniversity().getId());
-
-        if (!sameUniversity) {
-            throw new AccessDeniedException("Você não tem acesso aos dados deste estudante.");
-        }
-    }
-
-    private boolean hasRole(UserRole role) {
-        AuthenticatedUser user = SecurityContextHolder.getAuthenticatedUser();
-        return user != null && user.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals("ROLE_" + role.name()));
     }
 }

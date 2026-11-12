@@ -15,6 +15,7 @@ import com.conectaedu.api.modules.user.university_admin.domain.UniversityAdmin;
 import com.conectaedu.api.shared.enums.DemandStatus;
 import com.conectaedu.api.shared.enums.StudentStatus;
 import com.conectaedu.api.shared.enums.UserRole;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,13 +28,13 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class DashboardService {
-
     private final SchoolRepository schoolRepository;
     private final UniversityRepository universityRepository;
     private final StudentRepository studentRepository;
     private final DemandRepository demandRepository;
     private final LessonRepository lessonRepository;
     private final IInternshipFacade internshipFacade;
+    private final TenancyValidator tenancyValidator;
 
     @Transactional(readOnly = true)
     public DashboardStatsDTO getStats(User user) {
@@ -50,6 +51,8 @@ public class DashboardService {
                 return DashboardStatsDTO.builder().statistics(stats).build();
             }
             var universityId = admin.getUniversity().getId();
+            tenancyValidator.validateUniversity(universityId);
+
             stats.put("myStudentsCount", studentRepository.countByUniversityId(universityId));
             stats.put("activeStudentsCount", demandRepository.countActiveStudentsByUniversityId(universityId));
 
@@ -67,6 +70,8 @@ public class DashboardService {
                 return DashboardStatsDTO.builder().statistics(stats).build();
             }
             var schoolId = director.getSchool().getId();
+            tenancyValidator.validateSchool(schoolId);
+
             stats.put("myDemandsCount", demandRepository.countBySchoolId(schoolId));
             stats.put("openVacanciesCount", demandRepository.countBySchoolIdAndStatus(schoolId, DemandStatus.WAITING));
             stats.put("ongoingClassesCount", demandRepository.countBySchoolIdAndStatus(schoolId, DemandStatus.ONGOING));
@@ -75,6 +80,8 @@ public class DashboardService {
             // Gráfico para Diretor: barra por período e demanda
             stats.put("lessonsByPeriodAndDemand", lessonRepository.countBySchoolAndPeriodAndDemand(schoolId));
         } else if (user instanceof Student student) {
+            tenancyValidator.validateUserAccess(student.getId());
+
             BigDecimal myHours = internshipFacade.getHoursByStudent(student.getId()).totalHours();
             stats.put("myHours", myHours);
             

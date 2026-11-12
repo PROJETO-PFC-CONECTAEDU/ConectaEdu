@@ -11,6 +11,7 @@ import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.DemandStatus;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,17 +22,21 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class DemandCreationService {
-
     private final DemandRepository demandRepository;
     private final SchoolDirectorRepository schoolDirectorRepository;
     private final AuditService auditService;
     private final DemandMapper demandMapper;
+    private final TenancyValidator tenancyValidator;
 
     @Transactional
     public DemandResponseDTO createDemand(DemandCreationRequestDTO request) {
         UUID directorId = SecurityContextHolder.getAuthenticatedUserId();
         SchoolDirector director = schoolDirectorRepository.findById(directorId)
                 .orElseThrow(() -> new RuntimeException("Diretor não encontrado"));
+
+        if (director.getSchool() != null) {
+            tenancyValidator.validateSchool(director.getSchool().getId());
+        }
 
         Demand demand = new Demand();
         demand.setTitle(request.title());

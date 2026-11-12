@@ -16,6 +16,7 @@ import com.conectaedu.api.shared.exceptions.DemandNotFoundException;
 import com.conectaedu.api.shared.exceptions.EvaluationAlreadySubmittedException;
 import com.conectaedu.api.shared.exceptions.InvalidDemandStatusException;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,7 @@ public class ClassEvaluationService {
     private final ClassEvaluationRepository classEvaluationRepository;
     private final FeedbackMapper feedbackMapper;
     private final AuditService auditService;
+    private final TenancyValidator tenancyValidator;
 
     //o estudante que atendeu a necessidade faz o balanço da sala ao fim do ciclo.
     @Transactional
@@ -40,6 +42,8 @@ public class ClassEvaluationService {
 
         Demand demand = demandRepository.findById(request.demandId())
                 .orElseThrow(() -> new DemandNotFoundException("Necessidade não encontrada!"));
+
+        tenancyValidator.validateDemandAccess(demand);
 
         if (demand.getStatus() != DemandStatus.FINISHED) {
             throw new InvalidDemandStatusException(

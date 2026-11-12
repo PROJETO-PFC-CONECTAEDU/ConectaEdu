@@ -10,6 +10,7 @@ import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.SchoolStatus;
 import com.conectaedu.api.shared.exceptions.InvalidSchoolStatusException;
 import com.conectaedu.api.shared.exceptions.SchoolNotFoundException;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,13 +21,14 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class SchoolValidationService {
-
     private final SchoolRepository schoolRepository;
     private final AuditService auditService;
+    private final TenancyValidator tenancyValidator;
 
     //Aprova a escola.
     @Transactional
     public SchoolResponseDTO validateSchool(UUID id, String notes) {
+        tenancyValidator.validateSchool(id);
         School school = findPending(id);
 
         SchoolStatus beforeStatus = school.getStatus();
@@ -50,6 +52,7 @@ public class SchoolValidationService {
     //Recusa a escola: passa para inactive.
     @Transactional
     public SchoolResponseDTO deactivateSchool(UUID id) {
+        tenancyValidator.validateSchool(id);
         School school = findPending(id);
 
         SchoolStatus beforeStatus = school.getStatus();

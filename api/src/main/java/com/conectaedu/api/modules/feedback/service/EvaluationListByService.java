@@ -9,15 +9,10 @@ import com.conectaedu.api.modules.feedback.repository.ClassEvaluationRepository;
 import com.conectaedu.api.modules.feedback.repository.StudentEvaluationRepository;
 import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.student.repository.StudentRepository;
-import com.conectaedu.api.modules.user.university_admin.domain.UniversityAdmin;
-import com.conectaedu.api.modules.user.university_admin.repository.UniversityAdminRepository;
-import com.conectaedu.api.shared.enums.UserRole;
 import com.conectaedu.api.shared.exceptions.DemandNotFoundException;
 import com.conectaedu.api.shared.exceptions.UserNotFoundException;
-import com.conectaedu.api.shared.security.context.SecurityContextHolder;
-import com.conectaedu.api.shared.security.domain.AuthenticatedUser;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +33,7 @@ public class EvaluationListByService {
     private final StudentEvaluationRepository studentEvaluationRepository;
     private final ClassEvaluationRepository classEvaluationRepository;
     private final FeedbackMapper feedbackMapper;
-    private final UniversityAdminRepository universityAdminRepository;
+    private final TenancyValidator tenancyValidator;
 
     //histórico de avaliações recebidas pelo estudante RN-52. o estudante só vê o próprio.
     @Transactional(readOnly = true)
@@ -50,7 +45,7 @@ public class EvaluationListByService {
             throw new IllegalArgumentException("A data de início não pode ser posterior à data de término.");
         }
 
-        checkAccess(student);
+        tenancyValidator.validateStudentAccess(student);
 
         LocalDateTime start = from == null ? MIN_DATE : from;
         LocalDateTime end = to == null ? MAX_DATE : to;
@@ -63,9 +58,10 @@ public class EvaluationListByService {
     //os dois lados da mesma necessidade.
     @Transactional(readOnly = true)
     public DemandEvaluationsResponseDTO listByDemand(UUID demandId) {
-        if (!demandRepository.existsById(demandId)) {
-            throw new DemandNotFoundException("Necessidade não encontrada!");
-        }
+        com.conectaedu.api.modules.demand.domain.Demand demand = demandRepository.findById(demandId)
+                .orElseThrow(() -> new DemandNotFoundException("Necessidade não encontrada!"));
+
+        tenancyValidator.validateDemandAccess(demand);
 
         List<StudentEvaluationResponseDTO> studentEvaluations = studentEvaluationRepository
                 .findByDemand_IdOrderByCreatedAtDesc(demandId)
@@ -80,42 +76,10 @@ public class EvaluationListByService {
 
     @Transactional(readOnly = true)
     public List<ClassEvaluationResponseDTO> listByDirector(UUID directorId) {
-        // Garantir que o ator é o próprio diretor ou admin
-        UUID actorId = SecurityContextHolder.getAuthenticatedUserId();
-        if (!directorId.equals(actorId) && !hasRole(UserRole.PLATFORM_ADMIN)) {
-            throw new AccessDeniedException("Você não tem acesso a estas avaliações.");
-        }
+        tenancyValidator.validateUserAccess(directorId);
 
         return classEvaluationRepository
                 .findByDemand_Director_IdOrderByCreatedAtDesc(directorId)
                 .stream().map(feedbackMapper::mapToResponseDTO).toList();
-    }
-
-    private void checkAccess(Student student) {
-        UUID actorId = SecurityContextHolder.getAuthenticatedUserId();
-
-        if (student.getId().equals(actorId)) {
-            return;
-        }
-
-        if (hasRole(UserRole.PLATFORM_ADMIN)) {
-            return;
-        }
-
-        UniversityAdmin admin = universityAdminRepository.findById(actorId).orElse(null);
-        boolean sameUniversity = admin != null
-                && admin.getUniversity() != null
-                && student.getUniversity() != null
-                && admin.getUniversity().getId().equals(student.getUniversity().getId());
-
-        if (!sameUniversity) {
-            throw new AccessDeniedException("Você não tem acesso aos dados deste estudante.");
-        }
-    }
-
-    private boolean hasRole(UserRole role) {
-        AuthenticatedUser user = SecurityContextHolder.getAuthenticatedUser();
-        return user != null && user.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals("ROLE_" + role.name()));
     }
 }

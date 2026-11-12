@@ -8,6 +8,7 @@ import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.audit.support.AuditDiff;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.exceptions.UniversityNotFoundException;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,12 +18,13 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class UniversityUpdateService {
-
     private final UniversityRepository universityRepository;
     private final AuditService auditService;
+    private final TenancyValidator tenancyValidator;
 
     @Transactional
     public UniversityResponseDTO updateUniversity(UUID id, UniversityUpdateRequestDTO request) {
+        tenancyValidator.validateUniversity(id);
         University university = universityRepository.findById(id)
                 .orElseThrow(() -> new UniversityNotFoundException("Universidade não encontrada!"));
 

@@ -1,6 +1,7 @@
 package com.conectaedu.api.shared.security.filter;
 
 import com.conectaedu.api.modules.user.genericUser.repository.UserRepository;
+import com.conectaedu.api.modules.user.school_director.domain.SchoolDirector;
 import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.university_admin.domain.UniversityAdmin;
 import com.conectaedu.api.shared.security.domain.AuthenticatedUser;
@@ -13,6 +14,7 @@ import com.conectaedu.api.modules.user.genericUser.domain.User;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -27,7 +29,8 @@ public class CustomUserDetails implements UserDetailsService {
 
         var authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getUserRole().name()));
 
-        java.util.UUID universityId = null;
+        UUID universityId = null;
+        UUID schoolId = null;
         if (user instanceof Student student) {
             if (student.getUniversity() != null) {
                 universityId = student.getUniversity().getId();
@@ -36,6 +39,10 @@ public class CustomUserDetails implements UserDetailsService {
             if (admin.getUniversity() != null) {
                 universityId = admin.getUniversity().getId();
             }
+        } else if (user instanceof SchoolDirector director) {
+            if (director.getSchool() != null) {
+                schoolId = director.getSchool().getId();
+            }
         }
 
         return new AuthenticatedUser(
@@ -43,6 +50,7 @@ public class CustomUserDetails implements UserDetailsService {
                 user.getEmail(),
                 user.getPassword(),
                 universityId,
+                schoolId,
                 authorities);
     }
 }
