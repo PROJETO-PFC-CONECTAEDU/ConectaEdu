@@ -14,8 +14,8 @@ import com.conectaedu.api.shared.exceptions.InvalidLessonStatusException;
 import com.conectaedu.api.shared.exceptions.LessonNotFoundException;
 import com.conectaedu.api.shared.exceptions.RegistrationWindowClosedException;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +29,7 @@ public class LessonRegistrationService {
     private final LessonRepository lessonRepository;
     private final LessonMapper lessonMapper;
     private final AuditService auditService;
+    private final TenancyValidator tenancyValidator;
 
     //O estudante descreve o que deu em aula, quantos apareceram e classifica a turma no
     //Nine Box, é este registro que leva a aula a COMPLETED e a deixa pronta para validacao.
@@ -40,9 +41,7 @@ public class LessonRegistrationService {
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new LessonNotFoundException("Aula não encontrada!"));
 
-        if (!lesson.getStudent().getId().equals(studentId)) {
-            throw new AccessDeniedException("Apenas o estudante da aula pode registrá-la.");
-        }
+        tenancyValidator.validateLessonAccess(lesson);
 
         if (lesson.getStatus() != LessonStatus.CONFIRMED) {
             throw new InvalidLessonStatusException(

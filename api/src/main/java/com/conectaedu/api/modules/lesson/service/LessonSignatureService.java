@@ -13,6 +13,7 @@ import com.conectaedu.api.shared.enums.LessonStatus;
 import com.conectaedu.api.shared.exceptions.InvalidLessonStatusException;
 import com.conectaedu.api.shared.exceptions.LessonNotFoundException;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ public class LessonSignatureService {
     private final UniversityAdminRepository universityAdminRepository;
     private final LessonMapper lessonMapper;
     private final AuditService auditService;
+    private final TenancyValidator tenancyValidator;
 
     //A assinatura é o que transforma a aula em hora de estágio, normalmente assina o diretor da escola
     // passados os 10 dias a rotina escala o caso e a universidade do estudante pode assinar
@@ -40,6 +42,8 @@ public class LessonSignatureService {
 
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new LessonNotFoundException("Aula não encontrada!"));
+
+        tenancyValidator.validateLessonAccess(lesson);
 
         if (lesson.getStatus() != LessonStatus.COMPLETED) {
             throw new InvalidLessonStatusException(

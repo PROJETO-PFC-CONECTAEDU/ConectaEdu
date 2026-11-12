@@ -11,6 +11,7 @@ import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.student.repository.StudentRepository;
 import com.conectaedu.api.shared.enums.DemandStatus;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,11 +27,14 @@ public class DemandGetService {
     private final ClassEvaluationRepository classEvaluationRepository;
     private final StudentEvaluationRepository studentEvaluationRepository;
     private final DemandMapper demandMapper;
+    private final TenancyValidator tenancyValidator;
 
     @Transactional(readOnly = true)
     public DemandResponseDTO getDemand(UUID id) {
         Demand demand = demandRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Demanda não encontrada"));
+
+        tenancyValidator.validateDemandAccess(demand);
         
         Double distance = null;
         try {
@@ -60,20 +64,43 @@ public class DemandGetService {
 
     @Transactional(readOnly = true)
     public List<DemandResponseDTO> getAllDemands() {
-        return demandRepository.findAll().stream()
-                .map(demandMapper::mapToResponseDTO)
-                .toList();
+        if (SecurityContextHolder.hasRole("PLATFORM_ADMIN")) {
+            return demandRepository.findAll().stream()
+                    .map(demandMapper::mapToResponseDTO)
+                    .toList();
+        }
+
+        UUID schoolId = SecurityContextHolder.getAuthenticatedSchoolId();
+        if (schoolId != null) {
+            return demandRepository.findBySchoolId(schoolId).stream()
+                    .map(demandMapper::mapToResponseDTO)
+                    .toList();
+        }
+
+        return List.of();
     }
 
     @Transactional(readOnly = true)
     public List<DemandResponseDTO> getDemandsByStatus(DemandStatus status) {
-        return demandRepository.findByStatus(status).stream()
-                .map(demandMapper::mapToResponseDTO)
-                .toList();
+        if (SecurityContextHolder.hasRole("PLATFORM_ADMIN") || status == DemandStatus.WAITING) {
+            return demandRepository.findByStatus(status).stream()
+                    .map(demandMapper::mapToResponseDTO)
+                    .toList();
+        }
+
+        UUID schoolId = SecurityContextHolder.getAuthenticatedSchoolId();
+        if (schoolId != null) {
+            return demandRepository.findByStatusAndSchoolId(status, schoolId).stream()
+                    .map(demandMapper::mapToResponseDTO)
+                    .toList();
+        }
+
+        return List.of();
     }
 
     @Transactional(readOnly = true)
     public List<DemandStudentDTO> getDemandsByStatusAndStudentId(DemandStatus status, UUID studentId) {
+        tenancyValidator.validateUserAccess(studentId);
         return demandRepository.findByStatusAndStudentId(status, studentId).stream()
                 .map(demand -> {
                     boolean hasStudentFeedback = classEvaluationRepository.existsByDemand_IdAndStudent_Id(demand.getId(), studentId);
@@ -87,6 +114,7 @@ public class DemandGetService {
 
     @Transactional(readOnly = true)
     public List<DemandStudentDTO> getDemandsByStatusAndDirectorId(DemandStatus status, UUID directorId) {
+        tenancyValidator.validateUserAccess(directorId);
         return demandRepository.findByStatusAndDirectorId(status, directorId).stream()
                 .map(demand -> {
                     UUID studentId = demand.getStudent() != null ? demand.getStudent().getId() : null;

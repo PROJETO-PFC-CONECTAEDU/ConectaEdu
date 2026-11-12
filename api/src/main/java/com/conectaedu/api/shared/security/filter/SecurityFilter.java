@@ -40,13 +40,15 @@ public class SecurityFilter extends OncePerRequestFilter {
                 String id = decodedJWT.getClaim("id").asString();
 
                 String universityIdClaim = decodedJWT.getClaim("universityId").asString();
+                String schoolIdClaim = decodedJWT.getClaim("schoolId").asString();
 
                 if (id != null) {
                     var authorities = Collections.singletonList(new SimpleGrantedAuthority(role.startsWith("ROLE_") ? role : "ROLE_" + role));
 
                     UUID universityId = universityIdClaim != null ? UUID.fromString(universityIdClaim) : null;
+                    UUID schoolId = schoolIdClaim != null ? UUID.fromString(schoolIdClaim) : null;
 
-                    var userDetails = new AuthenticatedUser(UUID.fromString(id), email, "", universityId, authorities);
+                    var userDetails = new AuthenticatedUser(UUID.fromString(id), email, "", universityId, schoolId, authorities);
 
                     var authentication = new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authentication);

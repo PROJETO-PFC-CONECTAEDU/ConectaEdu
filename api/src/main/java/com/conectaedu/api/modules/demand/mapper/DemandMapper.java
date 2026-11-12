@@ -3,8 +3,11 @@ package com.conectaedu.api.modules.demand.mapper;
 import com.conectaedu.api.modules.demand.domain.Demand;
 import com.conectaedu.api.modules.demand.dto.response.DemandResponseDTO;
 import com.conectaedu.api.modules.demand.dto.response.DemandStudentDTO;
+import com.conectaedu.api.shared.security.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
@@ -35,9 +38,7 @@ public class DemandMapper {
                 demand.getDirector().getName(),
                 demand.getStudent() != null ? demand.getStudent().getId() : null,
                 demand.getStudent() != null ? demand.getStudent().getName() : null,
-                demand.getCandidates().stream()
-                        .map(c -> new DemandResponseDTO.CandidateResponseDTO(c.getId(), c.getName()))
-                        .collect(Collectors.toList()),
+                mapCandidates(demand),
                 demand.getStudentHistory().stream()
                         .map(h -> new DemandResponseDTO.HistoryResponseDTO(
                                 h.getStudent().getId(),
@@ -78,9 +79,7 @@ public class DemandMapper {
                 demand.getDirector().getName(),
                 demand.getStudent() != null ? demand.getStudent().getId() : null,
                 demand.getStudent() != null ? demand.getStudent().getName() : null,
-                demand.getCandidates().stream()
-                        .map(c -> new DemandResponseDTO.CandidateResponseDTO(c.getId(), c.getName()))
-                        .collect(Collectors.toList()),
+                mapCandidates(demand),
                 demand.getStudentHistory().stream()
                         .map(h -> new DemandResponseDTO.HistoryResponseDTO(
                                 h.getStudent().getId(),
@@ -119,9 +118,7 @@ public class DemandMapper {
                 demand.getDirector().getName(),
                 demand.getStudent() != null ? demand.getStudent().getId() : null,
                 demand.getStudent() != null ? demand.getStudent().getName() : null,
-                demand.getCandidates().stream()
-                        .map(c -> new DemandStudentDTO.CandidateResponseDTO(c.getId(), c.getName()))
-                        .collect(Collectors.toList()),
+                mapStudentCandidates(demand),
                 demand.getCreatedAt(),
                 demand.getUpdatedAt(),
                 null,
@@ -155,9 +152,7 @@ public class DemandMapper {
                 demand.getDirector().getName(),
                 demand.getStudent() != null ? demand.getStudent().getId() : null,
                 demand.getStudent() != null ? demand.getStudent().getName() : null,
-                demand.getCandidates().stream()
-                        .map(c -> new DemandStudentDTO.CandidateResponseDTO(c.getId(), c.getName()))
-                        .collect(Collectors.toList()),
+                mapStudentCandidates(demand),
                 demand.getCreatedAt(),
                 demand.getUpdatedAt(),
                 recommendationScore,
@@ -192,9 +187,7 @@ public class DemandMapper {
                 demand.getDirector().getName(),
                 demand.getStudent() != null ? demand.getStudent().getId() : null,
                 demand.getStudent() != null ? demand.getStudent().getName() : null,
-                demand.getCandidates().stream()
-                        .map(c -> new DemandStudentDTO.CandidateResponseDTO(c.getId(), c.getName()))
-                        .collect(Collectors.toList()),
+                mapStudentCandidates(demand),
                 demand.getCreatedAt(),
                 demand.getUpdatedAt(),
                 recommendationScore,
@@ -203,5 +196,23 @@ public class DemandMapper {
                 hasStudentFeedback,
                 hasDirectorFeedback
         );
+    }
+
+    private List<DemandResponseDTO.CandidateResponseDTO> mapCandidates(Demand demand) {
+        if (SecurityContextHolder.hasRole("STUDENT")) {
+            return Collections.emptyList();
+        }
+        return demand.getCandidates().stream()
+                .map(c -> new DemandResponseDTO.CandidateResponseDTO(c.getId(), c.getName()))
+                .collect(Collectors.toList());
+    }
+
+    private List<DemandStudentDTO.CandidateResponseDTO> mapStudentCandidates(Demand demand) {
+        if (SecurityContextHolder.hasRole("STUDENT")) {
+            return Collections.emptyList();
+        }
+        return demand.getCandidates().stream()
+                .map(c -> new DemandStudentDTO.CandidateResponseDTO(c.getId(), c.getName()))
+                .collect(Collectors.toList());
     }
 }

@@ -16,8 +16,8 @@ import com.conectaedu.api.shared.exceptions.DemandNotFoundException;
 import com.conectaedu.api.shared.exceptions.EvaluationAlreadySubmittedException;
 import com.conectaedu.api.shared.exceptions.InvalidDemandStatusException;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +32,7 @@ public class StudentEvaluationService {
     private final StudentEvaluationRepository studentEvaluationRepository;
     private final FeedbackMapper feedbackMapper;
     private final AuditService auditService;
+    private final TenancyValidator tenancyValidator;
 
     //o diretor responsável pela necessidade avalia o estudante RN-46. A avaliação é puxada e não depende do DemandFinishedEvent, só do status FINISHED.
     @Transactional
@@ -41,14 +42,12 @@ public class StudentEvaluationService {
         Demand demand = demandRepository.findById(request.demandId())
                 .orElseThrow(() -> new DemandNotFoundException("Necessidade não encontrada!"));
 
+        tenancyValidator.validateDemandAccess(demand);
+
         if (demand.getStatus() != DemandStatus.FINISHED) {
             throw new InvalidDemandStatusException(
                     "A Necessidade está com status %s e só pode ser avaliada depois de concluída."
                             .formatted(demand.getStatus()));
-        }
-
-        if (!demand.getDirector().getId().equals(directorId)) {
-            throw new AccessDeniedException("Apenas o diretor responsável pela Necessidade pode avaliá-la.");
         }
 
         Student student = (demand.getStudent() != null && demand.getStudent().getId().equals(request.studentId()))

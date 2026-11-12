@@ -6,6 +6,7 @@ import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.exceptions.UserNotFoundException;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -19,16 +20,14 @@ public class StudentDeletionService {
 
     private final StudentRepository studentRepository;
     private final AuditService auditService;
+    private final TenancyValidator tenancyValidator;
 
     @Transactional
     public void deleteStudent(UUID id) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado!"));
 
-        UUID universityId = SecurityContextHolder.getAuthenticatedUniversityId();
-        if (universityId != null && (student.getUniversity() == null || !student.getUniversity().getId().equals(universityId))) {
-            throw new AccessDeniedException("Você não tem permissão para remover este estudante.");
-        }
+        tenancyValidator.validateStudentAccess(student);
 
         studentRepository.deleteById(id);
 

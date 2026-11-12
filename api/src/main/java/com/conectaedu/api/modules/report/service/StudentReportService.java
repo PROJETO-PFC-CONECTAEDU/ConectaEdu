@@ -18,10 +18,8 @@ import com.conectaedu.api.shared.enums.LessonStatus;
 import com.conectaedu.api.shared.enums.UserRole;
 import com.conectaedu.api.shared.exceptions.SchoolNotFoundException;
 import com.conectaedu.api.shared.exceptions.UserNotFoundException;
-import com.conectaedu.api.shared.security.context.SecurityContextHolder;
-import com.conectaedu.api.shared.security.domain.AuthenticatedUser;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +51,7 @@ public class StudentReportService {
     private final ReportLessonRepository reportLessonRepository;
     private final IInternshipFacade internshipFacade;
     private final IFeedbackFacade feedbackFacade;
+    private final TenancyValidator tenancyValidator;
 
     @Transactional(readOnly = true)
     public StudentReportResponseDTO forStudent(UUID studentId, LocalDate from, LocalDate to, UUID schoolId) {
@@ -121,7 +120,7 @@ public class StudentReportService {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado!"));
 
-        checkAccess(student);
+        tenancyValidator.validateStudentAccess(student);
 
         if (from != null && to != null && from.isAfter(to)) {
             throw new IllegalArgumentException("A data de início não pode ser posterior à data de término.");
@@ -175,36 +174,5 @@ public class StudentReportService {
 
     private long countOf(List<Lesson> lessons, LessonStatus status) {
         return lessons.stream().filter(l -> l.getStatus() == status).count();
-    }
-
-
-    private void checkAccess(Student student) {
-        UUID actorId = SecurityContextHolder.getAuthenticatedUserId();
-
-        if (student.getId().equals(actorId)) {
-            return;
-        }
-
-        if (hasRole(UserRole.PLATFORM_ADMIN)) {
-            return;
-        }
-
-        UniversityAdmin admin =
-                universityAdminRepository.findById(actorId).orElse(null);
-
-        boolean sameUniversity = admin != null
-                && admin.getUniversity() != null
-                && student.getUniversity() != null
-                && admin.getUniversity().getId().equals(student.getUniversity().getId());
-
-        if (!sameUniversity) {
-            throw new AccessDeniedException("Você não tem acesso aos dados deste estudante.");
-        }
-    }
-
-    private boolean hasRole(UserRole role) {
-        AuthenticatedUser user = SecurityContextHolder.getAuthenticatedUser();
-        return user != null && user.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals("ROLE_" + role.name()));
     }
 }

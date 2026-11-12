@@ -14,6 +14,7 @@ import com.conectaedu.api.shared.exceptions.EmailAlreadyExistsException;
 import com.conectaedu.api.shared.exceptions.UniversityNotFoundException;
 import com.conectaedu.api.shared.exceptions.UserNotFoundException;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -30,16 +31,14 @@ public class StudentUpdateService {
     private final StudentRepository studentRepository;
     private final UniversityRepository universityRepository;
     private final AuditService auditService;
+    private final TenancyValidator tenancyValidator;
 
     @Transactional
     public StudentResponseDTO updateStudent(UUID id, StudentUpdateRequestDTO request) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado!"));
 
-        UUID authenticatedUniversityId = SecurityContextHolder.getAuthenticatedUniversityId();
-        if (authenticatedUniversityId != null && (student.getUniversity() == null || !student.getUniversity().getId().equals(authenticatedUniversityId))) {
-            throw new AccessDeniedException("Você não tem permissão para editar este estudante.");
-        }
+        tenancyValidator.validateStudentAccess(student);
 
         String beforeEmail = student.getEmail();
         String beforeName = student.getName();

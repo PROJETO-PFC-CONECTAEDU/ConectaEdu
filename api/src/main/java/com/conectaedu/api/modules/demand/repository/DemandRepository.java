@@ -12,6 +12,10 @@ import java.util.UUID;
 public interface DemandRepository extends JpaRepository<Demand, UUID> {
     List<Demand> findByStatus(DemandStatus status);
 
+    List<Demand> findBySchoolId(UUID schoolId);
+
+    List<Demand> findByStatusAndSchoolId(DemandStatus status, UUID schoolId);
+
     List<Demand> findByStatusAndStudentId(DemandStatus status, UUID studentId);
 
     List<Demand> findByStatusAndDirectorId(DemandStatus status, UUID directorId);

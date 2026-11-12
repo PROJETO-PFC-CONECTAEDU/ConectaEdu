@@ -9,6 +9,7 @@ import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.audit.support.AuditDiff;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.DemandStatus;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,11 +24,14 @@ public class DemandUpdateService {
     private final DemandRepository demandRepository;
     private final DemandMapper demandMapper;
     private final AuditService auditService;
+    private final TenancyValidator tenancyValidator;
 
     @Transactional
     public DemandResponseDTO updateDemand(UUID id, DemandUpdateRequestDTO request) {
         Demand demand = demandRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Demanda não encontrada"));
+
+        tenancyValidator.validateDemandAccess(demand);
 
         String beforeTitle = demand.getTitle();
         String beforeDescription = demand.getDescription();

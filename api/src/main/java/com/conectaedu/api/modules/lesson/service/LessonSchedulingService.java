@@ -25,8 +25,8 @@ import com.conectaedu.api.shared.exceptions.InvalidUniversityStatusException;
 import com.conectaedu.api.shared.exceptions.LessonOverlapException;
 import com.conectaedu.api.shared.exceptions.LessonScheduleTooSoonException;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +41,7 @@ public class LessonSchedulingService {
     private final DemandRepository demandRepository;
     private final LessonMapper lessonMapper;
     private final AuditService auditService;
+    private final TenancyValidator tenancyValidator;
 
     //A ordem das checagens não é estética, as duas primeiras são conta pura e barram a
     //requisição antes de tocar no banco, e a sobreposição fica no fim por ser a consulta mais cara.
@@ -63,6 +64,8 @@ public class LessonSchedulingService {
         Demand demand = demandRepository.findById(request.demandId())
                 .orElseThrow(() -> new DemandNotFoundException("Demanda não encontrada!"));
 
+        tenancyValidator.validateDemandAccess(demand);
+
         if (demand.getStatus() != DemandStatus.ONGOING && 
             demand.getStatus() != DemandStatus.DRAFT && 
             demand.getStatus() != DemandStatus.WAITING) {
@@ -71,10 +74,6 @@ public class LessonSchedulingService {
         }
 
         Student student = demand.getStudent();
-
-        if (demand.getDirector() == null || !demand.getDirector().getId().equals(directorId)) {
-            throw new AccessDeniedException("Apenas o diretor responsável pela demanda pode agendar aulas.");
-        }
 
         if (student != null) {
             validateInternshipLink(student, demand.getSchool());

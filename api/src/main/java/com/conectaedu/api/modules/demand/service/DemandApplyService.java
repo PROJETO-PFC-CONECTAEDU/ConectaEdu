@@ -11,6 +11,7 @@ import com.conectaedu.api.shared.audit.support.AuditDiff;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.DemandStatus;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ public class DemandApplyService {
     private final StudentRepository studentRepository;
     private final DemandMapper demandMapper;
     private final AuditService auditService;
+    private final TenancyValidator tenancyValidator;
 
     @Transactional
     public DemandResponseDTO apply(UUID demandId) {
@@ -35,6 +37,8 @@ public class DemandApplyService {
 
         Demand demand = demandRepository.findById(demandId)
                 .orElseThrow(() -> new RuntimeException("Demanda não encontrada"));
+
+        tenancyValidator.validateDemandAccess(demand);
 
         if (demand.getStatus() != DemandStatus.WAITING) {
             throw new RuntimeException("Esta demanda não está mais disponível para candidaturas");

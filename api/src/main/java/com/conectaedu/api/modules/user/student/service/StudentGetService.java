@@ -5,8 +5,8 @@ import com.conectaedu.api.modules.user.student.dto.response.StudentResponseDTO;
 import com.conectaedu.api.modules.user.student.repository.StudentRepository;
 import com.conectaedu.api.shared.exceptions.UserNotFoundException;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,21 +19,33 @@ import java.util.stream.Collectors;
 public class StudentGetService {
 
     private final StudentRepository studentRepository;
+    private final TenancyValidator tenancyValidator;
 
     @Transactional(readOnly = true)
     public List<StudentResponseDTO> getAllStudents() {
-        UUID universityId = SecurityContextHolder.getAuthenticatedUniversityId();
-        
-        List<Student> students;
-        if (universityId != null) {
-            students = studentRepository.findByUniversityId(universityId);
-        } else {
-            students = studentRepository.findAll();
+        if (SecurityContextHolder.hasRole("PLATFORM_ADMIN")) {
+            return studentRepository.findAll().stream()
+                    .map(this::mapToResponseDTO)
+                    .toList();
         }
 
-        return students.stream()
-                .map(this::mapToResponseDTO)
-                .collect(Collectors.toList());
+        UUID universityId = SecurityContextHolder.getAuthenticatedUniversityId();
+        if (universityId != null) {
+            return studentRepository.findByUniversityId(universityId).stream()
+                    .map(this::mapToResponseDTO)
+                    .toList();
+        }
+
+        if (SecurityContextHolder.hasRole("SCHOOL_DIRECTOR")) {
+            UUID schoolId = SecurityContextHolder.getAuthenticatedSchoolId();
+            if (schoolId != null) {
+                return studentRepository.findAllBySchoolId(schoolId).stream()
+                        .map(this::mapToResponseDTO)
+                        .toList();
+            }
+        }
+
+        return List.of();
     }
 
     @Transactional(readOnly = true)
@@ -41,10 +53,7 @@ public class StudentGetService {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado!"));
 
-        UUID universityId = SecurityContextHolder.getAuthenticatedUniversityId();
-        if (universityId != null && (student.getUniversity() == null || !student.getUniversity().getId().equals(universityId))) {
-            throw new AccessDeniedException("Você não tem permissão para acessar este estudante.");
-        }
+        tenancyValidator.validateStudentAccess(student);
 
         return mapToResponseDTO(student);
     }

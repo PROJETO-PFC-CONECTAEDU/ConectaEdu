@@ -8,6 +8,7 @@ import com.conectaedu.api.modules.consent.repository.LegalDocumentRepository;
 import com.conectaedu.api.shared.enums.ConsentAction;
 import com.conectaedu.api.shared.enums.LegalDocumentStatus;
 import com.conectaedu.api.shared.enums.LegalDocumentType;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,10 +23,12 @@ public class ConsentVerificationService {
 
     private final LegalDocumentRepository legalDocumentRepository;
     private final ConsentRecordRepository consentRecordRepository;
+    private final TenancyValidator tenancyValidator;
 
     // Leitura apenas
     @Transactional(readOnly = true)
     public ConsentStatusResponseDTO getConsentStatus(UUID userId) {
+        tenancyValidator.validateUserAccess(userId);
 
         List<LegalDocument> published = legalDocumentRepository
                 .findByStatus(LegalDocumentStatus.PUBLISHED);

@@ -10,6 +10,7 @@ import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.audit.support.AuditDiff;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.DemandStatus;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -26,11 +27,14 @@ public class DemandFinishService {
     private final DemandMapper demandMapper;
     private final AuditService auditService;
     private final ApplicationEventPublisher eventPublisher;
+    private final TenancyValidator tenancyValidator;
 
     @Transactional
     public DemandResponseDTO finish(UUID demandId) {
         Demand demand = demandRepository.findById(demandId)
                 .orElseThrow(() -> new RuntimeException("Demanda não encontrada"));
+
+        tenancyValidator.validateDemandAccess(demand);
 
         if (demand.getStatus() != DemandStatus.ONGOING) {
             throw new RuntimeException("Apenas demandas em reforço podem ser concluídas");

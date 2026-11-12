@@ -98,6 +98,7 @@ public class DemandController {
     }
 
     @PostMapping("/{id}/unlink")
+    @PreAuthorize("hasRole('SCHOOL_DIRECTOR')")
     public ResponseEntity<DemandResponseDTO> unlink(@PathVariable UUID id) {
         return ResponseEntity.ok(demandFacade.unlinkStudent(id));
     }
