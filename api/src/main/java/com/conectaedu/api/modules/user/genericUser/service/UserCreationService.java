@@ -5,6 +5,7 @@ import com.conectaedu.api.modules.user.genericUser.facade.dto.response.UserCreat
 import com.conectaedu.api.modules.user.genericUser.repository.UserRepository;
 import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.enums.AuditEntityType;
+import com.conectaedu.api.shared.email.service.SendEmailConfirmationService;
 import com.conectaedu.api.shared.exceptions.EmailAlreadyExistsException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +22,7 @@ public class UserCreationService {
     private final UserRepository userRepository;
     private final AuditService auditService;
     private final PasswordEncoder passwordEncoder;
+    private final SendEmailConfirmationService emailConfirmationService;
 
     public UserCreationResponseDTO createUser(UserCreationRequestDTO request) {
         if (userRepository.existsByEmail(request.email())) {
@@ -37,11 +39,15 @@ public class UserCreationService {
         user.setPassword(passwordEncoder.encode(request.password()));
 
         user.setCreatedAt(LocalDateTime.now());
+        
+        user.generateEmailConfirmationToken();
 
         userRepository.save(user);
 
         auditService.logCreate(AuditEntityType.USER, user.getId(), user.getName());
 
-        return new UserCreationResponseDTO("Usuário criado com sucesso!");
+        emailConfirmationService.sendConfirmationEmail(user.getEmail(), user.getEmailConfirmationToken());
+
+        return new UserCreationResponseDTO("Usuário criado com sucesso! Verifique seu e-mail para confirmar o cadastro.");
     }
 }
