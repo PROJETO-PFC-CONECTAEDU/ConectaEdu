@@ -32,6 +32,7 @@ const menuItems = [
   { icon: Users, label: 'Estudantes', path: '/estudantes', roles: ['PLATFORM_ADMIN', 'UNIVERSITY_ADMIN'] },
   { icon: School, label: 'Escolas', path: '/oportunidades', roles: ['PLATFORM_ADMIN'] },
   { icon: Building2, label: 'Universidades', path: '/universidades', roles: ['PLATFORM_ADMIN'] },
+  { icon: Users, label: 'Usuários', path: '/usuarios', roles: ['PLATFORM_ADMIN'] },
   { icon: FileText, label: 'Documentação', path: '/documentos-legais', roles: ['PLATFORM_ADMIN'] },
 ];
 
