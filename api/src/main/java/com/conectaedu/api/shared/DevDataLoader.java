@@ -63,6 +63,7 @@ public class DevDataLoader implements CommandLineRunner {
             User user = new PlatformAdmin();
             user.setName(name);
             user.setEmail(email);
+            user.setEmailConfirmed(true);
             user.setPassword(passwordEncoder.encode(password));
             user.setUserRole(UserRole.PLATFORM_ADMIN);
             user.setUserType(UserType.PERSON);
@@ -119,6 +120,7 @@ public class DevDataLoader implements CommandLineRunner {
             user.setUserRole(UserRole.UNIVERSITY_ADMIN);
             user.setUserType(UserType.PERSON);
             user.setUniversity(university);
+            user.setEmailConfirmed(true);
             user.setCreatedAt(LocalDateTime.now());
             user.setUpdatedAt(LocalDateTime.now());
             userRepository.save(user);
@@ -135,6 +137,7 @@ public class DevDataLoader implements CommandLineRunner {
             user.setUserRole(UserRole.SCHOOL_DIRECTOR);
             user.setUserType(UserType.PERSON);
             user.setSchool(school);
+            user.setEmailConfirmed(true);
             user.setCreatedAt(LocalDateTime.now());
             user.setUpdatedAt(LocalDateTime.now());
             userRepository.save(user);
@@ -191,6 +194,7 @@ public class DevDataLoader implements CommandLineRunner {
             user.setUserRole(UserRole.STUDENT);
             user.setUserType(UserType.PERSON);
             user.setUniversity(university);
+            user.setEmailConfirmed(true);
             user.setStatus(StudentStatus.VALIDATED);
             user.setAvailability("Manhã e Tarde");
             user.setInterestAreas(List.of("Matemática", "Física"));
