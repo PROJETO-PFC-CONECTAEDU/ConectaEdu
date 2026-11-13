@@ -2,7 +2,7 @@ package com.conectaedu.api.modules.user.genericUser.service;
 
 import com.conectaedu.api.modules.user.genericUser.domain.User;
 import com.conectaedu.api.modules.user.genericUser.facade.dto.request.UserUpdateRequestDTO;
-import com.conectaedu.api.modules.user.genericUser.facade.dto.response.UserResponseDTO;
+import com.conectaedu.api.modules.user.genericUser.dto.response.UserResponseDTO;
 import com.conectaedu.api.modules.user.genericUser.repository.UserRepository;
 import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.audit.support.AuditDiff;
@@ -10,6 +10,7 @@ import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.exceptions.EmailAlreadyExistsException;
 import com.conectaedu.api.shared.exceptions.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -17,6 +18,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@PreAuthorize( "hasRole('PLATFORM_ADMIN')")
 public class UserUpdateService {
 
     private final UserRepository userRepository;

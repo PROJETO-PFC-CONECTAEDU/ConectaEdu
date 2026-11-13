@@ -443,13 +443,6 @@ export function DemandDetail() {
 
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-6 border-t border-border-default">
                         <div className="space-y-1">
-                          <p className="text-xs text-text-muted font-medium">Data Prevista</p>
-                          <div className="flex items-center gap-2 text-sm text-text-heading font-semibold">
-                            <Calendar size={16} className="text-brand-primary" />
-                            {formatDate(demand.classDate)}
-                          </div>
-                        </div>
-                        <div className="space-y-1">
                           <p className="text-xs text-text-muted font-medium">Carga Horária</p>
                           <div className="flex items-center gap-2 text-sm text-text-heading font-semibold">
                             <Clock size={16} className="text-brand-primary" />

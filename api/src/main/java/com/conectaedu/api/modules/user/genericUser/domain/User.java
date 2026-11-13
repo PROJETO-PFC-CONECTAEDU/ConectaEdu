@@ -44,6 +44,9 @@ public class User {
     @NotNull
     private LocalDateTime createdAt;
 
+    //Nascem inativos para confirmação do administrador do ConectaEdu
+    private boolean active = false;
+
     private LocalDateTime updatedAt;
     
     private String passwordResetToken;

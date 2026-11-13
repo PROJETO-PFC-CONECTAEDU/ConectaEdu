@@ -5,6 +5,8 @@ import { z } from 'zod';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { ForgotPasswordModal } from '../components/auth/ForgotPasswordModal';
+import { RequestAccessModal } from '../components/auth/RequestAccessModal';
 import { useNavigate, Link } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import api from '../lib/api';
@@ -20,6 +22,8 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export function Login() {
   const [showPassword, setShowPassword] = useState(false);
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const navigate = useNavigate();
   const { signIn } = useAuth();
 
@@ -119,6 +123,16 @@ export function Login() {
               </button>
             </div>
 
+            <div className="flex">
+              <button
+                type="button"
+                onClick={() => setIsForgotModalOpen(true)}
+                className="text-sm font-medium text-brand-primary hover:text-brand-dark transition-colors"
+              >
+                Esqueci minha senha
+              </button>
+            </div>
+
             <Button
               type="submit"
               className="w-full"
@@ -127,6 +141,16 @@ export function Login() {
               {loginMutation.isPending ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
+          <div className="flex justify-center gap-4">
+            <p className="text-text-muted">Não tem conta?</p>
+            <button
+                type="button"
+                onClick={() => setIsRequestModalOpen(true)}
+                className="text-sm font-medium text-brand-primary hover:text-brand-dark transition-colors"
+            >
+              Solicite acesso a plataforma
+            </button>
+          </div>
 
           <div className="flex justify-center gap-4 border-t border-gray-100 pt-6">
             <Link
@@ -145,6 +169,16 @@ export function Login() {
           </div>
         </div>
       </div>
+      
+      <ForgotPasswordModal 
+        isOpen={isForgotModalOpen} 
+        onClose={() => setIsForgotModalOpen(false)} 
+      />
+
+      <RequestAccessModal
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+      />
     </div>
   );
 }

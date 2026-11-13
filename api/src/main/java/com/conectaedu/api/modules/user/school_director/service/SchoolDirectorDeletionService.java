@@ -6,6 +6,7 @@ import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.exceptions.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +14,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@PreAuthorize( "hasRole('PLATFORM_ADMIN')")
 public class SchoolDirectorDeletionService {
 
     private final SchoolDirectorRepository schoolDirectorRepository;

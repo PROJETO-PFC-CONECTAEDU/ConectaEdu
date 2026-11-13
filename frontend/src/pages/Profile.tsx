@@ -108,6 +108,14 @@ export function Profile() {
         <div className="md:col-span-2 space-y-6">
           <Card className="p-6">
             <div className="flex items-center gap-2 mb-6">
+              <User className="text-brand-primary" size={24} />
+              <h3 className="text-lg font-bold text-text-heading">Gerencie seu perfil</h3>
+            </div>
+            <p className="text-text-body italic">Implantação em andamento.</p>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-6">
               <Shield className="text-brand-primary" size={24} />
               <h3 className="text-lg font-bold text-text-heading">Consentimentos e Privacidade</h3>
             </div>

@@ -1,13 +1,14 @@
 package com.conectaedu.api.modules.user.genericUser.service;
 
 import com.conectaedu.api.modules.user.genericUser.facade.dto.request.UserCreationRequestDTO;
-import com.conectaedu.api.modules.user.genericUser.facade.dto.response.UserCreationResponseDTO;
+import com.conectaedu.api.modules.user.genericUser.dto.response.UserCreationResponseDTO;
 import com.conectaedu.api.modules.user.genericUser.repository.UserRepository;
 import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.email.service.SendEmailConfirmationService;
 import com.conectaedu.api.shared.exceptions.EmailAlreadyExistsException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.conectaedu.api.modules.user.genericUser.domain.User;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@PreAuthorize( "hasRole('PLATFORM_ADMIN')")
 public class UserCreationService {
 
 

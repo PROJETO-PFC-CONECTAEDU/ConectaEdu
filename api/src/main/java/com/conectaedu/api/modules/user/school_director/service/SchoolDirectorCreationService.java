@@ -14,6 +14,7 @@ import com.conectaedu.api.shared.enums.UserType;
 import com.conectaedu.api.shared.exceptions.EmailAlreadyExistsException;
 import com.conectaedu.api.shared.exceptions.SchoolNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@PreAuthorize( "hasRole('PLATFORM_ADMIN')")
 public class SchoolDirectorCreationService {
 
     private final UserRepository userRepository;

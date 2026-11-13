@@ -2,7 +2,7 @@ import { Header } from '../components/layout/Header';
 import { Card } from '../components/ui/Card';
 import { MetricCard } from '../components/ui/MetricCard';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Download, Filter, Calendar, BookOpen, CheckCircle, XCircle, Star } from 'lucide-react';
+import { Filter, Calendar, BookOpen, CheckCircle, XCircle, Star } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -173,9 +173,6 @@ export function Reports() {
               </Button>
             </div>
           </div>
-          <Button className="flex items-center gap-2 px-6">
-            <Download size={18} /> Exportar PDF
-          </Button>
         </div>
 
         {/* Métricas */}

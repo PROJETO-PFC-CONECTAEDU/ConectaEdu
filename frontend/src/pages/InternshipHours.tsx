@@ -150,9 +150,6 @@ export function InternshipHours() {
       <Card>
         <div className="p-6 border-b border-border-default flex justify-between items-center">
           <h3 className="text-lg font-semibold text-text-heading">Histórico de Aulas e Atividades</h3>
-          <button className="text-brand-primary text-sm font-medium hover:underline">
-            Exportar Extrato
-          </button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
