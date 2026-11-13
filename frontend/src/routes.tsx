@@ -83,6 +83,14 @@ export const router = createBrowserRouter([
         ]
       },
       {
+        path: '/relatorios',
+        element: <Reports />,
+      },
+      {
+        path: '/relatorios/:studentId',
+        element: <Reports />,
+      },
+      {
         element: <RoleProtectedRoute allowedRoles={['SCHOOL_DIRECTOR', 'STUDENT']} />,
         children: [
           {
@@ -104,10 +112,6 @@ export const router = createBrowserRouter([
           {
             path: '/avaliacoes',
             element: <Evaluations />,
-          },
-          {
-            path: '/relatorios',
-            element: <Reports />,
           }
         ]
       }

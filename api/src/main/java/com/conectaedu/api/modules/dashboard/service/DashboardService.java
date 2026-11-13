@@ -3,6 +3,8 @@ package com.conectaedu.api.modules.dashboard.service;
 import com.conectaedu.api.modules.dashboard.dto.DashboardStatsDTO;
 import com.conectaedu.api.modules.demand.domain.Demand;
 import com.conectaedu.api.modules.demand.repository.DemandRepository;
+import com.conectaedu.api.modules.feedback.repository.ClassEvaluationRepository;
+import com.conectaedu.api.modules.feedback.repository.StudentEvaluationRepository;
 import com.conectaedu.api.modules.internship.interfaces.IInternshipFacade;
 import com.conectaedu.api.modules.lesson.repository.LessonRepository;
 import com.conectaedu.api.modules.school.repository.SchoolRepository;
@@ -33,6 +35,8 @@ public class DashboardService {
     private final StudentRepository studentRepository;
     private final DemandRepository demandRepository;
     private final LessonRepository lessonRepository;
+    private final StudentEvaluationRepository studentEvaluationRepository;
+    private final ClassEvaluationRepository classEvaluationRepository;
     private final IInternshipFacade internshipFacade;
     private final TenancyValidator tenancyValidator;
 
@@ -63,8 +67,15 @@ public class DashboardService {
 
             stats.put("completedDemands", demandRepository.countFinishedDemandsByUniversityId(universityId));
 
+            // Indicadores de Feedback
+            stats.put("studentsAverageScore", studentEvaluationRepository.getAverageScoreByUniversity(universityId));
+            stats.put("classAverageScore", classEvaluationRepository.getAverageScoreByUniversity(universityId));
+
             // Gráfico para Universidade: aulas por período
             stats.put("lessonsByPeriod", lessonRepository.countByUniversityAndPeriod(universityId));
+
+            // Distribuição Nine Box (Impacto Pedagógico)
+            stats.put("nineBoxDistribution", lessonRepository.countNineBoxByUniversity(universityId));
         } else if (user instanceof SchoolDirector director) {
             if (director.getSchool() == null) {
                 return DashboardStatsDTO.builder().statistics(stats).build();
@@ -77,8 +88,15 @@ public class DashboardService {
             stats.put("ongoingClassesCount", demandRepository.countBySchoolIdAndStatus(schoolId, DemandStatus.ONGOING));
             stats.put("successfulDemandsCount", demandRepository.countBySchoolIdAndStatus(schoolId, DemandStatus.FINISHED));
 
+            // Indicadores de Feedback
+            stats.put("schoolAverageScore", classEvaluationRepository.getAverageScoreBySchool(schoolId));
+            stats.put("studentsAverageScore", studentEvaluationRepository.getAverageScoreBySchool(schoolId));
+
             // Gráfico para Diretor: barra por período e demanda
             stats.put("lessonsByPeriodAndDemand", lessonRepository.countBySchoolAndPeriodAndDemand(schoolId));
+
+            // Distribuição Nine Box (Impacto na Turma) na escola
+            stats.put("nineBoxDistribution", lessonRepository.countNineBoxBySchool(schoolId));
         } else if (user instanceof Student student) {
             tenancyValidator.validateUserAccess(student.getId());
 

@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../lib/api';
 import { useState, useMemo } from 'react';
 import { subMonths, startOfYear, format } from 'date-fns';
+import { useParams } from 'react-router-dom';
 
 interface ClassProgressPoint {
   lessonId: string;
@@ -64,6 +65,9 @@ interface School {
 
 export function Reports() {
   const { user } = useAuth();
+  const { studentId: urlStudentId } = useParams();
+  const studentId = urlStudentId || user?.id;
+  
   const [selectedPeriod, setSelectedPeriod] = useState('3m');
   const [selectedSchoolId, setSelectedSchoolId] = useState('');
 
@@ -99,7 +103,7 @@ export function Reports() {
   });
 
   const { data: report, isLoading } = useQuery<StudentReport>({
-    queryKey: ['report', user?.id, dateRange, selectedSchoolId],
+    queryKey: ['report', studentId, dateRange, selectedSchoolId],
     queryFn: async () => {
       const params: any = {
         from: dateRange.from,
@@ -108,10 +112,10 @@ export function Reports() {
       if (selectedSchoolId) {
         params.schoolId = selectedSchoolId;
       }
-      const response = await api.get(`/reports/students/${user?.id}`, { params });
+      const response = await api.get(`/reports/students/${studentId}`, { params });
       return response.data;
     },
-    enabled: !!user?.id,
+    enabled: !!studentId,
   });
 
   const chartData = useMemo(() => {
@@ -134,8 +138,8 @@ export function Reports() {
   return (
     <div className="flex-1">
       <Header 
-        title="Relatórios" 
-        subtitle="Analise seu desempenho e acompanhe seu progresso no estágio." 
+        title={urlStudentId ? `Relatório de ${report?.studentName || 'Estudante'}` : "Meus Relatórios"} 
+        subtitle={urlStudentId ? "Acompanhe o desempenho e progresso deste estudante." : "Analise seu desempenho e acompanhe seu progresso no estágio."} 
       />
       
       <div className="p-8 space-y-8">
@@ -212,7 +216,7 @@ export function Reports() {
         {/* Gráficos */}
         <div className="grid grid-cols-1 gap-8">
           <Card className="p-8">
-            <h3 className="text-lg font-bold text-text-heading mb-8">Evolução de Desempenho (Nine Box)</h3>
+            <h3 className="text-lg font-bold text-text-heading mb-8">Evolução da Turma (Nine Box)</h3>
             <div className="h-[350px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>

@@ -22,7 +22,7 @@ public class ReportController {
     private final IReportFacade reportFacade;
 
     @GetMapping("/students/{studentId}")
-    @PreAuthorize("hasAnyRole('STUDENT', 'UNIVERSITY_ADMIN', 'PLATFORM_ADMIN')")
+    @PreAuthorize("hasAnyRole('STUDENT', 'UNIVERSITY_ADMIN', 'SCHOOL_DIRECTOR', 'PLATFORM_ADMIN')")
     public ResponseEntity<StudentReportResponseDTO> studentReport(
             @PathVariable UUID studentId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -32,7 +32,7 @@ public class ReportController {
     }
 
     @GetMapping("/students/{studentId}/progress")
-    @PreAuthorize("hasAnyRole('STUDENT', 'UNIVERSITY_ADMIN', 'PLATFORM_ADMIN')")
+    @PreAuthorize("hasAnyRole('STUDENT', 'UNIVERSITY_ADMIN', 'SCHOOL_DIRECTOR', 'PLATFORM_ADMIN')")
     public ResponseEntity<List<ClassProgressPointDTO>> classProgress(
             @PathVariable UUID studentId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
