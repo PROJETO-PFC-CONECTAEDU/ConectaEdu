@@ -4,9 +4,13 @@ import com.conectaedu.api.modules.auth.dto.ForgotPasswordRequest;
 import com.conectaedu.api.modules.auth.dto.LoginRequestDTO;
 import com.conectaedu.api.modules.auth.dto.LoginResponseDTO;
 import com.conectaedu.api.modules.auth.dto.ResetPasswordRequest;
+import com.conectaedu.api.modules.auth.dto.SchoolDirectorRegisterDTO;
+import com.conectaedu.api.modules.auth.dto.UniversityAdminRegisterDTO;
 import com.conectaedu.api.modules.auth.service.AuthLoginService;
 import com.conectaedu.api.modules.auth.service.ConfirmEmailService;
 import com.conectaedu.api.modules.auth.service.ForgetPasswordService;
+import com.conectaedu.api.modules.auth.service.RegisterDirectorService;
+import com.conectaedu.api.modules.auth.service.RegisterUniversityAdminService;
 import com.conectaedu.api.modules.auth.service.ResetPasswordService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -23,6 +27,8 @@ public class AuthController {
     private final ConfirmEmailService confirmEmailService;
     private final ForgetPasswordService forgetPasswordService;
     private final ResetPasswordService resetPasswordService;
+    private final RegisterDirectorService registerDirectorService;
+    private final RegisterUniversityAdminService registerUniversityAdminService;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@RequestBody @Valid LoginRequestDTO data) {
@@ -44,6 +50,18 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<Void> resetPassword(@RequestBody @Valid ResetPasswordRequest request, HttpServletRequest httpRequest) {
         resetPasswordService.resetPassword(request, httpRequest);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/register/director")
+    public ResponseEntity<Void> registerDirector(@RequestBody @Valid SchoolDirectorRegisterDTO data) {
+        registerDirectorService.register(data);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/register/university-admin")
+    public ResponseEntity<Void> registerUniversityAdmin(@RequestBody @Valid UniversityAdminRegisterDTO data) {
+        registerUniversityAdminService.register(data);
         return ResponseEntity.ok().build();
     }
 }
