@@ -7,6 +7,7 @@ import { LegalDocuments } from './pages/LegalDocuments';
 import { Profile } from './pages/Profile';
 import { MapPage } from './pages/MapPage';
 import { Login } from './pages/Login';
+import { Register } from './pages/Register';
 import { LegalDocumentView } from './pages/LegalDocumentView';
 import { Demands } from './pages/Demands';
 import { DemandDetail } from './pages/DemandDetail';
@@ -14,6 +15,7 @@ import { Schedule } from './pages/Schedule';
 import { InternshipHours } from './pages/InternshipHours';
 import { Evaluations } from './pages/Evaluations';
 import { Reports } from './pages/Reports';
+import { PlatformUsers } from './pages/PlatformUsers';
 import { Layout } from './components/layout/Layout';
 import { RoleProtectedRoute } from './components/auth/RoleProtectedRoute';
 
@@ -21,6 +23,10 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <Login />,
+  },
+  {
+    path: '/register',
+    element: <Register />,
   },
   {
     path: '/legal/:type',
@@ -69,6 +75,10 @@ export const router = createBrowserRouter([
           {
             path: '/documentos-legais',
             element: <LegalDocuments />,
+          },
+          {
+            path: '/usuarios',
+            element: <PlatformUsers />,
           }
         ]
       },
