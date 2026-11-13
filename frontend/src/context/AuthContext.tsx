@@ -7,6 +7,7 @@ interface User {
   role: string;
   universityId?: string;
   schoolId?: string;
+  emailConfirmed: boolean;
 }
 
 interface AuthContextData {
