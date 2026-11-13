@@ -2,8 +2,8 @@ package com.conectaedu.api.modules.user.genericUser.interfaces;
 
 import com.conectaedu.api.modules.user.genericUser.facade.dto.request.UserCreationRequestDTO;
 import com.conectaedu.api.modules.user.genericUser.facade.dto.request.UserUpdateRequestDTO;
-import com.conectaedu.api.modules.user.genericUser.facade.dto.response.UserCreationResponseDTO;
-import com.conectaedu.api.modules.user.genericUser.facade.dto.response.UserResponseDTO;
+import com.conectaedu.api.modules.user.genericUser.dto.response.UserCreationResponseDTO;
+import com.conectaedu.api.modules.user.genericUser.dto.response.UserResponseDTO;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,4 +15,6 @@ public interface IUserFacade {
     UserResponseDTO getUserById(UUID id);
     UserResponseDTO getUserByEmail(String email);
     List<UserResponseDTO> getAllUsers();
+    UserResponseDTO activateUser(UUID id);
+    UserResponseDTO deactivateUser(UUID id);
 }

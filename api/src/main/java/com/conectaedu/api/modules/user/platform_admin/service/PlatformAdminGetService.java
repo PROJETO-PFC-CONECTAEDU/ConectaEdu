@@ -5,6 +5,7 @@ import com.conectaedu.api.modules.user.platform_admin.dto.response.PlatformAdmin
 import com.conectaedu.api.modules.user.platform_admin.repository.PlatformAdminRepository;
 import com.conectaedu.api.shared.exceptions.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@PreAuthorize( "hasRole('PLATFORM_ADMIN')")
 public class PlatformAdminGetService {
 
     private final PlatformAdminRepository platformAdminRepository;
