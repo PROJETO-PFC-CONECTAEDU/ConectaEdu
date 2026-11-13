@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
+import toast from 'react-hot-toast';
 import { Header } from '../components/layout/Header';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -93,7 +94,7 @@ export function Evaluations() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedDemandId) {
-      alert('Selecione uma opção para avaliar');
+      toast.error('Selecione uma opção para avaliar');
       return;
     }
 
@@ -123,7 +124,7 @@ export function Evaluations() {
         });
       }
 
-      alert('Avaliação enviada com sucesso!');
+      toast.success('Avaliação enviada com sucesso!');
       // Reset form
       setSelectedDemandId('');
       setEngagement(5);
@@ -140,7 +141,7 @@ export function Evaluations() {
       loadData();
     } catch (error) {
       console.error('Erro ao enviar avaliação:', error);
-      alert('Erro ao enviar avaliação. Tente novamente.');
+      toast.error('Erro ao enviar avaliação. Tente novamente.');
     } finally {
       setSubmitting(false);
     }
