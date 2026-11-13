@@ -24,7 +24,7 @@ const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', roles: ['PLATFORM_ADMIN', 'UNIVERSITY_ADMIN', 'STUDENT', 'SCHOOL_DIRECTOR'] },
   { icon: Search, label: 'Oportunidades', path: '/demandas', roles: ['STUDENT'] },
   { icon: Search, label: 'Demandas', path: '/demandas', roles: ['SCHOOL_DIRECTOR'] },
-  { icon: MapIcon, label: 'Mapa', path: '/mapa', roles: ['PLATFORM_ADMIN', 'STUDENT', 'SCHOOL_DIRECTOR'] },
+  { icon: MapIcon, label: 'Mapa', path: '/mapa', roles: ['PLATFORM_ADMIN', 'STUDENT'] },
   { icon: Calendar, label: 'Agenda', path: '/agenda', roles: ['STUDENT', 'SCHOOL_DIRECTOR'] },
   { icon: Clock, label: 'Horas', path: '/horas', roles: ['STUDENT'] },
   { icon: Star, label: 'Avaliações', path: '/avaliacoes', roles: ['STUDENT'] },

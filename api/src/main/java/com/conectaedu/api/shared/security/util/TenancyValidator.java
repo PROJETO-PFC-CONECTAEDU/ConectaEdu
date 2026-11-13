@@ -128,14 +128,19 @@ public class TenancyValidator {
     }
 
     public void validateLessonAccess(Lesson lesson) {
-        validateSchool(lesson.getSchool().getId());
-        
+        if (SecurityContextHolder.hasRole("PLATFORM_ADMIN")) {
+            return;
+        }
+
         if (SecurityContextHolder.hasRole("STUDENT")) {
             UUID userId = SecurityContextHolder.getAuthenticatedUserId();
-            if (lesson.getStudent() != null && !lesson.getStudent().getId().equals(userId)) {
-                throw new AccessDeniedException("Acesso negado: Esta aula não está vinculada a você.");
+            if (lesson.getStudent() != null && lesson.getStudent().getId().equals(userId)) {
+                return;
             }
+            throw new AccessDeniedException("Acesso negado: Esta aula não está vinculada a você.");
         }
+
+        validateSchool(lesson.getSchool().getId());
     }
 
     public void validateStudentEvaluationAccess(StudentEvaluation evaluation) {
