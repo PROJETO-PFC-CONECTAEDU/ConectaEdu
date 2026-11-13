@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -199,19 +200,21 @@ public class DemandMapper {
     }
 
     private List<DemandResponseDTO.CandidateResponseDTO> mapCandidates(Demand demand) {
-        if (SecurityContextHolder.hasRole("STUDENT")) {
-            return Collections.emptyList();
-        }
+        UUID currentUserId = SecurityContextHolder.getAuthenticatedUserId();
+        boolean isStudent = SecurityContextHolder.hasRole("STUDENT");
+
         return demand.getCandidates().stream()
+                .filter(c -> !isStudent || c.getId().equals(currentUserId))
                 .map(c -> new DemandResponseDTO.CandidateResponseDTO(c.getId(), c.getName()))
                 .collect(Collectors.toList());
     }
 
     private List<DemandStudentDTO.CandidateResponseDTO> mapStudentCandidates(Demand demand) {
-        if (SecurityContextHolder.hasRole("STUDENT")) {
-            return Collections.emptyList();
-        }
+        UUID currentUserId = SecurityContextHolder.getAuthenticatedUserId();
+        boolean isStudent = SecurityContextHolder.hasRole("STUDENT");
+
         return demand.getCandidates().stream()
+                .filter(c -> !isStudent || c.getId().equals(currentUserId))
                 .map(c -> new DemandStudentDTO.CandidateResponseDTO(c.getId(), c.getName()))
                 .collect(Collectors.toList());
     }
