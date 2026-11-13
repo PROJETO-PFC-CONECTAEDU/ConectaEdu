@@ -25,7 +25,7 @@ public class InternshipController {
     //Alimenta a tela de horas do estudante.
 
     @GetMapping("/students/{studentId}/hours")
-    @PreAuthorize("hasAnyRole('STUDENT', 'UNIVERSITY_ADMIN', 'PLATFORM_ADMIN')")
+    @PreAuthorize("hasAnyRole('STUDENT', 'UNIVERSITY_ADMIN', 'SCHOOL_DIRECTOR', 'PLATFORM_ADMIN')")
     public ResponseEntity<InternshipHoursResponseDTO> getByStudent(@PathVariable UUID studentId) {
         return ResponseEntity.ok(internshipFacade.getHoursByStudent(studentId));
     }

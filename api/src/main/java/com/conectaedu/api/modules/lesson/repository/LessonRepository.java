@@ -65,6 +65,23 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
             """, nativeQuery = true)
     List<Map<String, Object>> countByStudentAndPeriod(@Param("studentId") UUID studentId);
 
+    @Query(value = """
+            SELECT l.nine_box_performance as performance, l.nine_box_potential as potential, COUNT(l.id) as count
+            FROM lesson l
+            INNER JOIN users s ON l.student_id = s.id
+            WHERE s.university_id = :universityId AND l.status = 'VALIDATED' AND l.nine_box_performance IS NOT NULL AND l.nine_box_potential IS NOT NULL
+            GROUP BY performance, potential
+            """, nativeQuery = true)
+    List<Map<String, Object>> countNineBoxByUniversity(@Param("universityId") UUID universityId);
+
+    @Query(value = """
+            SELECT l.nine_box_performance as performance, l.nine_box_potential as potential, COUNT(l.id) as count
+            FROM lesson l
+            WHERE l.school_id = :schoolId AND l.status = 'VALIDATED' AND l.nine_box_performance IS NOT NULL AND l.nine_box_potential IS NOT NULL
+            GROUP BY performance, potential
+            """, nativeQuery = true)
+    List<Map<String, Object>> countNineBoxBySchool(@Param("schoolId") UUID schoolId);
+
     //O prazo de confirmação é o menor entre 3 dias do agendamento e 24h antes da aula.
     //Venceu se passou de um dos dois, e é esse OR que a consulta derivada não escreve.
 

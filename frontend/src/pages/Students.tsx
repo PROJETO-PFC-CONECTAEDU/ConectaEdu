@@ -10,11 +10,12 @@ import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { Users, Mail, GraduationCap, Trash2, ShieldCheck, XCircle, Plus, MapPin, UserX, Pencil } from 'lucide-react';
+import { Users, Mail, GraduationCap, Trash2, ShieldCheck, XCircle, Plus, MapPin, UserX, Pencil, FileText } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { AddressAutocomplete } from '../components/map/AddressAutocomplete';
 import { useAuth } from '../context/AuthContext';
 import { formatStudentStatus } from '../utils/format';
+import { Link } from 'react-router-dom';
 
 interface Student {
   id: string;
@@ -355,6 +356,13 @@ export function Students() {
                   </div>
                 </div>
                 <div className="flex gap-2">
+                  <Link 
+                    to={`/relatorios/${student.id}`}
+                    className="text-text-muted hover:text-brand-primary p-1"
+                    title="Ver Relatório"
+                  >
+                    <FileText size={18} />
+                  </Link>
                   <button 
                     onClick={() => handleEdit(student)}
                     className="text-text-muted hover:text-brand-primary p-1"

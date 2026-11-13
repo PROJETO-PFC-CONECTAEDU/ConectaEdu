@@ -1,4 +1,4 @@
-import { ClipboardList, DoorOpen, Activity, Trophy, BarChart3 } from 'lucide-react';
+import { ClipboardList, DoorOpen, Activity, Trophy, BarChart3, Star, TrendingUp, ScatterChart as ScatterIcon } from 'lucide-react';
 import { MetricCard } from '../ui/MetricCard';
 import { Card } from '../ui/Card';
 import { 
@@ -9,7 +9,11 @@ import {
   CartesianGrid, 
   Tooltip, 
   Legend, 
-  ResponsiveContainer 
+  ResponsiveContainer,
+  ScatterChart,
+  Scatter,
+  ZAxis,
+  Cell
 } from 'recharts';
 
 interface Props {
@@ -34,6 +38,12 @@ export function SchoolDirectorDashboard({ stats }: Props) {
 
   const demands = Array.from(new Set(stats.lessonsByPeriodAndDemand?.map((item: any) => item.DEMAND || item.demand))) as string[];
   const colors = ['#f97316', '#0ea5e9', '#10b981', '#f59e0b', '#6366f1'];
+
+  const nineBoxData = stats.nineBoxDistribution?.map((item: any) => ({
+    performance: item.PERFORMANCE || item.performance,
+    potential: item.POTENTIAL || item.potential,
+    count: item.COUNT || item.count
+  })) || [];
 
   return (
     <div className="space-y-6">
@@ -64,41 +74,88 @@ export function SchoolDirectorDashboard({ stats }: Props) {
         />
       </div>
 
-      <Card className="p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <BarChart3 className="text-brand-primary" size={20} />
-          <h3 className="text-lg font-bold text-text-heading">Aulas Realizadas por Período e Demanda</h3>
-        </div>
-        
-        <div className="h-[350px] w-full">
-          {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="period" />
-                <YAxis />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                />
-                <Legend />
-                {demands.map((demand, index) => (
-                  <Bar 
-                    key={demand} 
-                    dataKey={demand} 
-                    fill={colors[index % colors.length]} 
-                    radius={[4, 4, 0, 0]} 
-                    barSize={32}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <MetricCard 
+          icon={<Star className="text-yellow-500" size={24} />}
+          label="Média da Escola"
+          value={stats.schoolAverageScore?.toFixed(1) || 'N/A'}
+          note="Avaliação dada pelos estudantes"
+        />
+        <MetricCard 
+          icon={<TrendingUp className="text-blue-500" size={24} />}
+          label="Desempenho dos Estagiários"
+          value={stats.studentsAverageScore?.toFixed(1) || 'N/A'}
+          note="Média das avaliações que você deu"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <BarChart3 className="text-brand-primary" size={20} />
+            <h3 className="text-lg font-bold text-text-heading">Aulas Realizadas por Período e Demanda</h3>
+          </div>
+          
+          <div className="h-[350px] w-full">
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="period" />
+                  <YAxis />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-full flex items-center justify-center text-text-muted italic">
-              Nenhum dado disponível para o gráfico.
-            </div>
-          )}
-        </div>
-      </Card>
+                  <Legend />
+                  {demands.map((demand, index) => (
+                    <Bar 
+                      key={demand} 
+                      dataKey={demand} 
+                      fill={colors[index % colors.length]} 
+                      radius={[4, 4, 0, 0]} 
+                      barSize={32}
+                    />
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-text-muted italic">
+                Nenhum dado disponível para o gráfico.
+              </div>
+            )}
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <ScatterIcon className="text-brand-accent" size={20} />
+            <h3 className="text-lg font-bold text-text-heading">Avaliação do Impacto na Turma (Nine Box)</h3>
+          </div>
+          
+          <div className="h-[350px] w-full">
+            {nineBoxData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                  <CartesianGrid />
+                  <XAxis type="number" dataKey="performance" name="Desempenho" domain={[0.5, 3.5]} ticks={[1, 2, 3]} />
+                  <YAxis type="number" dataKey="potential" name="Potencial" domain={[0.5, 3.5]} ticks={[1, 2, 3]} />
+                  <ZAxis type="number" dataKey="count" range={[100, 1000]} name="Qtd. Aulas" />
+                  <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+                  <Scatter name="Aulas" data={nineBoxData} fill="#8884d8">
+                    {nineBoxData.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={entry.performance + entry.potential >= 5 ? '#10b981' : entry.performance + entry.potential >= 3 ? '#f59e0b' : '#ef4444'} />
+                    ))}
+                  </Scatter>
+                </ScatterChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-text-muted italic text-sm">
+                A distribuição aparecerá conforme os estudantes preencherem o Nine Box nas aulas.
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

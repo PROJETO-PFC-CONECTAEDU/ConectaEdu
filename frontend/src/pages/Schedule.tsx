@@ -285,28 +285,31 @@ export function Schedule() {
             {regErrors.contentTaught && <p className="text-xs text-red-500">{regErrors.contentTaught.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-text-heading">Desempenho (1-3)</label>
-              <select 
-                className="w-full p-2.5 rounded-lg border border-border-default bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" 
-                {...register('nineBoxPerformance', { valueAsNumber: true })}
-              >
-                <option value={1}>Abaixo do esperado</option>
-                <option value={2}>Atende ao esperado</option>
-                <option value={3}>Acima do esperado</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-text-heading">Potencial (1-3)</label>
-              <select 
-                className="w-full p-2.5 rounded-lg border border-border-default bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" 
-                {...register('nineBoxPotential', { valueAsNumber: true })}
-              >
-                <option value={1}>Baixo</option>
-                <option value={2}>Médio</option>
-                <option value={3}>Alto</option>
-              </select>
+          <div className="space-y-2 pt-2 border-t border-border-default">
+            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">Avaliação da Turma (Impacto Nine Box)</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-text-heading">Desempenho (1-3)</label>
+                <select 
+                  className="w-full p-2.5 rounded-lg border border-border-default bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" 
+                  {...register('nineBoxPerformance', { valueAsNumber: true })}
+                >
+                  <option value={1}>Abaixo do esperado</option>
+                  <option value={2}>Atende ao esperado</option>
+                  <option value={3}>Acima do esperado</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-text-heading">Potencial (1-3)</label>
+                <select 
+                  className="w-full p-2.5 rounded-lg border border-border-default bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" 
+                  {...register('nineBoxPotential', { valueAsNumber: true })}
+                >
+                  <option value={1}>Baixo</option>
+                  <option value={2}>Médio</option>
+                  <option value={3}>Alto</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -366,7 +369,7 @@ export function Schedule() {
             </div>
 
             <div className="space-y-3">
-              <p className="text-xs text-text-muted font-medium uppercase tracking-wider px-1">Avaliação NineBox</p>
+              <p className="text-xs text-text-muted font-medium uppercase tracking-wider px-1">Avaliação da Turma (Nine Box)</p>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-brand-primary/5 p-4 rounded-lg border border-brand-primary/10">
                   <p className="text-[10px] text-brand-primary font-bold uppercase mb-1">Desempenho</p>
