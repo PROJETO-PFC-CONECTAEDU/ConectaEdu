@@ -21,11 +21,16 @@ export function TimeBadge({ date, startTime, endTime, mobile }: TimeBadgeProps) 
   const getRelativeDate = (date: Date) => {
     if (isToday(date)) return 'Hoje';
     if (isTomorrow(date)) return 'Amanhã';
-    return format(date, 'eee', { locale: ptBR }).replace(/^\w/, (c) => c.toUpperCase()).replace('.', '');
+    const day = format(date, 'eee', { locale: ptBR });
+    return day.charAt(0).toUpperCase() + day.slice(1).replace('.', '');
   };
 
   const dayStr = getRelativeDate(date);
-  const dateStr = format(date, 'dd de MMM', { locale: ptBR });
+  const dateStr = format(date, "dd 'de' MMM", { locale: ptBR })
+    .replace('.', '')
+    .split(' ')
+    .map((word, i) => i === 2 ? word.charAt(0).toUpperCase() + word.slice(1) : word)
+    .join(' ');
 
   return (
     <div className="bg-time-badge-bg rounded-badge p-4 flex flex-col justify-center min-w-[110px] h-[72px]">

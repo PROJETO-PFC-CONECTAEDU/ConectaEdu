@@ -60,7 +60,7 @@ export function Schedule() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 9, 22));
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
   const [registeringLesson, setRegisteringLesson] = useState<Lesson | null>(null);
@@ -193,16 +193,16 @@ export function Schedule() {
           <div className="flex-1 w-full">
             <Card className="w-full min-h-[428px] rounded-xl border-border-default shadow-none flex flex-col bg-surface">
               {/* Tabs - Desktop Only */}
-              <div className="hidden md:flex px-6 pt-6 border-b border-border-default gap-2">
+              <div className="flex overflow-x-auto px-6 pt-6 border-b border-border-default gap-2 no-scrollbar items-center">
                 {tabs.map(tab => (
                   <button
                     key={tab.id}
                     onClick={() => setFilterStatus(tab.id)}
                     className={clsx(
-                      "px-4 py-2 text-[13px] font-sans font-semibold transition-colors mb-[-1px]",
+                      "px-4 py-2 text-[13px] font-sans font-semibold transition-colors mb-2 rounded-pill whitespace-nowrap",
                       filterStatus === tab.id 
-                        ? "bg-brand-primary text-white rounded-pill mb-2" 
-                        : "text-text-body hover:text-text-heading"
+                        ? "bg-brand-primary text-white" 
+                        : "text-text-body hover:text-text-heading hover:bg-slate-50"
                     )}
                   >
                     {tab.label}
@@ -214,7 +214,7 @@ export function Schedule() {
                 <h3 className="md:hidden text-text-heading font-display font-bold text-[16px] mb-4">
                   {selectedDay 
                     ? `Aulas de ${format(selectedDay, "dd 'de' MMM", { locale: ptBR })}`
-                    : `Aulas do Dia - ${format(currentDate, "dd 'Out'", { locale: ptBR })}`
+                    : `Aulas do Dia - ${format(currentDate, "dd 'de' MMM", { locale: ptBR })}`
                   }
                 </h3>
 

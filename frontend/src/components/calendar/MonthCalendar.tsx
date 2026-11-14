@@ -50,7 +50,7 @@ export function MonthCalendar({ currentDate, onDateChange, eventDates, selectedD
     }
   });
 
-  const dayLabels = ['seg.', 'ter.', 'qua.', 'qui.', 'sex.', 'sáb.', 'dom.'];
+  const dayLabels = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
   return (
     <div className="w-full">
