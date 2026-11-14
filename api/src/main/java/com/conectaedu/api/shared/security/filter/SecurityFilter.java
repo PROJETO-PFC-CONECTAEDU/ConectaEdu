@@ -1,5 +1,6 @@
 package com.conectaedu.api.shared.security.filter;
 
+import com.conectaedu.api.modules.auth.repository.TokenRepository;
 import com.conectaedu.api.shared.security.domain.AuthenticatedUser;
 import com.conectaedu.api.shared.security.token.ValidateToken;
 import jakarta.servlet.FilterChain;
@@ -22,6 +23,7 @@ import java.util.UUID;
 public class SecurityFilter extends OncePerRequestFilter {
 
     private final ValidateToken validateToken;
+    private final TokenRepository tokenRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -32,6 +34,12 @@ public class SecurityFilter extends OncePerRequestFilter {
         if (token != null) {
             var decodedJWT = validateToken.validateToken(token);
             if (decodedJWT != null) {
+
+                String tokenId = decodedJWT.getId();
+                if (tokenId != null && tokenRepository.existsByTokenId(tokenId)) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    return;
+                }
 
                 String email = decodedJWT.getSubject();
 

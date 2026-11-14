@@ -31,7 +31,7 @@ interface ConsentRecord {
 }
 
 export function Profile() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, signOut } = useAuth();
   const [consents, setConsents] = useState<ConsentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedConsent, setSelectedConsent] = useState<ConsentRecord | null>(null);
@@ -88,8 +88,7 @@ export function Profile() {
       toast.success('Consentimento revogado com sucesso!');
       fetchConsents();
       setIsModalOpen(false);
-      localStorage.removeItem('@ConectaEdu:token');
-      localStorage.removeItem('@ConectaEdu:user');
+      await signOut();
       // Força a recarga para que o ConsentGuard verifique o novo status e bloqueie o acesso se necessário
       setTimeout(() => {
         window.location.reload();
@@ -162,8 +161,7 @@ export function Profile() {
     try {
       await api.delete('/profile');
       toast.success('Sua conta foi desativada com sucesso.');
-      localStorage.removeItem('@ConectaEdu:token');
-      localStorage.removeItem('@ConectaEdu:user');
+      await signOut();
       setTimeout(() => {
         window.location.reload();
       }, 1500);

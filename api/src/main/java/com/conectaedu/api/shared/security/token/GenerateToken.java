@@ -5,6 +5,7 @@ import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.conectaedu.api.modules.user.genericUser.domain.User;
+import com.conectaedu.api.modules.user.school_director.domain.SchoolDirector;
 import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.university_admin.domain.UniversityAdmin;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.UUID;
 
 @Component
 public class GenerateToken {
@@ -28,13 +30,14 @@ public class GenerateToken {
                     .withSubject(user.getEmail())
                     .withClaim("id", user.getId().toString())
                     .withClaim("role", user.getUserRole().name())
+                    .withJWTId(UUID.randomUUID().toString())
                     .withExpiresAt(this.generateExpirationDate());
 
             if (user instanceof Student student && student.getUniversity() != null) {
                 builder.withClaim("universityId", student.getUniversity().getId().toString());
             } else if (user instanceof UniversityAdmin admin && admin.getUniversity() != null) {
                 builder.withClaim("universityId", admin.getUniversity().getId().toString());
-            } else if (user instanceof com.conectaedu.api.modules.user.school_director.domain.SchoolDirector director && director.getSchool() != null) {
+            } else if (user instanceof SchoolDirector director && director.getSchool() != null) {
                 builder.withClaim("schoolId", director.getSchool().getId().toString());
             }
 

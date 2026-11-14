@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 
+import api from '../lib/api';
+
 interface User {
   id: string;
   name: string;
@@ -16,7 +18,7 @@ interface AuthContextData {
   token: string | null;
   signIn: (data: { token: string; user: User }) => void;
   updateUser: (user: User) => void;
-  signOut: () => void;
+  signOut: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -44,11 +46,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(newUser);
   };
 
-  const signOut = () => {
-    localStorage.removeItem('@ConectaEdu:token');
-    localStorage.removeItem('@ConectaEdu:user');
-    setToken(null);
-    setUser(null);
+  const signOut = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (error) {
+      console.error('Erro ao fazer logout no servidor:', error);
+    } finally {
+      localStorage.removeItem('@ConectaEdu:token');
+      localStorage.removeItem('@ConectaEdu:user');
+      setToken(null);
+      setUser(null);
+    }
   };
 
   return (
