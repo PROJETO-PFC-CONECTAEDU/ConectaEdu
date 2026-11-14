@@ -78,9 +78,6 @@ export function Sidebar() {
             <span className="text-[14px] font-sans font-semibold text-white truncate">
                 {user?.name}
             </span>
-            <span className="text-[11px] font-sans text-text-muted">
-                {user?.role === 'STUDENT' ? 'Estudante de Pedagogia' : user?.role}
-            </span>
           </div>
         </div>
       </div>
