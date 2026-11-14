@@ -22,6 +22,7 @@ public class AuthController {
     private final RegisterDirectorService registerDirectorService;
     private final RegisterUniversityAdminService registerUniversityAdminService;
     private final TwoFactorAuthService twoFactorAuthService;
+    private final LogoutService logoutService;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@RequestBody @Valid LoginRequestDTO data) {
@@ -87,6 +88,16 @@ public class AuthController {
     @PostMapping("/register/university-admin")
     public ResponseEntity<Void> registerUniversityAdmin(@RequestBody @Valid UniversityAdminRegisterDTO data) {
         registerUniversityAdminService.register(data);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            logoutService.logout(token);
+        }
         return ResponseEntity.ok().build();
     }
 }
