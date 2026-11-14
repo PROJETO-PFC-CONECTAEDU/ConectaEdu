@@ -88,12 +88,20 @@ public class LessonSchedulingService {
 
         //O fim da nova aula contra, o início da que já existe, e o início da nova contra o fim dela.
 
+        boolean demandOverlaps = lessonRepository
+                .existsByDemand_IdAndStatusInAndScheduledStartLessThanAndScheduledEndGreaterThan(
+                        demand.getId(), LessonRules.BUSY_STATUSES,
+                        request.scheduledEnd(), request.scheduledStart());
+        if (demandOverlaps) {
+            throw new LessonOverlapException("Já existe uma aula agendada para esta demanda neste horário.");
+        }
+
         if (student != null) {
-            boolean overlaps = lessonRepository
+            boolean studentOverlaps = lessonRepository
                     .existsByStudent_IdAndStatusInAndScheduledStartLessThanAndScheduledEndGreaterThan(
                             student.getId(), LessonRules.BUSY_STATUSES,
                             request.scheduledEnd(), request.scheduledStart());
-            if (overlaps) {
+            if (studentOverlaps) {
                 throw new LessonOverlapException("O estudante já tem aula marcada neste horário.");
             }
         }

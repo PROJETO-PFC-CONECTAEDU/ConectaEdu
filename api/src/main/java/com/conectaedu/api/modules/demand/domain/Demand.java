@@ -38,10 +38,8 @@ public class Demand {
     @Enumerated(EnumType.STRING)
     private DemandStatus status;
 
-    private LocalDateTime classDate;
     private String totalHours;
 
-    private LocalDateTime pendingClassDate;
     private String pendingRoom;
 
     private boolean isArchived = false;

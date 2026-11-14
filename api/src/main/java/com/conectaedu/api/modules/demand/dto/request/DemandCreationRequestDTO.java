@@ -26,8 +26,6 @@ public record DemandCreationRequestDTO(
         @NotNull(message = "Quantidade de alunos é obrigatória")
         Integer pupilAmount,
 
-        LocalDateTime classDate,
-
         @NotBlank(message = "Total de horas é obrigatório")
         String totalHours,
 

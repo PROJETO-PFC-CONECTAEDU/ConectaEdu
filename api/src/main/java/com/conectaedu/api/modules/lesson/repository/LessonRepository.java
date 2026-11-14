@@ -20,6 +20,10 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
             UUID studentId, Collection<LessonStatus> status,
             LocalDateTime newEnd, LocalDateTime newStart);
 
+    boolean existsByDemand_IdAndStatusInAndScheduledStartLessThanAndScheduledEndGreaterThan(
+            UUID demandId, Collection<LessonStatus> status,
+            LocalDateTime newEnd, LocalDateTime newStart);
+
     //Confirma que a demanda teve algum cancelamento, sem precisar saber qual aula foi.
 
     boolean existsByDemand_IdAndStatus(UUID demandId, LessonStatus status);

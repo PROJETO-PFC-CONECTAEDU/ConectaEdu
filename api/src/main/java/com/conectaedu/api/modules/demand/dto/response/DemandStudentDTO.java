@@ -13,7 +13,6 @@ public record DemandStudentDTO(
         String gradeLevel,
         Integer pupilAmount,
         DemandStatus status,
-        LocalDateTime classDate,
         String totalHours,
         String room,
         String difficultyLevel,

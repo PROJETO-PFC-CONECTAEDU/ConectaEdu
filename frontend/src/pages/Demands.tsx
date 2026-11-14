@@ -29,7 +29,6 @@ interface Demand {
   gradeLevel: string;
   pupilAmount: number;
   status: string;
-  classDate: string;
   totalHours: string;
   room: string;
   difficultyLevel: string;
@@ -52,7 +51,6 @@ const demandSchema = z.object({
   totalHours: z.string().min(1, 'Total de horas é obrigatório'),
   room: z.string().min(1, 'Sala é obrigatória'),
   difficultyLevel: z.string().min(1, 'Grau de dificuldade é obrigatório'),
-  classDate: z.string().min(1, 'Data da aula é obrigatória'),
 });
 
 type DemandFormData = z.infer<typeof demandSchema>;

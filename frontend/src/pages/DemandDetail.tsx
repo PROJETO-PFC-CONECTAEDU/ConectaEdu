@@ -48,12 +48,10 @@ interface Demand {
   gradeLevel: string;
   pupilAmount: number;
   status: string;
-  classDate: string;
   totalHours: string;
   room: string;
   difficultyLevel: string;
   isArchived: boolean;
-  pendingClassDate?: string;
   pendingRoom?: string;
   schoolName: string;
   schoolAddress: string;
@@ -759,7 +757,7 @@ export function DemandDetail() {
                   </div>
                 )}
                 
-                {demand.studentId === user?.id && !demand.isArchived && (demand.pendingClassDate || demand.pendingRoom) && (
+                {demand.studentId === user?.id && !demand.isArchived && demand.pendingRoom && (
                   <div className="mt-6 p-6 bg-amber-50 border border-amber-200 rounded-xl space-y-4">
                     <div className="flex gap-3 text-amber-800">
                       <AlertCircle size={24} className="shrink-0" />
@@ -767,9 +765,6 @@ export function DemandDetail() {
                         <h4 className="font-bold">Alterações Pendentes</h4>
                         <p className="text-sm">O diretor da escola solicitou alterações nesta demanda que precisam da sua confirmação:</p>
                         <ul className="mt-2 text-sm list-disc list-inside space-y-1">
-                          {demand.pendingClassDate && (
-                            <li>Novo Horário: <span className="font-bold">{formatDate(demand.pendingClassDate)}</span></li>
-                          )}
                           {demand.pendingRoom && (
                             <li>Nova Sala: <span className="font-bold">{demand.pendingRoom}</span></li>
                           )}
