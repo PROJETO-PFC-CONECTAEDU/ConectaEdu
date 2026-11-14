@@ -7,9 +7,18 @@ import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Modal } from '../components/ui/Modal';
 import { Header } from '../components/layout/Header';
 import toast from 'react-hot-toast';
-import { User, Shield, CheckCircle, XCircle, Key, Download, Trash2 } from 'lucide-react';
+import { User, Shield, CheckCircle, XCircle, Key, Download, Trash2, Smartphone, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { formatRole, formatLegalDocumentType, formatDateTime } from '../utils/format';
 import { Input } from '../components/ui/Input';
+import { TwoFactorSetupModal } from '../components/auth/TwoFactorSetupModal';
+import { TwoFactorDisableModal } from '../components/auth/TwoFactorDisableModal';
+
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 interface ConsentRecord {
   id: string;
@@ -22,7 +31,7 @@ interface ConsentRecord {
 }
 
 export function Profile() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [consents, setConsents] = useState<ConsentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedConsent, setSelectedConsent] = useState<ConsentRecord | null>(null);
@@ -39,6 +48,10 @@ export function Profile() {
 
   // Exclusão
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  // 2FA
+  const [is2FASetupOpen, setIs2FASetupOpen] = useState(false);
+  const [is2FADisableOpen, setIs2FADisableOpen] = useState(false);
 
   useEffect(() => {
     fetchConsents();
@@ -240,14 +253,48 @@ export function Profile() {
               <Key className="text-brand-primary" size={24} />
               <h3 className="text-lg font-bold text-text-heading">Segurança</h3>
             </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-text-heading font-medium">Senha</p>
-                <p className="text-sm text-text-body">Altere sua senha de acesso periodicamente para sua segurança.</p>
+            
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-text-heading font-medium">Senha</p>
+                  <p className="text-sm text-text-body">Altere sua senha de acesso periodicamente para sua segurança.</p>
+                </div>
+                <Button variant="outline" onClick={() => setIsPasswordModalOpen(true)}>
+                  Alterar Senha
+                </Button>
               </div>
-              <Button variant="outline" onClick={() => setIsPasswordModalOpen(true)}>
-                Alterar Senha
-              </Button>
+
+              <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
+                <div className="flex gap-4">
+                  <div className={cn(
+                    "p-2 rounded-lg h-fit",
+                    user?.twoFactorEnabled ? "bg-green-100 text-green-600" : "bg-yellow-100 text-yellow-600"
+                  )}>
+                    {user?.twoFactorEnabled ? <ShieldCheck size={20} /> : <ShieldAlert size={20} />}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-text-heading font-bold">Autenticação de Duas Etapas (2FA)</p>
+                      {user?.twoFactorEnabled ? (
+                        <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold uppercase">Ativado</span>
+                      ) : (
+                        <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold uppercase">Desativado</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-text-body">Adicione uma camada extra de segurança usando um aplicativo autenticador.</p>
+                  </div>
+                </div>
+                {user?.twoFactorEnabled ? (
+                  <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => setIs2FADisableOpen(true)}>
+                    Desativar 2FA
+                  </Button>
+                ) : (
+                  <Button variant="outline" onClick={() => setIs2FASetupOpen(true)}>
+                    Configurar 2FA
+                  </Button>
+                )}
+              </div>
             </div>
           </Card>
 
@@ -431,6 +478,26 @@ export function Profile() {
           </Button>
         </div>
       </Modal>
+
+      <TwoFactorSetupModal
+        isOpen={is2FASetupOpen}
+        onClose={() => setIs2FASetupOpen(false)}
+        onSuccess={() => {
+          if (user) {
+            updateUser({ ...user, twoFactorEnabled: true });
+          }
+        }}
+      />
+
+      <TwoFactorDisableModal
+        isOpen={is2FADisableOpen}
+        onClose={() => setIs2FADisableOpen(false)}
+        onSuccess={() => {
+          if (user) {
+            updateUser({ ...user, twoFactorEnabled: false });
+          }
+        }}
+      />
     </div>
   </div>
   );

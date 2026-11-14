@@ -18,13 +18,13 @@ public class ConfirmEmailService {
     private final AuditService auditService;
 
     @Transactional
-    public void confirmEmail(String token) {
-        User user = userRepository.findByEmailConfirmationToken(token).orElse(null);
+    public void confirmEmail(String email, String code) {
+        User user = userRepository.findByEmailAndEmailConfirmationToken(email, code).orElse(null);
 
         if (user == null) {
-            log.error("Falha na confirmação de e-mail: Token inválido {}", token);
-            auditService.logEmailConfirmationFail(token, "invalid_token");
-            throw new BusinessException("Token de confirmação inválido.");
+            log.error("Falha na confirmação de e-mail: Código inválido para o e-mail {}", email);
+            auditService.logEmailConfirmationFail(code, "invalid_code");
+            throw new BusinessException("Código de confirmação inválido.");
         }
 
         if (user.isEmailConfirmed()) {

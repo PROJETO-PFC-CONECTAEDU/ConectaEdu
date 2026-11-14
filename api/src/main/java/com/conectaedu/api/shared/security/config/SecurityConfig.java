@@ -36,9 +36,10 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/auth/confirm-email").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/confirm-email").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/forgot-password").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/reset-password").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/2fa/verify").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register/director").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register/university-admin").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/legal-documents/current/**").permitAll()

@@ -1,17 +1,9 @@
 package com.conectaedu.api.modules.auth.controller;
 
-import com.conectaedu.api.modules.auth.dto.ForgotPasswordRequest;
-import com.conectaedu.api.modules.auth.dto.LoginRequestDTO;
-import com.conectaedu.api.modules.auth.dto.LoginResponseDTO;
-import com.conectaedu.api.modules.auth.dto.ResetPasswordRequest;
-import com.conectaedu.api.modules.auth.dto.SchoolDirectorRegisterDTO;
-import com.conectaedu.api.modules.auth.dto.UniversityAdminRegisterDTO;
-import com.conectaedu.api.modules.auth.service.AuthLoginService;
-import com.conectaedu.api.modules.auth.service.ConfirmEmailService;
-import com.conectaedu.api.modules.auth.service.ForgetPasswordService;
-import com.conectaedu.api.modules.auth.service.RegisterDirectorService;
-import com.conectaedu.api.modules.auth.service.RegisterUniversityAdminService;
-import com.conectaedu.api.modules.auth.service.ResetPasswordService;
+import com.conectaedu.api.modules.auth.dto.*;
+import com.conectaedu.api.modules.auth.service.*;
+import com.conectaedu.api.modules.user.genericUser.domain.User;
+import com.conectaedu.api.shared.security.context.SecurityContextHolder;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,15 +21,48 @@ public class AuthController {
     private final ResetPasswordService resetPasswordService;
     private final RegisterDirectorService registerDirectorService;
     private final RegisterUniversityAdminService registerUniversityAdminService;
+    private final TwoFactorAuthService twoFactorAuthService;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@RequestBody @Valid LoginRequestDTO data) {
         return ResponseEntity.ok(authService.login(data));
     }
 
-    @GetMapping("/confirm-email")
-    public ResponseEntity<Void> confirmEmail(@RequestParam("token") String token) {
-        confirmEmailService.confirmEmail(token);
+    @PostMapping("/2fa/verify")
+    public ResponseEntity<LoginResponseDTO> verify2FA(@RequestBody @Valid TwoFactorVerifyRequestDTO data) {
+        return ResponseEntity.ok(twoFactorAuthService.verify2FA(data));
+    }
+
+    @PostMapping("/2fa/setup")
+    public ResponseEntity<TwoFactorSetupResponseDTO> setup2FA() {
+        User user = twoFactorAuthService.findById(SecurityContextHolder.getAuthenticatedUserId());
+        return ResponseEntity.ok(twoFactorAuthService.setup2FA(user));
+    }
+
+    @PostMapping("/2fa/confirm")
+    public ResponseEntity<Void> confirm2FA(@RequestBody @Valid TwoFactorConfirmRequestDTO data) {
+        User user = twoFactorAuthService.findById(SecurityContextHolder.getAuthenticatedUserId());
+        twoFactorAuthService.confirm2FA(user, data.code());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/2fa/disable/request")
+    public ResponseEntity<Void> requestDisable2FA() {
+        User user = twoFactorAuthService.findById(SecurityContextHolder.getAuthenticatedUserId());
+        twoFactorAuthService.requestDisable2FA(user);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/2fa/disable/confirm")
+    public ResponseEntity<Void> confirmDisable2FA(@RequestBody @Valid TwoFactorDisableRequestDTO data) {
+        User user = twoFactorAuthService.findById(SecurityContextHolder.getAuthenticatedUserId());
+        twoFactorAuthService.confirmDisable2FA(user, data.code());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/confirm-email")
+    public ResponseEntity<Void> confirmEmail(@RequestBody @Valid ConfirmEmailRequestDTO request) {
+        confirmEmailService.confirmEmail(request.email(), request.code());
         return ResponseEntity.ok().build();
     }
 

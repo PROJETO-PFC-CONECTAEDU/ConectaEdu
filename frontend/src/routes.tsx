@@ -8,6 +8,7 @@ import { Profile } from './pages/Profile';
 import { MapPage } from './pages/MapPage';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { ConfirmEmail } from './pages/ConfirmEmail';
 import { LegalDocumentView } from './pages/LegalDocumentView';
 import { Demands } from './pages/Demands';
 import { DemandDetail } from './pages/DemandDetail';
@@ -27,6 +28,10 @@ export const router = createBrowserRouter([
   {
     path: '/register',
     element: <Register />,
+  },
+  {
+    path: '/confirm-email',
+    element: <ConfirmEmail />,
   },
   {
     path: '/legal/:type',

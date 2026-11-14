@@ -8,12 +8,14 @@ interface User {
   universityId?: string;
   schoolId?: string;
   emailConfirmed: boolean;
+  twoFactorEnabled: boolean;
 }
 
 interface AuthContextData {
   user: User | null;
   token: string | null;
   signIn: (data: { token: string; user: User }) => void;
+  updateUser: (user: User) => void;
   signOut: () => void;
   isAuthenticated: boolean;
 }
@@ -37,6 +39,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(user);
   };
 
+  const updateUser = (newUser: User) => {
+    localStorage.setItem('@ConectaEdu:user', JSON.stringify(newUser));
+    setUser(newUser);
+  };
+
   const signOut = () => {
     localStorage.removeItem('@ConectaEdu:token');
     localStorage.removeItem('@ConectaEdu:user');
@@ -45,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, signIn, signOut, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ user, token, signIn, updateUser, signOut, isAuthenticated: !!token }}>
       {children}
     </AuthContext.Provider>
   );
