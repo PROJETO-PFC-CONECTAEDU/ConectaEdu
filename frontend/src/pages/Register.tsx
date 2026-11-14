@@ -62,7 +62,7 @@ export function Register() {
       await api.post(endpoint, payload);
       
       toast.success('Cadastro realizado com sucesso! Verifique seu e-mail para confirmação.');
-      navigate('/login');
+      navigate(`/confirm-email?email=${encodeURIComponent(data.email)}`);
     } catch (error: any) {
       const message = error.response?.data?.message || 'Erro ao realizar cadastro. Tente novamente.';
       toast.error(message);

@@ -12,6 +12,7 @@ import { useMutation } from '@tanstack/react-query';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import { TwoFactorVerifyModal } from '../components/auth/TwoFactorVerifyModal';
 
 const loginSchema = z.object({
   email: z.string().email('E-mail inválido'),
@@ -24,6 +25,8 @@ export function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [is2FAModalOpen, setIs2FAModalOpen] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState('');
   const navigate = useNavigate();
   const { signIn } = useAuth();
 
@@ -41,6 +44,11 @@ export function Login() {
       return response.data;
     },
     onSuccess: (data) => {
+      if (data.twoFactorEnabled && !data.token) {
+        setPendingEmail(data.email);
+        setIs2FAModalOpen(true);
+        return;
+      }
       signIn({
         token: data.token,
         user: {
@@ -49,7 +57,9 @@ export function Login() {
           email: data.email,
           role: data.role,
           universityId: data.universityId,
-          schoolId: data.schoolId
+          schoolId: data.schoolId,
+          emailConfirmed: true, // Se logou, o email está confirmado
+          twoFactorEnabled: data.twoFactorEnabled
         }
       });
       toast.success('Bem-vindo ao ConectaEdu!');
@@ -178,6 +188,29 @@ export function Login() {
       <RequestAccessModal
         isOpen={isRequestModalOpen}
         onClose={() => setIsRequestModalOpen(false)}
+      />
+
+      <TwoFactorVerifyModal
+        isOpen={is2FAModalOpen}
+        onClose={() => setIs2FAModalOpen(false)}
+        email={pendingEmail}
+        onSuccess={(data) => {
+          signIn({
+            token: data.token,
+            user: {
+              id: data.id,
+              name: data.name,
+              email: data.email,
+              role: data.role,
+              universityId: data.universityId,
+              schoolId: data.schoolId,
+              emailConfirmed: true,
+              twoFactorEnabled: data.twoFactorEnabled
+            }
+          });
+          toast.success('Bem-vindo ao ConectaEdu!');
+          navigate('/dashboard');
+        }}
       />
     </div>
   );

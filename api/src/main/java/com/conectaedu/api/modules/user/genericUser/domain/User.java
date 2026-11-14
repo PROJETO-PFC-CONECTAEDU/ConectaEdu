@@ -57,6 +57,12 @@ public class User {
     
     private boolean emailConfirmed = false;
     
+    private String secret2fa;
+
+    private boolean is2faEnabled = false;
+
+    private String disable2faCode;
+    
     public void generatePasswordResetToken() {
         this.passwordResetToken = java.util.UUID.randomUUID().toString();
         this.passwordResetExpiresAt = LocalDateTime.now().plusHours(1);
@@ -74,7 +80,7 @@ public class User {
     }
 
     public void generateEmailConfirmationToken() {
-        this.emailConfirmationToken = java.util.UUID.randomUUID().toString();
+        this.emailConfirmationToken = String.format("%06d", new java.util.Random().nextInt(1000000));
     }
 
     public void confirmEmail() {

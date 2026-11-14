@@ -20,4 +20,10 @@ public class LoginResponseDTO {
     private String role;
     private UUID universityId;
     private UUID schoolId;
+    private boolean twoFactorEnabled;
+
+    public LoginResponseDTO(String email, boolean twoFactorEnabled) {
+        this.email = email;
+        this.twoFactorEnabled = twoFactorEnabled;
+    }
 }
