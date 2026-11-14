@@ -44,7 +44,6 @@ public class DemandCreationService {
         demand.setSubject(request.subject());
         demand.setGradeLevel(request.gradeLevel());
         demand.setPupilAmount(request.pupilAmount());
-        demand.setClassDate(request.classDate());
         demand.setTotalHours(request.totalHours());
         demand.setRoom(request.room());
         demand.setDifficultyLevel(request.difficultyLevel());

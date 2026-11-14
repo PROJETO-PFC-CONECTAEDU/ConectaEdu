@@ -157,7 +157,6 @@ public class DevDataLoader implements CommandLineRunner {
             demand1.setRoom("Sala 12");
             demand1.setDifficultyLevel("Médio");
             demand1.setStatus(DemandStatus.WAITING);
-            demand1.setClassDate(LocalDateTime.now().plusDays(7));
             demand1.setTotalHours("2h");
             demand1.setSchool(school);
             demand1.setDirector(director);
@@ -173,7 +172,6 @@ public class DevDataLoader implements CommandLineRunner {
             demand2.setRoom("Biblioteca");
             demand2.setDifficultyLevel("Fácil");
             demand2.setStatus(DemandStatus.WAITING);
-            demand2.setClassDate(LocalDateTime.now().plusDays(10));
             demand2.setTotalHours("1h30");
             demand2.setSchool(school);
             demand2.setDirector(director);
@@ -219,7 +217,6 @@ public class DevDataLoader implements CommandLineRunner {
         ongoingDemand.setRoom("Laboratório 2");
         ongoingDemand.setDifficultyLevel("Médio");
         ongoingDemand.setStatus(DemandStatus.ONGOING);
-        ongoingDemand.setClassDate(LocalDateTime.now().minusDays(2));
         ongoingDemand.setTotalHours("20h");
         ongoingDemand.setSchool(school);
         ongoingDemand.setDirector(director);

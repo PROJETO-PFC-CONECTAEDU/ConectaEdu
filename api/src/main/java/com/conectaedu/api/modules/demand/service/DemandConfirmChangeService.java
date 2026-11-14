@@ -38,17 +38,11 @@ public class DemandConfirmChangeService {
             throw new AccessDeniedException("Apenas o estudante vinculado pode confirmar alterações");
         }
 
-        if (demand.getPendingClassDate() == null && demand.getPendingRoom() == null) {
+        if (demand.getPendingRoom() == null) {
             throw new RuntimeException("Não há alterações pendentes para confirmar");
         }
 
         AuditDiff diff = AuditDiff.create();
-
-        if (demand.getPendingClassDate() != null) {
-            diff.field("dataAula", demand.getClassDate(), demand.getPendingClassDate());
-            demand.setClassDate(demand.getPendingClassDate());
-            demand.setPendingClassDate(null);
-        }
 
         if (demand.getPendingRoom() != null) {
             diff.field("sala", demand.getRoom(), demand.getPendingRoom());
