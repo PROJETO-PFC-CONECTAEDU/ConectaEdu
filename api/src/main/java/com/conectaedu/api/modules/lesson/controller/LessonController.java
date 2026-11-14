@@ -47,6 +47,13 @@ public class LessonController {
         return ResponseEntity.ok(lessonFacade.cancelLesson(id, request));
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('SCHOOL_DIRECTOR')")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        lessonFacade.deleteLesson(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @PatchMapping("/{id}/register")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<LessonResponseDTO> register(@PathVariable UUID id,

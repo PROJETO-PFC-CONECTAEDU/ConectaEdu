@@ -50,9 +50,9 @@ public class LessonCancellationService {
 
         tenancyValidator.validateLessonAccess(lesson);
 
-        if (lesson.getStatus() != LessonStatus.SCHEDULED && lesson.getStatus() != LessonStatus.CONFIRMED) {
+        if (lesson.getStatus() != LessonStatus.CONFIRMED) {
             throw new InvalidLessonStatusException(
-                    "A aula está com status %s e não aceita esta operação.".formatted(lesson.getStatus()));
+                    "Somente aulas confirmadas podem ser canceladas com justificativa. Para aulas agendadas, utilize a remoção.");
         }
 
         LessonStatus beforeStatus = lesson.getStatus();

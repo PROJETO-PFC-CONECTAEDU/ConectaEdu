@@ -21,7 +21,10 @@ import {
   AlertCircle,
   Trash2,
   Info,
-  MapPin
+  MapPin,
+  Eye,
+  XCircle,
+  FileText
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
@@ -79,7 +82,23 @@ const schedulingSchema = z.object({
   path: ["scheduledEnd"],
 });
 
+const cancellationSchema = z.object({
+  reason: z.enum(['STUDENT_UNAVAILABLE', 'SCHOOL_UNAVAILABLE', 'PUPILS_ABSENT', 'INSTITUTIONAL_ISSUE', 'OTHER'], {
+    errorMap: () => ({ message: 'Selecione um motivo válido' })
+  }),
+  notes: z.string().max(500, 'Máximo 500 caracteres').optional(),
+});
+
+const registrationSchema = z.object({
+  presentCount: z.number().min(0, 'Mínimo 0'),
+  contentTaught: z.string().min(1, 'Conteúdo é obrigatório').max(2000, 'Máximo 2000 caracteres'),
+  nineBoxPerformance: z.number().min(1).max(3),
+  nineBoxPotential: z.number().min(1).max(3),
+});
+
 type SchedulingFormData = z.infer<typeof schedulingSchema>;
+type CancellationFormData = z.infer<typeof cancellationSchema>;
+type RegistrationFormData = z.infer<typeof registrationSchema>;
 
 export function DemandDetail() {
   const { id } = useParams<{ id: string }>();
@@ -92,6 +111,11 @@ export function DemandDetail() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isViewLessonModalOpen, setIsViewLessonModalOpen] = useState(false);
+  const [isCancelLessonModalOpen, setIsCancelLessonModalOpen] = useState(false);
+  const [isDeleteLessonModalOpen, setIsDeleteLessonModalOpen] = useState(false);
+  const [isRegisterLessonModalOpen, setIsRegisterLessonModalOpen] = useState(false);
+  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
   const [startTime, setStartTime] = useState('08:00');
@@ -103,6 +127,21 @@ export function DemandDetail() {
     resolver: zodResolver(schedulingSchema),
     defaultValues: {
       enrolledCount: 3
+    }
+  });
+
+  const cancelForm = useForm<CancellationFormData>({
+    resolver: zodResolver(cancellationSchema),
+    defaultValues: {
+      reason: 'OTHER'
+    }
+  });
+
+  const registerForm = useForm<RegistrationFormData>({
+    resolver: zodResolver(registrationSchema),
+    defaultValues: {
+      nineBoxPerformance: 2,
+      nineBoxPotential: 2
     }
   });
 
@@ -213,6 +252,67 @@ export function DemandDetail() {
       const message = axios.isAxiosError(err) 
         ? (err.response?.data?.detail || err.response?.data?.message || 'Erro ao assinar aula.') 
         : 'Erro ao assinar aula.';
+      toast.error(message);
+    }
+  });
+
+  const confirmLessonMutation = useMutation({
+    mutationFn: async (lessonId: string) => {
+      await api.patch(`/lessons/${lessonId}/confirm`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demand-lessons', id] });
+      toast.success('Aula confirmada com sucesso!');
+    },
+    onError: (err: unknown) => {
+      const message = axios.isAxiosError(err) ? (err.response?.data?.message || 'Erro ao confirmar aula.') : 'Erro ao confirmar aula.';
+      toast.error(message);
+    }
+  });
+
+  const cancelLessonMutation = useMutation({
+    mutationFn: async ({ lessonId, data }: { lessonId: string, data: CancellationFormData }) => {
+      await api.patch(`/lessons/${lessonId}/cancel`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demand-lessons', id] });
+      toast.success('Aula cancelada com sucesso!');
+      setIsCancelLessonModalOpen(false);
+      cancelForm.reset();
+    },
+    onError: (err: unknown) => {
+      const message = axios.isAxiosError(err) ? (err.response?.data?.message || 'Erro ao cancelar aula.') : 'Erro ao cancelar aula.';
+      toast.error(message);
+    }
+  });
+
+  const deleteLessonMutation = useMutation({
+    mutationFn: async (lessonId: string) => {
+      await api.delete(`/lessons/${lessonId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demand-lessons', id] });
+      toast.success('Aula removida com sucesso!');
+      setIsDeleteLessonModalOpen(false);
+    },
+    onError: (err: unknown) => {
+      const message = axios.isAxiosError(err) ? (err.response?.data?.message || 'Erro ao remover aula.') : 'Erro ao remover aula.';
+      toast.error(message);
+    }
+  });
+
+  const registerLessonMutation = useMutation({
+    mutationFn: async ({ lessonId, data }: { lessonId: string, data: RegistrationFormData }) => {
+      await api.patch(`/lessons/${lessonId}/register`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demand-lessons', id] });
+      toast.success('Aula registrada com sucesso!');
+      setIsRegisterLessonModalOpen(false);
+      registerForm.reset();
+    },
+    onError: (err: unknown) => {
+      const message = axios.isAxiosError(err) ? (err.response?.data?.message || 'Erro ao registrar aula.') : 'Erro ao registrar aula.';
       toast.error(message);
     }
   });
@@ -731,18 +831,72 @@ export function DemandDetail() {
                             {new Date(lesson.scheduledStart).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - 
                             {new Date(lesson.scheduledEnd).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                           </div>
-                          <p className="text-xs text-text-muted mb-3">{lesson.enrolledCount} alunos previstos</p>
                           
-                          {isDirector && (lesson.status === 'REGISTERED' || lesson.status === 'COMPLETED') && (
-                            <Button 
-                              size="sm" 
-                              className="w-full text-xs h-8"
-                              onClick={() => signMutation.mutate(lesson.id)}
-                              isLoading={signMutation.isPending}
-                            >
-                              Validar e Assinar
-                            </Button>
-                          )}
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-border-default">
+                            <p className="text-xs text-text-muted">{lesson.enrolledCount} alunos previstos</p>
+                            
+                            <div className="flex gap-1">
+                              <button 
+                                onClick={() => { setSelectedLesson(lesson); setIsViewLessonModalOpen(true); }}
+                                className="p-1.5 text-text-muted hover:text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-colors"
+                                title="Visualizar Detalhes"
+                              >
+                                <Eye size={16} />
+                              </button>
+
+                              {isDirector && lesson.status === 'SCHEDULED' && (
+                                <button 
+                                  onClick={() => { setSelectedLesson(lesson); setIsDeleteLessonModalOpen(true); }}
+                                  className="p-1.5 text-text-muted hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                  title="Remover Aula"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              )}
+
+                              {(isDirector || isStudent) && lesson.status === 'CONFIRMED' && (
+                                <button 
+                                  onClick={() => { setSelectedLesson(lesson); setIsCancelLessonModalOpen(true); }}
+                                  className="p-1.5 text-text-muted hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                  title="Cancelar Aula"
+                                >
+                                  <XCircle size={16} />
+                                </button>
+                              )}
+
+                              {isDirector && (lesson.status === 'REGISTERED' || lesson.status === 'COMPLETED') && (
+                                <button 
+                                  onClick={() => signMutation.mutate(lesson.id)}
+                                  disabled={signMutation.isPending}
+                                  className="p-1.5 text-text-muted hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors disabled:opacity-50"
+                                  title="Validar e Assinar"
+                                >
+                                  <CheckCircle2 size={16} />
+                                </button>
+                              )}
+
+                              {isStudent && lesson.status === 'SCHEDULED' && (
+                                <button 
+                                  onClick={() => confirmLessonMutation.mutate(lesson.id)}
+                                  disabled={confirmLessonMutation.isPending}
+                                  className="p-1.5 text-text-muted hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors disabled:opacity-50"
+                                  title="Confirmar Aula"
+                                >
+                                  <Check size={16} />
+                                </button>
+                              )}
+
+                              {isStudent && lesson.status === 'CONFIRMED' && (
+                                <button 
+                                  onClick={() => { setSelectedLesson(lesson); setIsRegisterLessonModalOpen(true); }}
+                                  className="p-1.5 text-text-muted hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                  title="Registrar Aula"
+                                >
+                                  <FileText size={16} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -897,6 +1051,16 @@ export function DemandDetail() {
         variant="info"
       />
 
+      <ConfirmModal
+        isOpen={isDeleteLessonModalOpen}
+        onClose={() => setIsDeleteLessonModalOpen(false)}
+        onConfirm={() => selectedLesson && deleteLessonMutation.mutate(selectedLesson.id)}
+        title="Remover Aula"
+        description="Tem certeza que deseja remover esta aula agendada? Esta ação não pode ser desfeita."
+        isLoading={deleteLessonMutation.isPending}
+        variant="danger"
+      />
+
       <Modal
         isOpen={isScheduleModalOpen}
         onClose={() => setIsScheduleModalOpen(false)}
@@ -931,6 +1095,206 @@ export function DemandDetail() {
           <div className="flex justify-end gap-3 mt-6">
             <Button variant="outline" onClick={() => setIsScheduleModalOpen(false)}>Cancelar</Button>
             <Button type="submit" isLoading={scheduleMutation.isPending}>Confirmar Agendamento</Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        isOpen={isViewLessonModalOpen}
+        onClose={() => setIsViewLessonModalOpen(false)}
+        title="Detalhes da Aula"
+      >
+        {selectedLesson && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-text-muted font-medium mb-1">Status</p>
+                <span className={`text-xs px-2 py-1 rounded-full font-bold ${
+                  selectedLesson.status === 'SCHEDULED' ? 'bg-blue-100 text-blue-700' :
+                  selectedLesson.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
+                  (selectedLesson.status === 'REGISTERED' || selectedLesson.status === 'COMPLETED') ? 'bg-purple-100 text-purple-700' :
+                  'bg-emerald-100 text-emerald-700'
+                }`}>
+                  {formatLessonStatus(selectedLesson.status)}
+                </span>
+              </div>
+              <div>
+                <p className="text-xs text-text-muted font-medium mb-1">Data</p>
+                <p className="text-sm font-bold text-text-heading">
+                  {format(new Date(selectedLesson.scheduledStart), 'dd/MM/yyyy')}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-text-muted font-medium mb-1">Horário</p>
+                <p className="text-sm font-bold text-text-heading">
+                  {format(new Date(selectedLesson.scheduledStart), 'HH:mm')} - {format(new Date(selectedLesson.scheduledEnd), 'HH:mm')}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-text-muted font-medium mb-1">Alunos Previstos</p>
+                <p className="text-sm font-bold text-text-heading">{selectedLesson.enrolledCount}</p>
+              </div>
+            </div>
+
+            {selectedLesson.presentCount !== undefined && selectedLesson.presentCount !== null && (
+              <div className="pt-4 border-t border-border-default space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-text-muted font-medium mb-1">Alunos Presentes</p>
+                    <p className="text-sm font-bold text-text-heading">{selectedLesson.presentCount}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-text-muted font-medium mb-1">Registrado em</p>
+                    <p className="text-sm font-bold text-text-heading">
+                      {selectedLesson.registeredAt ? format(new Date(selectedLesson.registeredAt), 'dd/MM/yyyy HH:mm') : '-'}
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-text-muted font-medium mb-1">Conteúdo Ministrado</p>
+                  <p className="text-sm text-text-body bg-slate-50 p-3 rounded-lg border border-border-default whitespace-pre-wrap">
+                    {selectedLesson.contentTaught || 'Não informado'}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-text-muted font-medium mb-1">Desempenho (1-3)</p>
+                    <p className="text-sm font-bold text-text-heading">{selectedLesson.nineBoxPerformance || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-text-muted font-medium mb-1">Potencial (1-3)</p>
+                    <p className="text-sm font-bold text-text-heading">{selectedLesson.nineBoxPotential || '-'}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {selectedLesson.signedAt && (
+              <div className="pt-4 border-t border-border-default">
+                <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 p-3 rounded-lg">
+                  <CheckCircle2 size={18} />
+                  <p className="text-sm font-medium">Validada e assinada pelo diretor</p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end pt-4">
+              <Button onClick={() => setIsViewLessonModalOpen(false)}>Fechar</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={isCancelLessonModalOpen}
+        onClose={() => setIsCancelLessonModalOpen(false)}
+        title={isDirector ? "Remover Aula" : "Cancelar Aula"}
+      >
+        <form 
+          onSubmit={cancelForm.handleSubmit((data) => {
+            if (selectedLesson) {
+              cancelLessonMutation.mutate({ lessonId: selectedLesson.id, data });
+            }
+          })} 
+          className="space-y-4"
+        >
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text-heading">Motivo do Cancelamento</label>
+            <select
+              {...cancelForm.register('reason')}
+              className="flex h-11 w-full rounded-lg border border-border-default bg-white px-3 py-2 text-sm text-text-heading focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+            >
+              <option value="STUDENT_UNAVAILABLE">Estudante indisponível</option>
+              <option value="SCHOOL_UNAVAILABLE">Escola indisponível</option>
+              <option value="PUPILS_ABSENT">Alunos ausentes</option>
+              <option value="INSTITUTIONAL_ISSUE">Questão institucional</option>
+              <option value="OTHER">Outro motivo</option>
+            </select>
+            {cancelForm.formState.errors.reason && <p className="text-xs text-red-500">{cancelForm.formState.errors.reason.message}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text-heading">Observações (opcional)</label>
+            <textarea
+              {...cancelForm.register('notes')}
+              className="flex min-h-[100px] w-full rounded-lg border border-border-default bg-white px-3 py-2 text-sm text-text-heading focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+              placeholder="Descreva brevemente o motivo..."
+            />
+            {cancelForm.formState.errors.notes && <p className="text-xs text-red-500">{cancelForm.formState.errors.notes.message}</p>}
+          </div>
+
+          <div className="flex justify-end gap-3 mt-6">
+            <Button variant="outline" onClick={() => setIsCancelLessonModalOpen(false)}>Voltar</Button>
+            <Button 
+              type="submit" 
+              className="bg-red-500 hover:bg-red-600 text-white"
+              isLoading={cancelLessonMutation.isPending}
+            >
+              Confirmar Cancelamento
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        isOpen={isRegisterLessonModalOpen}
+        onClose={() => setIsRegisterLessonModalOpen(false)}
+        title="Registrar Aula Realizada"
+      >
+        <form 
+          onSubmit={registerForm.handleSubmit((data) => {
+            if (selectedLesson) {
+              registerLessonMutation.mutate({ lessonId: selectedLesson.id, data });
+            }
+          })} 
+          className="space-y-4"
+        >
+          <Input
+            label="Quantidade de Alunos Presentes"
+            type="number"
+            min={0}
+            {...registerForm.register('presentCount', { valueAsNumber: true })}
+            error={registerForm.formState.errors.presentCount?.message}
+          />
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text-heading">Conteúdo Ministrado</label>
+            <textarea
+              {...registerForm.register('contentTaught')}
+              className="flex min-h-[120px] w-full rounded-lg border border-border-default bg-white px-3 py-2 text-sm text-text-heading focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+              placeholder="Descreva o que foi trabalhado nesta aula..."
+            />
+            {registerForm.formState.errors.contentTaught && <p className="text-xs text-red-500">{registerForm.formState.errors.contentTaught.message}</p>}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-text-heading">Desempenho (1-3)</label>
+              <select
+                {...registerForm.register('nineBoxPerformance', { valueAsNumber: true })}
+                className="flex h-11 w-full rounded-lg border border-border-default bg-white px-3 py-2 text-sm text-text-heading focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+              >
+                <option value={1}>1 - Baixo</option>
+                <option value={2}>2 - Médio</option>
+                <option value={3}>3 - Alto</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-text-heading">Potencial (1-3)</label>
+              <select
+                {...registerForm.register('nineBoxPotential', { valueAsNumber: true })}
+                className="flex h-11 w-full rounded-lg border border-border-default bg-white px-3 py-2 text-sm text-text-heading focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+              >
+                <option value={1}>1 - Baixo</option>
+                <option value={2}>2 - Médio</option>
+                <option value={3}>3 - Alto</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 mt-6">
+            <Button variant="outline" onClick={() => setIsRegisterLessonModalOpen(false)}>Cancelar</Button>
+            <Button type="submit" isLoading={registerLessonMutation.isPending}>Salvar Registro</Button>
           </div>
         </form>
       </Modal>

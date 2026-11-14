@@ -48,7 +48,10 @@ const registrationSchema = z.object({
 type RegistrationFormData = z.infer<typeof registrationSchema>;
 
 const cancellationSchema = z.object({
-  reason: z.string().min(5, 'Motivo deve ter pelo menos 5 caracteres'),
+  reason: z.enum(['STUDENT_UNAVAILABLE', 'SCHOOL_UNAVAILABLE', 'PUPILS_ABSENT', 'INSTITUTIONAL_ISSUE', 'OTHER'], {
+    errorMap: () => ({ message: 'Selecione um motivo válido' })
+  }),
+  notes: z.string().max(500, 'Máximo 500 caracteres').optional(),
 });
 
 type CancellationFormData = z.infer<typeof cancellationSchema>;
@@ -116,8 +119,8 @@ export function Schedule() {
   });
 
   const cancelMutation = useMutation({
-    mutationFn: async (data: { id: string; reason: string }) => {
-      await api.patch(`/lessons/${data.id}/cancel`, { reason: data.reason });
+    mutationFn: async (data: { id: string; body: CancellationFormData }) => {
+      await api.patch(`/lessons/${data.id}/cancel`, data.body);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lessons'] });
@@ -138,7 +141,10 @@ export function Schedule() {
   });
 
   const { register: registerCancel, handleSubmit: handleCancelSubmit, formState: { errors: cancelErrors } } = useForm<CancellationFormData>({
-    resolver: zodResolver(cancellationSchema)
+    resolver: zodResolver(cancellationSchema),
+    defaultValues: {
+      reason: 'OTHER'
+    }
   });
 
   const eventDates = useMemo(() => {
@@ -237,7 +243,8 @@ export function Schedule() {
                           }}
                         />
                         {/* Ações rápidas no hover */}
-                        {['SCHEDULED', 'CONFIRMED'].includes(lesson.status) && (
+                        {((!isStudent && ['SCHEDULED', 'CONFIRMED'].includes(lesson.status)) || 
+                          (isStudent && lesson.status === 'CONFIRMED')) && (
                             <button 
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -325,17 +332,34 @@ export function Schedule() {
         onClose={() => setCancellingLesson(null)}
         title="Cancelar Aula"
       >
-        <form onSubmit={handleCancelSubmit((data) => cancelMutation.mutate({ id: cancellingLesson!.id, reason: data.reason }))} className="space-y-4">
+        <form onSubmit={handleCancelSubmit((data) => cancelMutation.mutate({ id: cancellingLesson!.id, body: data }))} className="space-y-4">
           <p className="text-sm text-text-muted">Tem certeza que deseja cancelar esta aula? Esta ação não pode ser desfeita.</p>
-          <div className="space-y-1">
+          
+          <div className="space-y-1.5">
             <label className="text-sm font-medium text-text-heading">Motivo do Cancelamento</label>
-            <textarea
-              className="w-full p-3 rounded-lg border border-border-default bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 min-h-[80px]"
+            <select
               {...registerCancel('reason')}
-              placeholder="Explique o motivo do cancelamento..."
-            />
+              className="flex h-11 w-full rounded-lg border border-border-default bg-white px-3 py-2 text-sm text-text-heading focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+            >
+              <option value="STUDENT_UNAVAILABLE">Estudante indisponível</option>
+              <option value="SCHOOL_UNAVAILABLE">Escola indisponível</option>
+              <option value="PUPILS_ABSENT">Alunos ausentes</option>
+              <option value="INSTITUTIONAL_ISSUE">Questão institucional</option>
+              <option value="OTHER">Outro motivo</option>
+            </select>
             {cancelErrors.reason && <p className="text-xs text-red-500">{cancelErrors.reason.message}</p>}
           </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text-heading">Observações (opcional)</label>
+            <textarea
+              {...registerCancel('notes')}
+              className="flex min-h-[100px] w-full rounded-lg border border-border-default bg-white px-3 py-2 text-sm text-text-heading focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+              placeholder="Descreva brevemente o motivo..."
+            />
+            {cancelErrors.notes && <p className="text-xs text-red-500">{cancelErrors.notes.message}</p>}
+          </div>
+
           <div className="flex justify-end gap-3 mt-6">
             <Button variant="outline" onClick={() => setCancellingLesson(null)}>Voltar</Button>
             <Button type="submit" variant="primary" className="bg-red-600 hover:bg-red-700" isLoading={cancelMutation.isPending}>Confirmar Cancelamento</Button>

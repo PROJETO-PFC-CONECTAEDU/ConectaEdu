@@ -23,6 +23,8 @@ public interface ILessonFacade {
 
     LessonResponseDTO signLesson(UUID lessonId);
 
+    void deleteLesson(UUID lessonId);
+
     List<LessonResponseDTO> getLessonsByStudent(UUID studentId, LocalDateTime from,
                                                 LocalDateTime to, LessonStatus status);
 
