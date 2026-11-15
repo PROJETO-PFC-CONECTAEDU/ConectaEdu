@@ -65,9 +65,7 @@ export function LegalDocuments() {
       });
       fetchDocuments();
     } catch (error: unknown) {
-      const axiosError = error as any;
-      const message = axiosError.response?.data?.message || 'Erro ao publicar documento.';
-      toast.error(message);
+      // Erro tratado globalmente
     } finally {
       setLoading(false);
     }

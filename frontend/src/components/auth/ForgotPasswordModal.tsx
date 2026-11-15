@@ -54,7 +54,7 @@ export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProp
       toast.success('Código enviado para o seu e-mail!');
     },
     onError: () => {
-      toast.error('Ocorreu um erro ao solicitar a recuperação de senha.');
+      // Erro tratado globalmente
     },
   });
 
@@ -69,9 +69,8 @@ export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProp
       toast.success('Senha redefinida com sucesso!');
       handleClose();
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || 'Código inválido ou expirado.';
-      toast.error(message);
+    onError: () => {
+      // Erro tratado globalmente
     },
   });
 

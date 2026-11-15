@@ -24,7 +24,7 @@ export function TwoFactorDisableModal({ isOpen, onClose, onSuccess }: TwoFactorD
       toast.success('Código de desativação enviado para seu e-mail.');
       setStep(2);
     } catch (error) {
-      toast.error('Erro ao solicitar código de desativação.');
+      // Erro tratado globalmente
     } finally {
       setLoading(false);
     }
@@ -39,7 +39,7 @@ export function TwoFactorDisableModal({ isOpen, onClose, onSuccess }: TwoFactorD
       onSuccess();
       onClose();
     } catch (error) {
-      toast.error('Código inválido ou expirado.');
+      // Erro tratado globalmente
     } finally {
       setLoading(false);
     }

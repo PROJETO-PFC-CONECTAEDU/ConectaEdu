@@ -111,7 +111,7 @@ export function Demands() {
       setDeletingId(null);
     },
     onError: () => {
-      toast.error('Erro ao remover demanda.');
+      // Erro tratado globalmente
     }
   });
 
@@ -125,9 +125,8 @@ export function Demands() {
       setIsModalOpen(false);
       reset();
     },
-    onError: (err: any) => {
-      const message = err.response?.data?.detail || err.response?.data?.message || 'Erro ao criar demanda.';
-      toast.error(message);
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 
@@ -139,9 +138,8 @@ export function Demands() {
       queryClient.invalidateQueries({ queryKey: ['demands'] });
       toast.success('Candidatura realizada com sucesso!');
     },
-    onError: (err: any) => {
-      const message = err.response?.data?.detail || err.response?.data?.message || 'Erro ao realizar candidatura.';
-      toast.error(message);
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 

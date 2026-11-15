@@ -182,11 +182,8 @@ export function DemandDetail() {
       setIsScheduleModalOpen(false);
       reset();
     },
-    onError: (err: unknown) => {
-      const message = axios.isAxiosError(err) 
-        ? (err.response?.data?.detail || err.response?.data?.message || 'Erro ao agendar aula.') 
-        : 'Erro ao agendar aula.';
-      toast.error(message);
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 
@@ -220,11 +217,8 @@ export function DemandDetail() {
       toast.success(`${selectedDates.length} aula(s) agendada(s) com sucesso!`);
       setSelectedDates([]);
     },
-    onError: (err: any) => {
-      const message = axios.isAxiosError(err)
-        ? (err.response?.data?.detail || err.response?.data?.message || err.message || 'Erro ao agendar aulas.')
-        : (err.message || 'Erro ao agendar aulas.');
-      toast.error(message);
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 
@@ -248,11 +242,8 @@ export function DemandDetail() {
       queryClient.invalidateQueries({ queryKey: ['demand-lessons', id] });
       toast.success('Aula assinada com sucesso!');
     },
-    onError: (err: unknown) => {
-      const message = axios.isAxiosError(err) 
-        ? (err.response?.data?.detail || err.response?.data?.message || 'Erro ao assinar aula.') 
-        : 'Erro ao assinar aula.';
-      toast.error(message);
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 
@@ -264,9 +255,8 @@ export function DemandDetail() {
       queryClient.invalidateQueries({ queryKey: ['demand-lessons', id] });
       toast.success('Aula confirmada com sucesso!');
     },
-    onError: (err: unknown) => {
-      const message = axios.isAxiosError(err) ? (err.response?.data?.message || 'Erro ao confirmar aula.') : 'Erro ao confirmar aula.';
-      toast.error(message);
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 
@@ -280,9 +270,8 @@ export function DemandDetail() {
       setIsCancelLessonModalOpen(false);
       cancelForm.reset();
     },
-    onError: (err: unknown) => {
-      const message = axios.isAxiosError(err) ? (err.response?.data?.message || 'Erro ao cancelar aula.') : 'Erro ao cancelar aula.';
-      toast.error(message);
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 
@@ -295,9 +284,8 @@ export function DemandDetail() {
       toast.success('Aula removida com sucesso!');
       setIsDeleteLessonModalOpen(false);
     },
-    onError: (err: unknown) => {
-      const message = axios.isAxiosError(err) ? (err.response?.data?.message || 'Erro ao remover aula.') : 'Erro ao remover aula.';
-      toast.error(message);
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 
@@ -311,9 +299,8 @@ export function DemandDetail() {
       setIsRegisterLessonModalOpen(false);
       registerForm.reset();
     },
-    onError: (err: unknown) => {
-      const message = axios.isAxiosError(err) ? (err.response?.data?.message || 'Erro ao registrar aula.') : 'Erro ao registrar aula.';
-      toast.error(message);
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 
@@ -325,9 +312,8 @@ export function DemandDetail() {
       queryClient.invalidateQueries({ queryKey: ['demand', id] });
       toast.success('Candidatura realizada com sucesso!');
     },
-    onError: (err: unknown) => {
-      const message = axios.isAxiosError(err) ? (err.response?.data?.message || 'Erro ao realizar candidatura.') : 'Erro ao realizar candidatura.';
-      toast.error(message);
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 
@@ -339,9 +325,8 @@ export function DemandDetail() {
       queryClient.invalidateQueries({ queryKey: ['demand', id] });
       toast.success('Demanda publicada com sucesso!');
     },
-    onError: (err: unknown) => {
-      const message = axios.isAxiosError(err) ? (err.response?.data?.message || 'Erro ao publicar demanda.') : 'Erro ao publicar demanda.';
-      toast.error(message);
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 
@@ -353,9 +338,8 @@ export function DemandDetail() {
       queryClient.invalidateQueries({ queryKey: ['demand', id] });
       toast.success('Candidato aprovado com sucesso!');
     },
-    onError: (err: unknown) => {
-      const message = axios.isAxiosError(err) ? (err.response?.data?.message || 'Erro ao aprovar candidato.') : 'Erro ao aprovar candidato.';
-      toast.error(message);
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 
@@ -368,7 +352,7 @@ export function DemandDetail() {
       navigate('/demandas');
     },
     onError: () => {
-      toast.error('Erro ao remover demanda.');
+      // Erro tratado globalmente
     }
   });
 
@@ -381,11 +365,8 @@ export function DemandDetail() {
       toast.success('Demanda encerrada com sucesso!');
       setIsFinishModalOpen(false);
     },
-    onError: (err: unknown) => {
-      const message = axios.isAxiosError(err) 
-        ? (err.response?.data?.message || 'Erro ao encerrar demanda.') 
-        : 'Erro ao encerrar demanda.';
-      toast.error(message);
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
   
@@ -397,9 +378,8 @@ export function DemandDetail() {
       queryClient.invalidateQueries({ queryKey: ['demand', id] });
       toast.success('Alterações confirmadas com sucesso!');
     },
-    onError: (err: unknown) => {
-      const message = axios.isAxiosError(err) ? (err.response?.data?.message || 'Erro ao confirmar alterações.') : 'Erro ao confirmar alterações.';
-      toast.error(message);
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 

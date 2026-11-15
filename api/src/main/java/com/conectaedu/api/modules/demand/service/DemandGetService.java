@@ -10,6 +10,7 @@ import com.conectaedu.api.modules.feedback.repository.StudentEvaluationRepositor
 import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.student.repository.StudentRepository;
 import com.conectaedu.api.shared.enums.DemandStatus;
+import com.conectaedu.api.shared.exceptions.DemandNotFoundException;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
 import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,7 @@ public class DemandGetService {
     @Transactional(readOnly = true)
     public DemandResponseDTO getDemand(UUID id) {
         Demand demand = demandRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Demanda não encontrada"));
+                .orElseThrow(() -> new DemandNotFoundException("Demanda não encontrada"));
 
         tenancyValidator.validateDemandAccess(demand);
         

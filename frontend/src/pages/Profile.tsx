@@ -66,7 +66,7 @@ export function Profile() {
       const response = await api.get<ConsentRecord[]>(`/consents/user/${user.id}`);
       setConsents(response.data);
     } catch (error) {
-      toast.error('Erro ao buscar histórico de consentimentos.');
+      // Erro tratado globalmente
     } finally {
       setLoading(false);
     }
@@ -94,7 +94,7 @@ export function Profile() {
         window.location.reload();
       }, 1500);
     } catch (error) {
-      toast.error('Erro ao revogar consentimento.');
+      // Erro tratado globalmente
     }
   };
 
@@ -106,7 +106,7 @@ export function Profile() {
         content: response.data.content
       });
     } catch (error) {
-      toast.error('Erro ao buscar conteúdo do documento.');
+      // Erro tratado globalmente
     }
   };
 
@@ -117,7 +117,7 @@ export function Profile() {
       toast.success('Perfil atualizado com sucesso!');
       setIsEditingProfile(false);
     } catch (error) {
-      toast.error('Erro ao atualizar perfil.');
+      // Erro tratado globalmente
     }
   };
 
@@ -136,7 +136,7 @@ export function Profile() {
       setIsPasswordModalOpen(false);
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error) {
-      toast.error('Erro ao alterar senha. Verifique se a senha atual está correta.');
+      // Erro tratado globalmente
     }
   };
 
@@ -153,7 +153,7 @@ export function Profile() {
       link.remove();
       toast.success('Dados exportados com sucesso!');
     } catch (error) {
-      toast.error('Erro ao exportar dados.');
+      // Erro tratado globalmente
     }
   };
 
@@ -166,7 +166,7 @@ export function Profile() {
         window.location.reload();
       }, 1500);
     } catch (error) {
-      toast.error('Erro ao excluir conta.');
+      // Erro tratado globalmente
     }
   };
 

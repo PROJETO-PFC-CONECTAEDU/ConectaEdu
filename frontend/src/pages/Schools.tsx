@@ -78,7 +78,7 @@ export function Schools() {
       reset();
     },
     onError: () => {
-      toast.error('Erro ao criar escola.');
+      // Erro tratado globalmente
     }
   });
 
@@ -95,7 +95,7 @@ export function Schools() {
       reset();
     },
     onError: () => {
-      toast.error('Erro ao atualizar escola.');
+      // Erro tratado globalmente
     }
   });
 

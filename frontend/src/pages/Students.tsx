@@ -98,7 +98,7 @@ export function Students() {
       setDeletingId(null);
     },
     onError: () => {
-      toast.error('Erro ao remover estudante.');
+      // Erro tratado globalmente
     }
   });
 
@@ -112,9 +112,8 @@ export function Students() {
       setIsModalOpen(false);
       reset();
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || 'Erro ao cadastrar estudante.';
-      toast.error(message);
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 
@@ -129,9 +128,8 @@ export function Students() {
       setEditingStudent(null);
       reset();
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || 'Erro ao atualizar estudante.';
-      toast.error(message);
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 

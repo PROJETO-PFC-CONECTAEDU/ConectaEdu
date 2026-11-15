@@ -140,8 +140,7 @@ export function Evaluations() {
       // Refresh data
       loadData();
     } catch (error) {
-      console.error('Erro ao enviar avaliação:', error);
-      toast.error('Erro ao enviar avaliação. Tente novamente.');
+      // Erro tratado globalmente
     } finally {
       setSubmitting(false);
     }

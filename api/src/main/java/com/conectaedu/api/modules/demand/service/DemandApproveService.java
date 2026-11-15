@@ -13,6 +13,7 @@ import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.audit.support.AuditDiff;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.DemandStatus;
+import com.conectaedu.api.shared.exceptions.*;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
 import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
@@ -37,19 +38,19 @@ public class DemandApproveService {
     @Transactional
     public DemandResponseDTO approve(UUID demandId, UUID studentId) {
         Demand demand = demandRepository.findById(demandId)
-                .orElseThrow(() -> new RuntimeException("Demanda não encontrada"));
+                .orElseThrow(() -> new DemandNotFoundException("Demanda não encontrada"));
 
         tenancyValidator.validateDemandAccess(demand);
 
         if (demand.getStatus() != DemandStatus.WAITING) {
-            throw new RuntimeException("Esta demanda não está em espera");
+            throw new InvalidDemandStatusException("Esta demanda não está em espera");
         }
 
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Estudante não encontrado"));
+                .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado"));
 
         if (!demand.getCandidates().contains(student)) {
-            throw new RuntimeException("Este estudante não se candidatou a esta demanda");
+            throw new StudentNotACandidateException("Este estudante não se candidatou a esta demanda");
         }
 
         var beforeStatus = demand.getStatus();
