@@ -48,7 +48,7 @@ const demandSchema = z.object({
   subject: z.string().min(2, 'Disciplina é obrigatória'),
   gradeLevel: z.string().min(1, 'Nível de escolaridade é obrigatório'),
   pupilAmount: z.number().min(3, 'Quantidade de alunos deve ser pelo menos 3'),
-  totalHours: z.string().min(1, 'Total de horas é obrigatório'),
+  totalHours: z.string().min(1, 'Total de horas é obrigatório').regex(/^\d+h$/, 'O padrão deve ser como: 40h, 30h, etc'),
   room: z.string().min(1, 'Sala é obrigatória'),
   difficultyLevel: z.string().min(1, 'Grau de dificuldade é obrigatório'),
 });
@@ -226,7 +226,12 @@ export function Demands() {
                 label="Horas estimadas"
                 placeholder="Ex: 40h"
                 error={errors.totalHours?.message}
-                {...register('totalHours')}
+                {...register('totalHours', {
+                  onChange: (e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    e.target.value = value ? `${value}h` : '';
+                  }
+                })}
             />
           </div>
 
