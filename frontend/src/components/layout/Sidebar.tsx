@@ -27,7 +27,7 @@ const menuItems = [
   { icon: MapIcon, label: 'Mapa', path: '/mapa', roles: ['PLATFORM_ADMIN', 'STUDENT'] },
   { icon: Calendar, label: 'Agenda', path: '/agenda', roles: ['STUDENT', 'SCHOOL_DIRECTOR'] },
   { icon: Clock, label: 'Horas', path: '/horas', roles: ['STUDENT'] },
-  { icon: Star, label: 'Avaliações', path: '/avaliacoes', roles: ['STUDENT'] },
+  { icon: Star, label: 'Avaliações', path: '/avaliacoes', roles: ['STUDENT', 'SCHOOL_DIRECTOR'] },
   { icon: BarChart3, label: 'Relatórios', path: '/relatorios', roles: ['STUDENT'] },
   { icon: Users, label: 'Estudantes', path: '/estudantes', roles: ['PLATFORM_ADMIN', 'UNIVERSITY_ADMIN'] },
   { icon: School, label: 'Escolas', path: '/oportunidades', roles: ['PLATFORM_ADMIN'] },

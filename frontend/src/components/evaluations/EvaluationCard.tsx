@@ -40,10 +40,10 @@ export function EvaluationCard({
         </div>
       </div>
 
-      <div className={`grid grid-cols-${metrics.length} gap-2 py-2 border-y border-slate-50`}>
+      <div className="flex flex-wrap gap-4 py-2 border-y border-slate-50">
         {metrics.map((metric, index) => (
-          <div key={index} className="text-center">
-            <p className="text-[10px] text-text-muted uppercase">{metric.label}</p>
+          <div key={index} className="flex-1 min-w-[80px] text-center">
+            <p className="text-[10px] text-text-muted uppercase whitespace-nowrap">{metric.label}</p>
             <p className="text-sm font-bold text-text-heading">{metric.value}</p>
           </div>
         ))}
