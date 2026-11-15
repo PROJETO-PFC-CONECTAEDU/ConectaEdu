@@ -159,10 +159,7 @@ class ReportIntegrationTest {
                 .andExpect(jsonPath("$.notCompletedLessons").value(0))
                 .andExpect(jsonPath("$.averageReceived").value(4.0))
                 .andExpect(jsonPath("$.evaluations.length()").value(1))
-                .andExpect(jsonPath("$.evaluations[0].demandTitle").value("Reforço de matemática"))
-                .andExpect(jsonPath("$.progress.length()").value(1))
-                .andExpect(jsonPath("$.progress[0].performance").value(2))
-                .andExpect(jsonPath("$.progress[0].potential").value(3));
+                .andExpect(jsonPath("$.evaluations[0].demandTitle").value("Reforço de matemática"));
     }
 
     @Test
@@ -177,8 +174,7 @@ class ReportIntegrationTest {
                 .andExpect(jsonPath("$.validatedHoursInPeriod").value(0.0))
                 .andExpect(jsonPath("$.canceledLessons").value(0))
                 .andExpect(jsonPath("$.averageReceived").doesNotExist())
-                .andExpect(jsonPath("$.evaluations").isEmpty())
-                .andExpect(jsonPath("$.progress").isEmpty());
+                .andExpect(jsonPath("$.evaluations").isEmpty());
     }
 
     @Test

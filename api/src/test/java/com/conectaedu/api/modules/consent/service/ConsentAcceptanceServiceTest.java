@@ -17,6 +17,7 @@ import com.conectaedu.api.shared.exceptions.ConsentNotFoundException;
 import com.conectaedu.api.shared.exceptions.InvalidLegalDocumentStatusException;
 import com.conectaedu.api.shared.exceptions.LegalDocumentNotFoundException;
 import com.conectaedu.api.shared.exceptions.UserNotFoundException;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -46,6 +47,9 @@ class ConsentAcceptanceServiceTest {
 
     @Mock
     private ConsentRecordRepository consentRecordRepository;
+
+    @Mock
+    private TenancyValidator tenancyValidator;
 
     @Mock
     private LegalDocumentRepository legalDocumentRepository;

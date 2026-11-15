@@ -4,6 +4,8 @@ import com.conectaedu.api.modules.demand.domain.Demand;
 import com.conectaedu.api.modules.demand.repository.DemandRepository;
 import com.conectaedu.api.modules.feedback.repository.ClassEvaluationRepository;
 import com.conectaedu.api.modules.feedback.repository.StudentEvaluationRepository;
+import com.conectaedu.api.modules.lesson.domain.Lesson;
+import com.conectaedu.api.modules.lesson.repository.LessonRepository;
 import com.conectaedu.api.modules.school.domain.School;
 import com.conectaedu.api.modules.school.repository.SchoolRepository;
 import com.conectaedu.api.modules.user.school_director.domain.SchoolDirector;
@@ -11,6 +13,7 @@ import com.conectaedu.api.modules.user.school_director.repository.SchoolDirector
 import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.student.repository.StudentRepository;
 import com.conectaedu.api.shared.enums.DemandStatus;
+import com.conectaedu.api.shared.enums.LessonStatus;
 import com.conectaedu.api.shared.enums.UserType;
 import com.conectaedu.api.shared.security.domain.AuthenticatedUser;
 import org.junit.jupiter.api.AfterEach;
@@ -58,6 +61,9 @@ class FeedbackIntegrationTest {
     private DemandRepository demandRepository;
 
     @Autowired
+    private LessonRepository lessonRepository;
+
+    @Autowired
     private StudentEvaluationRepository studentEvaluationRepository;
 
     @Autowired
@@ -69,6 +75,7 @@ class FeedbackIntegrationTest {
     private Student outroEstudante;
     private Demand concluida;
     private Demand emAndamento;
+    private Lesson aulaConcluida;
 
     @BeforeEach
     void prepararCenario() {
@@ -92,12 +99,24 @@ class FeedbackIntegrationTest {
 
         concluida = demandRepository.save(necessidade(DemandStatus.FINISHED));
         emAndamento = demandRepository.save(necessidade(DemandStatus.ONGOING));
+
+        //o diretor so avalia quem concluiu ao menos uma aula na necessidade.
+        aulaConcluida = new Lesson();
+        aulaConcluida.setSubject("Matemática");
+        aulaConcluida.setScheduledStart(LocalDateTime.now().minusDays(2));
+        aulaConcluida.setScheduledEnd(LocalDateTime.now().minusDays(2).plusHours(1));
+        aulaConcluida.setStatus(LessonStatus.COMPLETED);
+        aulaConcluida.setDemand(concluida);
+        aulaConcluida.setStudent(estudante);
+        aulaConcluida.setSchool(escola);
+        aulaConcluida = lessonRepository.save(aulaConcluida);
     }
 
     @AfterEach
     void limparCenario() {
         studentEvaluationRepository.deleteAll();
         classEvaluationRepository.deleteAll();
+        lessonRepository.deleteById(aulaConcluida.getId());
         demandRepository.deleteAllById(List.of(concluida.getId(), emAndamento.getId()));
         studentRepository.deleteAllById(List.of(estudante.getId(), outroEstudante.getId()));
         schoolDirectorRepository.deleteById(diretor.getId());
@@ -242,7 +261,7 @@ class FeedbackIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(corpoDaAvaliacaoDoEstudante(concluida.getId(), outroEstudante.getId(), 10)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.detail").value("O estudante informado não atendeu esta Necessidade."));
+                .andExpect(jsonPath("$.detail").value("Este estudante não concluiu nenhuma aula nesta Necessidade."));
 
         assertEquals(0, studentEvaluationRepository.count());
     }
