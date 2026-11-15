@@ -18,6 +18,7 @@ import {
   ArrowLeft,
   Check,
   CheckCircle2,
+  Star,
   AlertCircle,
   Trash2,
   Info,
@@ -492,6 +493,17 @@ export function DemandDetail() {
                         </div>
                       </div>
                       <div className="flex items-center gap-3 flex-wrap">
+                        {isStudent && demand.status === 'FINISHED' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-brand-primary border-brand-primary/20 hover:bg-brand-primary/5 gap-2"
+                            onClick={() => navigate('/avaliacoes')}
+                          >
+                            <Star size={18} />
+                            Avaliar Escola
+                          </Button>
+                        )}
                         <div className="flex gap-2 flex-wrap">
                           <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(demand.status)}`}>
                             {formatDemandStatus(demand.status)}
@@ -592,6 +604,17 @@ export function DemandDetail() {
                       >
                         <CheckCircle2 size={18} />
                         Encerrar Demanda
+                      </Button>
+                    )}
+                    {isDirector && demand.status === 'FINISHED' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-brand-primary border-brand-primary/20 hover:bg-brand-primary/5 gap-2"
+                        onClick={() => navigate('/avaliacoes')}
+                      >
+                        <Star size={18} />
+                        Avaliar Estudante
                       </Button>
                     )}
                     <div className="flex gap-2 flex-wrap">

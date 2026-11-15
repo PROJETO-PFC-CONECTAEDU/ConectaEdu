@@ -210,9 +210,14 @@ export function Evaluations() {
                   </option>
                 ))}
               </select>
+              {!isStudent && selectedDemandId && !demands.find(d => d.id === selectedDemandId)?.studentId && (
+                <p className="text-xs text-amber-600 mt-1">
+                  Nota: Este aluno ainda não concluiu aulas nesta demanda. A avaliação só será permitida após a conclusão de ao menos uma aula.
+                </p>
+              )}
             </div>
 
-            <div className="grid grid-cols-5 md:grid-cols-1 gap-8">
+            <div className="grid grid-cols-1 gap-8">
               {isStudent ? (
                 <>
                   <RatingSlider 

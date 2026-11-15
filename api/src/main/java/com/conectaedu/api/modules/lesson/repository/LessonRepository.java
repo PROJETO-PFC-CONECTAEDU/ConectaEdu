@@ -27,6 +27,8 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
     //Confirma que a demanda teve algum cancelamento, sem precisar saber qual aula foi.
 
     boolean existsByDemand_IdAndStatus(UUID demandId, LessonStatus status);
+
+    boolean existsByDemand_IdAndStudent_IdAndStatusIn(UUID demandId, UUID studentId, Collection<LessonStatus> statuses);
     
     List<Lesson> findByDemand_Id(UUID demandId);
 

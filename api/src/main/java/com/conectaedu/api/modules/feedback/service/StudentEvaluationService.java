@@ -8,13 +8,16 @@ import com.conectaedu.api.modules.feedback.dto.request.StudentEvaluationRequestD
 import com.conectaedu.api.modules.feedback.dto.response.StudentEvaluationResponseDTO;
 import com.conectaedu.api.modules.feedback.mapper.FeedbackMapper;
 import com.conectaedu.api.modules.feedback.repository.StudentEvaluationRepository;
+import com.conectaedu.api.modules.lesson.repository.LessonRepository;
 import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.DemandStatus;
+import com.conectaedu.api.shared.enums.LessonStatus;
 import com.conectaedu.api.shared.exceptions.DemandNotFoundException;
 import com.conectaedu.api.shared.exceptions.EvaluationAlreadySubmittedException;
 import com.conectaedu.api.shared.exceptions.InvalidDemandStatusException;
+import com.conectaedu.api.shared.exceptions.NoCompletedLessonException;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
 import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -30,6 +34,7 @@ public class StudentEvaluationService {
 
     private final DemandRepository demandRepository;
     private final StudentEvaluationRepository studentEvaluationRepository;
+    private final LessonRepository lessonRepository;
     private final FeedbackMapper feedbackMapper;
     private final AuditService auditService;
     private final TenancyValidator tenancyValidator;
@@ -48,6 +53,14 @@ public class StudentEvaluationService {
             throw new InvalidDemandStatusException(
                     "A Necessidade está com status %s e só pode ser avaliada depois de concluída."
                             .formatted(demand.getStatus()));
+        }
+
+        boolean hasCompletedLesson = lessonRepository.existsByDemand_IdAndStudent_IdAndStatusIn(
+                demand.getId(), request.studentId(), List.of(LessonStatus.COMPLETED, LessonStatus.VALIDATED));
+
+        if (!hasCompletedLesson) {
+            throw new NoCompletedLessonException(
+                    "Este estudante não concluiu nenhuma aula nesta Necessidade.");
         }
 
         Student student = (demand.getStudent() != null && demand.getStudent().getId().equals(request.studentId()))
