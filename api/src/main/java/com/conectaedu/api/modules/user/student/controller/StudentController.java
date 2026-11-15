@@ -17,7 +17,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/students")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('PLATFORM_ADMIN')")
+@PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'UNIVERSITY_ADMIN')")
 public class StudentController {
 
     private final IStudentFacade studentFacade;
@@ -60,6 +60,12 @@ public class StudentController {
     @PatchMapping("/{id}/reject")
     public ResponseEntity<Void> reject(@PathVariable UUID id) {
         studentFacade.rejectStudent(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/inactivate")
+    public ResponseEntity<Void> inactivate(@PathVariable UUID id) {
+        studentFacade.inactivateStudent(id);
         return ResponseEntity.noContent().build();
     }
 }

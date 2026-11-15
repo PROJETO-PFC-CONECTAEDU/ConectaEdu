@@ -50,4 +50,9 @@ public class StudentFacadeImpl implements IStudentFacade {
     public void rejectStudent(UUID id) {
         studentValidationService.rejectStudent(id);
     }
+
+    @Override
+    public void inactivateStudent(UUID id) {
+        studentValidationService.inactivateStudent(id);
+    }
 }

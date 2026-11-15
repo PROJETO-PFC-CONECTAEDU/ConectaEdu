@@ -5,6 +5,7 @@ import com.conectaedu.api.modules.user.school_director.dto.response.SchoolDirect
 import com.conectaedu.api.modules.user.school_director.repository.SchoolDirectorRepository;
 import com.conectaedu.api.shared.exceptions.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@PreAuthorize( "hasRole('PLATFORM_ADMIN')")
 public class SchoolDirectorGetService {
 
     private final SchoolDirectorRepository schoolDirectorRepository;

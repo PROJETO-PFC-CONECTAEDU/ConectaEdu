@@ -11,8 +11,8 @@ import com.conectaedu.api.shared.enums.LessonStatus;
 import com.conectaedu.api.shared.exceptions.InvalidLessonStatusException;
 import com.conectaedu.api.shared.exceptions.LessonNotFoundException;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +26,7 @@ public class LessonConfirmationService {
     private final LessonRepository lessonRepository;
     private final LessonMapper lessonMapper;
     private final AuditService auditService;
+    private final TenancyValidator tenancyValidator;
 
     //Quem confirma é o estudante da aula, e só enquanto a aula está SCHEDULED.
 
@@ -36,9 +37,7 @@ public class LessonConfirmationService {
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new LessonNotFoundException("Aula não encontrada!"));
 
-        if (!lesson.getStudent().getId().equals(studentId)) {
-            throw new AccessDeniedException("Apenas o estudante da aula pode confirmá-la.");
-        }
+        tenancyValidator.validateLessonAccess(lesson);
 
         if (lesson.getStatus() != LessonStatus.SCHEDULED) {
             throw new InvalidLessonStatusException(

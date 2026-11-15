@@ -5,11 +5,14 @@ import { z } from 'zod';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { ForgotPasswordModal } from '../components/auth/ForgotPasswordModal';
+import { RequestAccessModal } from '../components/auth/RequestAccessModal';
 import { useNavigate, Link } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import { TwoFactorVerifyModal } from '../components/auth/TwoFactorVerifyModal';
 
 const loginSchema = z.object({
   email: z.string().email('E-mail inválido'),
@@ -20,6 +23,10 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export function Login() {
   const [showPassword, setShowPassword] = useState(false);
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [is2FAModalOpen, setIs2FAModalOpen] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState('');
   const navigate = useNavigate();
   const { signIn } = useAuth();
 
@@ -37,20 +44,29 @@ export function Login() {
       return response.data;
     },
     onSuccess: (data) => {
+      if (data.twoFactorEnabled && !data.token) {
+        setPendingEmail(data.email);
+        setIs2FAModalOpen(true);
+        return;
+      }
       signIn({
         token: data.token,
         user: {
           id: data.id,
           name: data.name,
           email: data.email,
-          role: data.role
+          role: data.role,
+          universityId: data.universityId,
+          schoolId: data.schoolId,
+          emailConfirmed: true, // Se logou, o email está confirmado
+          twoFactorEnabled: data.twoFactorEnabled
         }
       });
       toast.success('Bem-vindo ao ConectaEdu!');
       navigate('/dashboard');
     },
     onError: () => {
-      toast.error('E-mail ou senha incorretos.');
+      // O erro já é tratado globalmente no interceptor do axios
     },
   });
 
@@ -63,16 +79,17 @@ export function Login() {
       {/* Painel de Marca */}
       <div className="hidden w-1/2 flex-col justify-between bg-brand-dark p-12 text-white lg:flex">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-brand-primary" />
-          <span className="text-2xl font-bold font-display tracking-tight">ConectaEdu</span>
+          <h1 className="text-[20px] text-white font-display font-bold tracking-tight">
+            Conecta<span className="text-brand-accent">Edu</span>
+          </h1>
         </div>
 
         <div className="space-y-6">
-          <h1 className="text-5xl font-bold leading-tight font-display">
-            Sua jornada pedagógica começa <span className="text-brand-primary">aqui</span>
+          <h1 className="text-5xl font-bold text-white leading-tight font-display">
+            Sua jornada pedagógica começa <span className="text-brand-accent">aqui</span>
           </h1>
           <p className="text-xl text-text-muted max-w-md">
-            Conectando estudantes de Pedagogia às melhores oportunidades em escolas parceiras.
+            Conectando estudantes de Pedagogia às melhores oportunidades em escolas.
           </p>
         </div>
       </div>
@@ -116,6 +133,16 @@ export function Login() {
               </button>
             </div>
 
+            <div className="flex">
+              <button
+                type="button"
+                onClick={() => setIsForgotModalOpen(true)}
+                className="text-sm font-medium text-brand-primary hover:text-brand-dark transition-colors"
+              >
+                Esqueci minha senha
+              </button>
+            </div>
+
             <Button
               type="submit"
               className="w-full"
@@ -124,6 +151,16 @@ export function Login() {
               {loginMutation.isPending ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
+          <div className="flex justify-center gap-4">
+            <p className="text-text-muted">Não tem conta?</p>
+            <button
+                type="button"
+                onClick={() => setIsRequestModalOpen(true)}
+                className="text-sm font-medium text-brand-primary hover:text-brand-dark transition-colors"
+            >
+              Solicite acesso a plataforma
+            </button>
+          </div>
 
           <div className="flex justify-center gap-4 border-t border-gray-100 pt-6">
             <Link
@@ -142,6 +179,39 @@ export function Login() {
           </div>
         </div>
       </div>
+      
+      <ForgotPasswordModal 
+        isOpen={isForgotModalOpen} 
+        onClose={() => setIsForgotModalOpen(false)} 
+      />
+
+      <RequestAccessModal
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+      />
+
+      <TwoFactorVerifyModal
+        isOpen={is2FAModalOpen}
+        onClose={() => setIs2FAModalOpen(false)}
+        email={pendingEmail}
+        onSuccess={(data) => {
+          signIn({
+            token: data.token,
+            user: {
+              id: data.id,
+              name: data.name,
+              email: data.email,
+              role: data.role,
+              universityId: data.universityId,
+              schoolId: data.schoolId,
+              emailConfirmed: true,
+              twoFactorEnabled: data.twoFactorEnabled
+            }
+          });
+          toast.success('Bem-vindo ao ConectaEdu!');
+          navigate('/dashboard');
+        }}
+      />
     </div>
   );
 }

@@ -38,16 +38,15 @@ public class Demand {
     @Enumerated(EnumType.STRING)
     private DemandStatus status;
 
-    private LocalDateTime classDate;
     private String totalHours;
 
-    private LocalDateTime pendingClassDate;
     private String pendingRoom;
 
     private boolean isArchived = false;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime finishedAt;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "school_id", nullable = false)

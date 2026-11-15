@@ -7,6 +7,7 @@ import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.student.repository.StudentRepository;
 import com.conectaedu.api.shared.enums.DemandStatus;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,10 +19,10 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class DemandForStudentService {
-
     private final DemandRepository demandRepository;
     private final StudentRepository studentRepository;
     private final DemandMapper demandMapper;
+    private final TenancyValidator tenancyValidator;
 
     @Transactional(readOnly = true)
     public List<DemandStudentDTO> getAvailableDemandsForStudents() {
@@ -29,6 +30,9 @@ public class DemandForStudentService {
         try {
             UUID userId = SecurityContextHolder.getAuthenticatedUserId();
             student = studentRepository.findById(userId).orElse(null);
+            if (student != null) {
+                tenancyValidator.validateStudentAccess(student);
+            }
         } catch (Exception ignored) {}
 
         final Student finalStudent = student;

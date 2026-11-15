@@ -10,7 +10,9 @@ import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.audit.support.AuditDiff;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.DemandStatus;
+import com.conectaedu.api.shared.exceptions.*;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,26 +28,29 @@ public class DemandApplyService {
     private final StudentRepository studentRepository;
     private final DemandMapper demandMapper;
     private final AuditService auditService;
+    private final TenancyValidator tenancyValidator;
 
     @Transactional
     public DemandResponseDTO apply(UUID demandId) {
         UUID studentId = SecurityContextHolder.getAuthenticatedUserId();
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Estudante não encontrado"));
+                .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado"));
 
         Demand demand = demandRepository.findById(demandId)
-                .orElseThrow(() -> new RuntimeException("Demanda não encontrada"));
+                .orElseThrow(() -> new DemandNotFoundException("Demanda não encontrada"));
+
+        tenancyValidator.validateDemandAccess(demand);
 
         if (demand.getStatus() != DemandStatus.WAITING) {
-            throw new RuntimeException("Esta demanda não está mais disponível para candidaturas");
+            throw new InvalidDemandStatusException("Esta demanda não está mais disponível para candidaturas");
         }
 
         if (demand.getStudent() != null) {
-            throw new RuntimeException("Esta demanda já possui um estudante vinculado");
+            throw new DemandAlreadyHasStudentException("Esta demanda já possui um estudante vinculado");
         }
 
         if (demand.getCandidates().contains(student)) {
-            throw new RuntimeException("Você já se candidatou a esta demanda");
+            throw new StudentAlreadyAppliedException("Você já se candidatou a esta demanda");
         }
 
         demand.getCandidates().add(student);

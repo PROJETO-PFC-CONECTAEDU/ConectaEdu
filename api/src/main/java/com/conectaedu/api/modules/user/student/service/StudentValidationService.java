@@ -7,7 +7,10 @@ import com.conectaedu.api.shared.audit.support.AuditDiff;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.StudentStatus;
 import com.conectaedu.api.shared.exceptions.UserNotFoundException;
+import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,14 +20,16 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class StudentValidationService {
-
     private final StudentRepository studentRepository;
     private final AuditService auditService;
+    private final TenancyValidator tenancyValidator;
 
     @Transactional
     public void validateStudent(UUID studentId) {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado!"));
+
+        tenancyValidator.validateStudentAccess(student);
 
         StudentStatus beforeStatus = student.getStatus();
 
@@ -41,9 +46,27 @@ public class StudentValidationService {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado!"));
 
+        tenancyValidator.validateStudentAccess(student);
+
         StudentStatus beforeStatus = student.getStatus();
 
         student.setStatus(StudentStatus.REJECTED);
+        studentRepository.save(student);
+
+        AuditDiff diff = AuditDiff.create().field("status", beforeStatus, student.getStatus());
+        auditService.logUpdate(AuditEntityType.STUDENT, student.getId(), student.getName(), diff);
+    }
+
+    @Transactional
+    public void inactivateStudent(UUID studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado!"));
+
+        tenancyValidator.validateStudentAccess(student);
+
+        StudentStatus beforeStatus = student.getStatus();
+
+        student.setStatus(StudentStatus.INACTIVE);
         studentRepository.save(student);
 
         AuditDiff diff = AuditDiff.create().field("status", beforeStatus, student.getStatus());

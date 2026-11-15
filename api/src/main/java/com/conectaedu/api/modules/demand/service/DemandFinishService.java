@@ -10,6 +10,9 @@ import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.audit.support.AuditDiff;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.DemandStatus;
+import com.conectaedu.api.shared.exceptions.DemandNotFoundException;
+import com.conectaedu.api.shared.exceptions.InvalidDemandStatusException;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -26,33 +29,39 @@ public class DemandFinishService {
     private final DemandMapper demandMapper;
     private final AuditService auditService;
     private final ApplicationEventPublisher eventPublisher;
+    private final TenancyValidator tenancyValidator;
 
     @Transactional
     public DemandResponseDTO finish(UUID demandId) {
         Demand demand = demandRepository.findById(demandId)
-                .orElseThrow(() -> new RuntimeException("Demanda não encontrada"));
+                .orElseThrow(() -> new DemandNotFoundException("Demanda não encontrada"));
+
+        tenancyValidator.validateDemandAccess(demand);
 
         if (demand.getStatus() != DemandStatus.ONGOING) {
-            throw new RuntimeException("Apenas demandas em reforço podem ser concluídas");
+            throw new InvalidDemandStatusException("Apenas demandas em reforço podem ser concluídas");
         }
 
         var beforeStatus = demand.getStatus();
+        LocalDateTime now = LocalDateTime.now();
 
         demand.setStatus(DemandStatus.FINISHED);
-        demand.setUpdatedAt(LocalDateTime.now());
+        demand.setFinishedAt(now);
+        demand.setUpdatedAt(now);
 
         // Update history
         demand.getStudentHistory().stream()
                 .filter(DemandStudent::isActive)
                 .forEach(h -> {
                     h.setActive(false);
-                    h.setUnlinkedAt(LocalDateTime.now());
+                    h.setUnlinkedAt(now);
                 });
 
         demandRepository.save(demand);
 
         AuditDiff diff = AuditDiff.create()
-                .field("status", beforeStatus, demand.getStatus());
+                .field("status", beforeStatus, demand.getStatus())
+                .field("concluída em", null, demand.getFinishedAt());
 
         auditService.logUpdate(AuditEntityType.DEMAND, demand.getId(), demand.getTitle(), diff);
 

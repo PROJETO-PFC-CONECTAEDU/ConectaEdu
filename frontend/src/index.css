@@ -9,13 +9,36 @@
   --color-text-muted: #94a3b8;
   --color-border-default: #e2e8f0;
   
+  /* Novos tokens da Agenda */
+  --color-page-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-row-bg: #f8fafc;
+  --color-time-badge-bg: #eff6ff;
+  --color-time-badge-text: #2563eb;
+
+  --color-status-confirmed-bg: #ecfdf5;
+  --color-status-confirmed-fg: #10b981;
+  --color-status-pending-bg: #fef3c7;
+  --color-status-pending-fg: #f59e0b;
+  --color-status-rescheduled-bg: #eff6ff;
+  --color-status-rescheduled-fg: #2563eb;
+  --color-status-cancelled-bg: #fef2f2;
+  --color-status-cancelled-fg: #ef4444;
+
+  --color-cal-weekend: #17a1fa;
+  --color-cal-day: #616161;
+  --color-cal-muted: #b3b3b3;
+  --color-cal-week-number-bg: #333333;
+  
   --background-image-gradient-brand: linear-gradient(to bottom right, #eef2f6, #dbeafe);
   
   --font-display: "Outfit", sans-serif;
   --font-sans: "Inter", sans-serif;
   
   --radius-lg: 12px;
-  --radius-xl: 24px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
+  --radius-badge: 8px;
 }
 
 :root {

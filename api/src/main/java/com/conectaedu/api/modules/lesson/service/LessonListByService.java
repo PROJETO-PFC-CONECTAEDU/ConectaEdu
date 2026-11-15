@@ -5,7 +5,15 @@ import com.conectaedu.api.modules.lesson.dto.response.LessonHoursResponseDTO;
 import com.conectaedu.api.modules.lesson.dto.response.LessonResponseDTO;
 import com.conectaedu.api.modules.lesson.mapper.LessonMapper;
 import com.conectaedu.api.modules.lesson.repository.LessonRepository;
+import com.conectaedu.api.modules.demand.domain.Demand;
+import com.conectaedu.api.modules.demand.repository.DemandRepository;
+import com.conectaedu.api.modules.user.student.domain.Student;
+import com.conectaedu.api.modules.user.student.repository.StudentRepository;
 import com.conectaedu.api.shared.enums.LessonStatus;
+import com.conectaedu.api.shared.exceptions.UserNotFoundException;
+import com.conectaedu.api.shared.exceptions.DemandNotFoundException;
+import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,12 +34,20 @@ public class LessonListByService {
 
     private final LessonRepository lessonRepository;
     private final LessonMapper lessonMapper;
+    private final StudentRepository studentRepository;
+    private final DemandRepository demandRepository;
+    private final TenancyValidator tenancyValidator;
 
     //Alimenta a tela da agenda.
 
     @Transactional(readOnly = true)
     public List<LessonResponseDTO> listByStudent(UUID studentId, LocalDateTime from,
                                                  LocalDateTime to, LessonStatus status) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado!"));
+
+        tenancyValidator.validateStudentAccess(student);
+
         LocalDateTime start = from == null ? MIN_DATE : from;
         LocalDateTime end = to == null ? MAX_DATE : to;
 
@@ -41,6 +57,16 @@ public class LessonListByService {
                 : lessonRepository.findByStudent_IdAndStatusAndScheduledStartBetweenOrderByScheduledStartAsc(
                 studentId, status, start, end);
 
+        if (SecurityContextHolder.hasRole("SCHOOL_DIRECTOR") && !SecurityContextHolder.hasRole("PLATFORM_ADMIN")) {
+            UUID schoolId = SecurityContextHolder.getAuthenticatedSchoolId();
+            if (schoolId != null) {
+                return lessons.stream()
+                        .filter(l -> l.getSchool().getId().equals(schoolId))
+                        .map(lessonMapper::mapToResponseDTO)
+                        .toList();
+            }
+        }
+
         return lessons.stream().map(lessonMapper::mapToResponseDTO).toList();
     }
 
@@ -48,6 +74,11 @@ public class LessonListByService {
 
     @Transactional(readOnly = true)
     public LessonHoursResponseDTO totalValidatedHours(UUID studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado!"));
+
+        tenancyValidator.validateStudentAccess(student);
+
         List<Lesson> validated = lessonRepository.findByStudent_IdAndStatus(studentId, LessonStatus.VALIDATED);
 
         long minutes = validated.stream()
@@ -55,5 +86,25 @@ public class LessonListByService {
                 .sum();
 
         return new LessonHoursResponseDTO(studentId, minutes, validated.size());
+    }
+
+    @Transactional(readOnly = true)
+    public List<LessonResponseDTO> listBySchool(UUID schoolId) {
+        tenancyValidator.validateSchool(schoolId);
+
+        List<Lesson> lessons = lessonRepository.findBySchool_IdOrderByScheduledStartAsc(schoolId);
+
+        return lessons.stream().map(lessonMapper::mapToResponseDTO).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<LessonResponseDTO> listByDemand(UUID demandId) {
+        Demand demand = demandRepository.findById(demandId)
+                .orElseThrow(() -> new DemandNotFoundException("Necessidade não encontrada!"));
+        
+        tenancyValidator.validateDemandAccess(demand);
+
+        List<Lesson> lessons = lessonRepository.findByDemand_Id(demandId);
+        return lessons.stream().map(lessonMapper::mapToResponseDTO).toList();
     }
 }

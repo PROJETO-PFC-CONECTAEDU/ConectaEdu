@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface LessonRepository extends JpaRepository<Lesson, UUID> {
@@ -19,9 +20,17 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
             UUID studentId, Collection<LessonStatus> status,
             LocalDateTime newEnd, LocalDateTime newStart);
 
+    boolean existsByDemand_IdAndStatusInAndScheduledStartLessThanAndScheduledEndGreaterThan(
+            UUID demandId, Collection<LessonStatus> status,
+            LocalDateTime newEnd, LocalDateTime newStart);
+
     //Confirma que a demanda teve algum cancelamento, sem precisar saber qual aula foi.
 
     boolean existsByDemand_IdAndStatus(UUID demandId, LessonStatus status);
+
+    boolean existsByDemand_IdAndStudent_IdAndStatusIn(UUID demandId, UUID studentId, Collection<LessonStatus> statuses);
+    
+    List<Lesson> findByDemand_Id(UUID demandId);
 
     List<Lesson> findByStudent_IdAndScheduledStartBetweenOrderByScheduledStartAsc(
             UUID studentId, LocalDateTime from, LocalDateTime to);
@@ -30,6 +39,54 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
             UUID studentId, LessonStatus status, LocalDateTime from, LocalDateTime to);
 
     List<Lesson> findByStudent_IdAndStatus(UUID studentId, LessonStatus status);
+
+    List<Lesson> findBySchool_IdOrderByScheduledStartAsc(UUID schoolId);
+
+    @Query(value = """
+            SELECT FORMATDATETIME(l.scheduled_start, 'MM/yyyy') as period, COUNT(l.id) as count
+            FROM lesson l
+            INNER JOIN users s ON l.student_id = s.id
+            WHERE s.university_id = :universityId AND l.status = 'VALIDATED' AND s.user_role = 'STUDENT'
+            GROUP BY period
+            ORDER BY period DESC
+            """, nativeQuery = true)
+    List<Map<String, Object>> countByUniversityAndPeriod(@Param("universityId") UUID universityId);
+
+    @Query(value = """
+            SELECT FORMATDATETIME(l.scheduled_start, 'MM/yyyy') as period, d.title as demand, COUNT(l.id) as count
+            FROM lesson l
+            INNER JOIN demand d ON l.demand_id = d.id
+            WHERE l.school_id = :schoolId AND l.status = 'VALIDATED'
+            GROUP BY period, demand
+            ORDER BY period DESC
+            """, nativeQuery = true)
+    List<Map<String, Object>> countBySchoolAndPeriodAndDemand(@Param("schoolId") UUID schoolId);
+
+    @Query(value = """
+            SELECT FORMATDATETIME(l.scheduled_start, 'MM/yyyy') as period, COUNT(l.id) as count
+            FROM lesson l
+            WHERE l.student_id = :studentId AND l.status = 'VALIDATED'
+            GROUP BY period
+            ORDER BY period DESC
+            """, nativeQuery = true)
+    List<Map<String, Object>> countByStudentAndPeriod(@Param("studentId") UUID studentId);
+
+    @Query(value = """
+            SELECT l.nine_box_performance as performance, l.nine_box_potential as potential, COUNT(l.id) as count
+            FROM lesson l
+            INNER JOIN users s ON l.student_id = s.id
+            WHERE s.university_id = :universityId AND l.status = 'VALIDATED' AND l.nine_box_performance IS NOT NULL AND l.nine_box_potential IS NOT NULL
+            GROUP BY performance, potential
+            """, nativeQuery = true)
+    List<Map<String, Object>> countNineBoxByUniversity(@Param("universityId") UUID universityId);
+
+    @Query(value = """
+            SELECT l.nine_box_performance as performance, l.nine_box_potential as potential, COUNT(l.id) as count
+            FROM lesson l
+            WHERE l.school_id = :schoolId AND l.status = 'VALIDATED' AND l.nine_box_performance IS NOT NULL AND l.nine_box_potential IS NOT NULL
+            GROUP BY performance, potential
+            """, nativeQuery = true)
+    List<Map<String, Object>> countNineBoxBySchool(@Param("schoolId") UUID schoolId);
 
     //O prazo de confirmação é o menor entre 3 dias do agendamento e 24h antes da aula.
     //Venceu se passou de um dos dois, e é esse OR que a consulta derivada não escreve.

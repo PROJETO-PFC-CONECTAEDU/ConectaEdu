@@ -9,6 +9,7 @@ import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.UniversityStatus;
 import com.conectaedu.api.shared.exceptions.InvalidUniversityStatusException;
 import com.conectaedu.api.shared.exceptions.UniversityNotFoundException;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,13 +20,14 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class UniversityValidationService {
-
     private final UniversityRepository universityRepository;
     private final AuditService auditService;
+    private final TenancyValidator tenancyValidator;
 
     //Aprova a universidade: passa a APPROVED e é ativada.
     @Transactional
     public UniversityResponseDTO validateUniversity(UUID id, String notes) {
+        tenancyValidator.validateUniversity(id);
         University university = findPending(id);
 
         UniversityStatus beforeStatus = university.getStatus();
@@ -50,6 +52,7 @@ public class UniversityValidationService {
     //Recusa a universidade: passa a REJECTED e continua inativa.
     @Transactional
     public UniversityResponseDTO rejectUniversity(UUID id, String notes) {
+        tenancyValidator.validateUniversity(id);
         //A universidade precisa saber o motivo da recusa.
         if (notes == null || notes.isBlank()) {
             throw new IllegalArgumentException("Recusa exige um parecer justificado");

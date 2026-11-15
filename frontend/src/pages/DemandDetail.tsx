@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { Header } from '../components/layout/Header';
@@ -17,13 +18,26 @@ import {
   ArrowLeft,
   Check,
   CheckCircle2,
+  Star,
   AlertCircle,
   Trash2,
   Info,
-  MapPin
+  MapPin,
+  Eye,
+  XCircle,
+  FileText
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { SchoolMap } from '../components/map/SchoolMap';
+import { Modal } from '../components/ui/Modal';
+import { Input } from '../components/ui/Input';
+import { MonthCalendar } from '../components/calendar/MonthCalendar';
+import { isSameDay, startOfDay, format } from 'date-fns';
+import { formatDemandStatus, formatLessonStatus } from '../utils/format';
+import type { Lesson } from './Schedule';
 
 interface Candidate {
   id: string;
@@ -38,12 +52,10 @@ interface Demand {
   gradeLevel: string;
   pupilAmount: number;
   status: string;
-  classDate: string;
   totalHours: string;
   room: string;
   difficultyLevel: string;
   isArchived: boolean;
-  pendingClassDate?: string;
   pendingRoom?: string;
   schoolName: string;
   schoolAddress: string;
@@ -58,6 +70,37 @@ interface Demand {
   isRecommended?: boolean;
 }
 
+const schedulingSchema = z.object({
+  scheduledStart: z.string().min(1, 'Início é obrigatório').refine((val) => {
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() + 2);
+    return new Date(val) >= minDate;
+  }, 'A aula deve ser agendada com no mínimo 2 dias de antecedência'),
+  scheduledEnd: z.string().min(1, 'Término é obrigatório'),
+  enrolledCount: z.number().min(3, 'Mínimo de 3 alunos').max(10, 'Máximo de 10 alunos'),
+}).refine((data) => new Date(data.scheduledEnd) > new Date(data.scheduledStart), {
+  message: "O término deve ser após o início",
+  path: ["scheduledEnd"],
+});
+
+const cancellationSchema = z.object({
+  reason: z.enum(['STUDENT_UNAVAILABLE', 'SCHOOL_UNAVAILABLE', 'PUPILS_ABSENT', 'INSTITUTIONAL_ISSUE', 'OTHER'], {
+    errorMap: () => ({ message: 'Selecione um motivo válido' })
+  }),
+  notes: z.string().max(500, 'Máximo 500 caracteres').optional(),
+});
+
+const registrationSchema = z.object({
+  presentCount: z.number().min(0, 'Mínimo 0'),
+  contentTaught: z.string().min(1, 'Conteúdo é obrigatório').max(2000, 'Máximo 2000 caracteres'),
+  nineBoxPerformance: z.number().min(1).max(3),
+  nineBoxPotential: z.number().min(1).max(3),
+});
+
+type SchedulingFormData = z.infer<typeof schedulingSchema>;
+type CancellationFormData = z.infer<typeof cancellationSchema>;
+type RegistrationFormData = z.infer<typeof registrationSchema>;
+
 export function DemandDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -67,6 +110,41 @@ export function DemandDetail() {
   const isDirector = user?.role === 'SCHOOL_DIRECTOR';
   const isStudent = user?.role === 'STUDENT';
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isViewLessonModalOpen, setIsViewLessonModalOpen] = useState(false);
+  const [isCancelLessonModalOpen, setIsCancelLessonModalOpen] = useState(false);
+  const [isDeleteLessonModalOpen, setIsDeleteLessonModalOpen] = useState(false);
+  const [isRegisterLessonModalOpen, setIsRegisterLessonModalOpen] = useState(false);
+  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
+  const [startTime, setStartTime] = useState('08:00');
+  const [endTime, setEndTime] = useState('13:00');
+  const [pupilAmount, setPupilAmount] = useState(3);
+  const pupilAmountError = (pupilAmount < 3 || pupilAmount > 10) ? 'Mínimo 3 e máximo 10 alunos' : undefined;
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<SchedulingFormData>({
+    resolver: zodResolver(schedulingSchema),
+    defaultValues: {
+      enrolledCount: 3
+    }
+  });
+
+  const cancelForm = useForm<CancellationFormData>({
+    resolver: zodResolver(cancellationSchema),
+    defaultValues: {
+      reason: 'OTHER'
+    }
+  });
+
+  const registerForm = useForm<RegistrationFormData>({
+    resolver: zodResolver(registrationSchema),
+    defaultValues: {
+      nineBoxPerformance: 2,
+      nineBoxPotential: 2
+    }
+  });
 
   const { data: demand, isLoading, error } = useQuery<Demand>({
     queryKey: ['demand', id],
@@ -74,6 +152,157 @@ export function DemandDetail() {
       const response = await api.get(`/demands/${id}`);
       return response.data;
     },
+  });
+
+  useEffect(() => {
+    if (demand?.pupilAmount) {
+      setPupilAmount(demand.pupilAmount);
+    }
+  }, [demand?.pupilAmount]);
+
+  const { data: lessons } = useQuery<Lesson[]>({
+    queryKey: ['demand-lessons', id],
+    queryFn: async () => {
+      const response = await api.get(`/lessons/demand/${id}`);
+      return response.data;
+    },
+    enabled: !!id,
+  });
+
+  const scheduleMutation = useMutation({
+    mutationFn: async (data: SchedulingFormData) => {
+      await api.post('/lessons', {
+        ...data,
+        demandId: id,
+        origin: 'NEW'
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demand-lessons', id] });
+      toast.success('Aula agendada com sucesso!');
+      setIsScheduleModalOpen(false);
+      reset();
+    },
+    onError: () => {
+      // Erro tratado globalmente
+    }
+  });
+
+  const scheduleMultipleMutation = useMutation({
+    mutationFn: async () => {
+      if (selectedDates.length === 0) throw new Error('Selecione ao menos um dia');
+      if (pupilAmount < 3 || pupilAmount > 10) throw new Error('A quantidade de alunos deve estar entre 3 e 10');
+      
+      const promises = selectedDates.map(date => {
+        const start = new Date(date);
+        const [startH, startM] = startTime.split(':').map(Number);
+        start.setHours(startH, startM, 0, 0);
+
+        const end = new Date(date);
+        const [endH, endM] = endTime.split(':').map(Number);
+        end.setHours(endH, endM, 0, 0);
+
+        return api.post('/lessons', {
+          demandId: id,
+          scheduledStart: format(start, "yyyy-MM-dd'T'HH:mm:ss"),
+          scheduledEnd: format(end, "yyyy-MM-dd'T'HH:mm:ss"),
+          enrolledCount: pupilAmount,
+          origin: 'NEW'
+        });
+      });
+
+      await Promise.all(promises);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demand-lessons', id] });
+      toast.success(`${selectedDates.length} aula(s) agendada(s) com sucesso!`);
+      setSelectedDates([]);
+    },
+    onError: () => {
+      // Erro tratado globalmente
+    }
+  });
+
+  const toggleDate = (date: Date | null) => {
+    if (!date) return;
+    const dateOnly = startOfDay(date);
+    setSelectedDates(prev => {
+      const exists = prev.find(d => isSameDay(d, dateOnly));
+      if (exists) {
+        return prev.filter(d => !isSameDay(d, dateOnly));
+      }
+      return [...prev, dateOnly];
+    });
+  };
+
+  const signMutation = useMutation({
+    mutationFn: async (lessonId: string) => {
+      await api.patch(`/lessons/${lessonId}/sign`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demand-lessons', id] });
+      toast.success('Aula assinada com sucesso!');
+    },
+    onError: () => {
+      // Erro tratado globalmente
+    }
+  });
+
+  const confirmLessonMutation = useMutation({
+    mutationFn: async (lessonId: string) => {
+      await api.patch(`/lessons/${lessonId}/confirm`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demand-lessons', id] });
+      toast.success('Aula confirmada com sucesso!');
+    },
+    onError: () => {
+      // Erro tratado globalmente
+    }
+  });
+
+  const cancelLessonMutation = useMutation({
+    mutationFn: async ({ lessonId, data }: { lessonId: string, data: CancellationFormData }) => {
+      await api.patch(`/lessons/${lessonId}/cancel`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demand-lessons', id] });
+      toast.success('Aula cancelada com sucesso!');
+      setIsCancelLessonModalOpen(false);
+      cancelForm.reset();
+    },
+    onError: () => {
+      // Erro tratado globalmente
+    }
+  });
+
+  const deleteLessonMutation = useMutation({
+    mutationFn: async (lessonId: string) => {
+      await api.delete(`/lessons/${lessonId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demand-lessons', id] });
+      toast.success('Aula removida com sucesso!');
+      setIsDeleteLessonModalOpen(false);
+    },
+    onError: () => {
+      // Erro tratado globalmente
+    }
+  });
+
+  const registerLessonMutation = useMutation({
+    mutationFn: async ({ lessonId, data }: { lessonId: string, data: RegistrationFormData }) => {
+      await api.patch(`/lessons/${lessonId}/register`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demand-lessons', id] });
+      toast.success('Aula registrada com sucesso!');
+      setIsRegisterLessonModalOpen(false);
+      registerForm.reset();
+    },
+    onError: () => {
+      // Erro tratado globalmente
+    }
   });
 
   const applyMutation = useMutation({
@@ -84,9 +313,21 @@ export function DemandDetail() {
       queryClient.invalidateQueries({ queryKey: ['demand', id] });
       toast.success('Candidatura realizada com sucesso!');
     },
-    onError: (err: any) => {
-      const message = err.response?.data?.message || 'Erro ao realizar candidatura.';
-      toast.error(message);
+    onError: () => {
+      // Erro tratado globalmente
+    }
+  });
+
+  const publishMutation = useMutation({
+    mutationFn: async () => {
+      await api.post(`/demands/${id}/publish`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demand', id] });
+      toast.success('Demanda publicada com sucesso!');
+    },
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 
@@ -98,9 +339,8 @@ export function DemandDetail() {
       queryClient.invalidateQueries({ queryKey: ['demand', id] });
       toast.success('Candidato aprovado com sucesso!');
     },
-    onError: (err: any) => {
-      const message = err.response?.data?.message || 'Erro ao aprovar candidato.';
-      toast.error(message);
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 
@@ -113,7 +353,21 @@ export function DemandDetail() {
       navigate('/demandas');
     },
     onError: () => {
-      toast.error('Erro ao remover demanda.');
+      // Erro tratado globalmente
+    }
+  });
+
+  const finishMutation = useMutation({
+    mutationFn: async () => {
+      await api.post(`/demands/${id}/finish`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demand', id] });
+      toast.success('Demanda encerrada com sucesso!');
+      setIsFinishModalOpen(false);
+    },
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
   
@@ -125,9 +379,8 @@ export function DemandDetail() {
       queryClient.invalidateQueries({ queryKey: ['demand', id] });
       toast.success('Alterações confirmadas com sucesso!');
     },
-    onError: (err: any) => {
-      const message = err.response?.data?.message || 'Erro ao confirmar alterações.';
-      toast.error(message);
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 
@@ -141,16 +394,6 @@ export function DemandDetail() {
     }
   };
 
-  const translateStatus = (status: string) => {
-    switch (status) {
-      case 'WAITING': return 'Inscrições Abertas';
-      case 'ONGOING': return 'Em Andamento';
-      case 'FINISHED': return 'Concluída';
-      case 'ARCHIVED': return 'Arquivada';
-      default: return status;
-    }
-  };
-
   const formatDate = (dateString: string) => {
     try {
       return new Intl.DateTimeFormat('pt-BR', {
@@ -160,7 +403,7 @@ export function DemandDetail() {
         hour: '2-digit',
         minute: '2-digit'
       }).format(new Date(dateString));
-    } catch (e) {
+    } catch (_) {
       return dateString;
     }
   };
@@ -250,9 +493,20 @@ export function DemandDetail() {
                         </div>
                       </div>
                       <div className="flex items-center gap-3 flex-wrap">
+                        {isStudent && demand.status === 'FINISHED' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-brand-primary border-brand-primary/20 hover:bg-brand-primary/5 gap-2"
+                            onClick={() => navigate('/avaliacoes')}
+                          >
+                            <Star size={18} />
+                            Avaliar Escola
+                          </Button>
+                        )}
                         <div className="flex gap-2 flex-wrap">
                           <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(demand.status)}`}>
-                            {translateStatus(demand.status)}
+                            {formatDemandStatus(demand.status)}
                           </span>
                           {isStudent && demand.status === 'WAITING' && (
                             demand.isRecommended ? (
@@ -278,13 +532,6 @@ export function DemandDetail() {
                       </div>
 
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-6 border-t border-border-default">
-                        <div className="space-y-1">
-                          <p className="text-xs text-text-muted font-medium">Data Prevista</p>
-                          <div className="flex items-center gap-2 text-sm text-text-heading font-semibold">
-                            <Calendar size={16} className="text-brand-primary" />
-                            {formatDate(demand.classDate)}
-                          </div>
-                        </div>
                         <div className="space-y-1">
                           <p className="text-xs text-text-muted font-medium">Carga Horária</p>
                           <div className="flex items-center gap-2 text-sm text-text-heading font-semibold">
@@ -326,6 +573,19 @@ export function DemandDetail() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 flex-wrap">
+                    {isDirector && demand.status === 'DRAFT' && !demand.isArchived && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="bg-brand-primary text-white gap-2"
+                        onClick={() => publishMutation.mutate()}
+                        disabled={publishMutation.isPending}
+                        isLoading={publishMutation.isPending}
+                      >
+                        <CheckCircle2 size={18} />
+                        Publicar Demanda
+                      </Button>
+                    )}
                     {isDirector && demand.status === 'WAITING' && !demand.isArchived && (
                       <button 
                         onClick={() => setIsDeleteModalOpen(true)}
@@ -335,9 +595,31 @@ export function DemandDetail() {
                         <Trash2 size={20} />
                       </button>
                     )}
+                    {isDirector && demand.status === 'ONGOING' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 gap-2"
+                        onClick={() => setIsFinishModalOpen(true)}
+                      >
+                        <CheckCircle2 size={18} />
+                        Encerrar Demanda
+                      </Button>
+                    )}
+                    {isDirector && demand.status === 'FINISHED' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-brand-primary border-brand-primary/20 hover:bg-brand-primary/5 gap-2"
+                        onClick={() => navigate('/avaliacoes')}
+                      >
+                        <Star size={18} />
+                        Avaliar Estudante
+                      </Button>
+                    )}
                     <div className="flex gap-2 flex-wrap">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(demand.status)}`}>
-                        {translateStatus(demand.status)}
+                        {formatDemandStatus(demand.status)}
                       </span>
                     </div>
                   </div>
@@ -353,14 +635,7 @@ export function DemandDetail() {
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-6 border-t border-border-default">
                     <div className="space-y-1">
-                      <p className="text-xs text-text-muted font-medium">Data Prevista</p>
-                      <div className="flex items-center gap-2 text-sm text-text-heading font-semibold">
-                        <Calendar size={16} className="text-brand-primary" />
-                        {formatDate(demand.classDate)}
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-xs text-text-muted font-medium">Carga Horária</p>
+                      <p className="text-xs text-text-muted font-medium">Carga Horária Prevista</p>
                       <div className="flex items-center gap-2 text-sm text-text-heading font-semibold">
                         <Clock size={16} className="text-brand-primary" />
                         {demand.totalHours}
@@ -391,7 +666,7 @@ export function DemandDetail() {
                       <p className="text-xs text-text-muted font-medium">Status</p>
                       <div className="flex items-center gap-2 text-sm text-text-heading font-semibold">
                         <CheckCircle2 size={16} className="text-brand-primary" />
-                        {translateStatus(demand.status)}
+                        {formatDemandStatus(demand.status)}
                       </div>
                     </div>
                   </div>
@@ -441,27 +716,195 @@ export function DemandDetail() {
               </Card>
             )}
 
-            {demand.studentName && (
+            {(demand.studentName || isDirector || (lessons && lessons.length > 0)) && (
               <Card className={`p-8 border-brand-primary/20 ${demand.studentId === user?.id ? 'bg-emerald-50 border-emerald-200' : 'bg-brand-primary/[0.02]'}`}>
-                <h3 className="text-lg font-bold text-text-heading mb-4">
-                  {demand.studentId === user?.id ? 'Seu Estágio' : 'Estudante Alocado'}
-                </h3>
-                <div className="flex items-center gap-4 p-4 bg-white rounded-xl border border-brand-primary/10">
-                  <div className="w-12 h-12 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary">
-                    <UserIcon size={24} />
+                {demand.studentName ? (
+                  <>
+                    <h3 className="text-lg font-bold text-text-heading mb-4">
+                      {demand.studentId === user?.id ? 'Seu Estágio' : 'Estudante Alocado'}
+                    </h3>
+                    <div className="flex items-center gap-4 p-4 bg-white rounded-xl border border-brand-primary/10">
+                      <div className="w-12 h-12 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary">
+                        <UserIcon size={24} />
+                      </div>
+                      <div>
+                        <p className="font-bold text-text-heading text-lg">{demand.studentName}</p>
+                        <p className="text-sm text-text-muted">
+                          {demand.studentId === user?.id 
+                            ? 'Você é o responsável pela execução desta demanda' 
+                            : 'Responsável pela execução desta demanda'}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <h3 className="text-lg font-bold text-text-heading mb-4">
+                    Agenda da Demanda
+                  </h3>
+                )}
+
+                {/* Agenda da Demanda para Diretor */}
+                {isDirector && !demand.isArchived && (demand.status === 'DRAFT' || demand.status === 'WAITING' || demand.status === 'ONGOING') && (
+                  <div className="mt-8 space-y-6">
+                    <h3 className="text-lg font-bold text-text-heading flex items-center gap-2">
+                      <Calendar size={20} className="text-brand-primary" />
+                      Definir Agenda de Reforço
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <Card className="p-6">
+                        <MonthCalendar 
+                          currentDate={currentCalendarDate}
+                          onDateChange={setCurrentCalendarDate}
+                          eventDates={selectedDates}
+                          onSelectDate={toggleDate}
+                        />
+                        <div className="mt-4 flex flex-wrap gap-1">
+                          {selectedDates.sort((a,b) => a.getTime() - b.getTime()).map(date => (
+                            <span key={date.toISOString()} className="px-2 py-1 bg-brand-primary/10 text-brand-primary rounded text-[10px] font-bold">
+                              {date.toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})}
+                            </span>
+                          ))}
+                        </div>
+                      </Card>
+                      <Card className="p-6 space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <Input 
+                            label="Horário Início"
+                            type="time"
+                            value={startTime}
+                            onChange={e => setStartTime(e.target.value)}
+                          />
+                          <Input 
+                            label="Horário Término"
+                            type="time"
+                            value={endTime}
+                            onChange={e => setEndTime(e.target.value)}
+                          />
+                        </div>
+                          <Input
+                            label="Quantidade de Alunos"
+                            type="number"
+                            min={3}
+                            max={10}
+                            value={pupilAmount}
+                            onChange={e => setPupilAmount(Number(e.target.value))}
+                            error={pupilAmountError}
+                          />
+                        <p className="text-xs text-text-muted italic">
+                          O horário selecionado será aplicado a todos os dias marcados no calendário.
+                        </p>
+                        <Button 
+                          className="w-full mt-4"
+                          disabled={selectedDates.length === 0 || !!pupilAmountError || scheduleMultipleMutation.isPending}
+                          onClick={() => scheduleMultipleMutation.mutate()}
+                          isLoading={scheduleMultipleMutation.isPending}
+                        >
+                          Gerar {selectedDates.length} Aula(s) na Agenda
+                        </Button>
+                      </Card>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-bold text-text-heading text-lg">{demand.studentName}</p>
-                    <p className="text-sm text-text-muted">
-                      {demand.studentId === user?.id 
-                        ? 'Você é o responsável pela execução desta demanda' 
-                        : 'Responsável pela execução desta demanda'}
-                    </p>
+                )}
+
+                {/* Listagem de Aulas da Demanda */}
+                {lessons && lessons.length > 0 && (
+                  <div className="mt-8 space-y-4">
+                    <h4 className="font-bold text-text-heading flex items-center gap-2">
+                      <Calendar size={18} className="text-brand-primary" />
+                      Aulas Agendadas
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {lessons.map((lesson) => (
+                        <div key={lesson.id} className="p-4 bg-white rounded-xl border border-border-default hover:border-brand-primary/50 transition-colors">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                              lesson.status === 'SCHEDULED' ? 'bg-blue-100 text-blue-700' :
+                              lesson.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
+                              (lesson.status === 'REGISTERED' || lesson.status === 'COMPLETED') ? 'bg-purple-100 text-purple-700' :
+                              'bg-emerald-100 text-emerald-700'
+                            }`}>
+                              {formatLessonStatus(lesson.status)}
+                            </span>
+                            <span className="text-xs text-text-muted">
+                              {new Date(lesson.scheduledStart).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm font-bold text-text-heading mb-1">
+                            <Clock size={14} className="text-brand-primary" />
+                            {new Date(lesson.scheduledStart).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - 
+                            {new Date(lesson.scheduledEnd).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                          </div>
+                          
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-border-default">
+                            <p className="text-xs text-text-muted">{lesson.enrolledCount} alunos previstos</p>
+                            
+                            <div className="flex gap-1">
+                              <button 
+                                onClick={() => { setSelectedLesson(lesson); setIsViewLessonModalOpen(true); }}
+                                className="p-1.5 text-text-muted hover:text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-colors"
+                                title="Visualizar Detalhes"
+                              >
+                                <Eye size={16} />
+                              </button>
+
+                              {isDirector && lesson.status === 'SCHEDULED' && (
+                                <button 
+                                  onClick={() => { setSelectedLesson(lesson); setIsDeleteLessonModalOpen(true); }}
+                                  className="p-1.5 text-text-muted hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                  title="Remover Aula"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              )}
+
+                              {(isDirector || isStudent) && lesson.status === 'CONFIRMED' && (
+                                <button 
+                                  onClick={() => { setSelectedLesson(lesson); setIsCancelLessonModalOpen(true); }}
+                                  className="p-1.5 text-text-muted hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                  title="Cancelar Aula"
+                                >
+                                  <XCircle size={16} />
+                                </button>
+                              )}
+
+                              {isDirector && (lesson.status === 'REGISTERED' || lesson.status === 'COMPLETED') && (
+                                <button 
+                                  onClick={() => signMutation.mutate(lesson.id)}
+                                  disabled={signMutation.isPending}
+                                  className="p-1.5 text-text-muted hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors disabled:opacity-50"
+                                  title="Validar e Assinar"
+                                >
+                                  <CheckCircle2 size={16} />
+                                </button>
+                              )}
+
+                              {isStudent && lesson.status === 'SCHEDULED' && (
+                                <button 
+                                  onClick={() => confirmLessonMutation.mutate(lesson.id)}
+                                  disabled={confirmLessonMutation.isPending}
+                                  className="p-1.5 text-text-muted hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors disabled:opacity-50"
+                                  title="Confirmar Aula"
+                                >
+                                  <Check size={16} />
+                                </button>
+                              )}
+
+                              {isStudent && lesson.status === 'CONFIRMED' && (
+                                <button 
+                                  onClick={() => { setSelectedLesson(lesson); setIsRegisterLessonModalOpen(true); }}
+                                  className="p-1.5 text-text-muted hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                  title="Registrar Aula"
+                                >
+                                  <FileText size={16} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="ml-auto">
-                    <CheckCircle2 size={32} className="text-emerald-500" />
-                  </div>
-                </div>
+                )}
                 {demand.studentId === user?.id && (
                   <div className="mt-6 p-4 bg-emerald-100/50 rounded-lg flex gap-3 text-emerald-800 text-sm">
                     <Info size={20} className="shrink-0" />
@@ -471,7 +914,7 @@ export function DemandDetail() {
                   </div>
                 )}
                 
-                {demand.studentId === user?.id && !demand.isArchived && (demand.pendingClassDate || demand.pendingRoom) && (
+                {demand.studentId === user?.id && !demand.isArchived && demand.pendingRoom && (
                   <div className="mt-6 p-6 bg-amber-50 border border-amber-200 rounded-xl space-y-4">
                     <div className="flex gap-3 text-amber-800">
                       <AlertCircle size={24} className="shrink-0" />
@@ -479,9 +922,6 @@ export function DemandDetail() {
                         <h4 className="font-bold">Alterações Pendentes</h4>
                         <p className="text-sm">O diretor da escola solicitou alterações nesta demanda que precisam da sua confirmação:</p>
                         <ul className="mt-2 text-sm list-disc list-inside space-y-1">
-                          {demand.pendingClassDate && (
-                            <li>Novo Horário: <span className="font-bold">{formatDate(demand.pendingClassDate)}</span></li>
-                          )}
                           {demand.pendingRoom && (
                             <li>Nova Sala: <span className="font-bold">{demand.pendingRoom}</span></li>
                           )}
@@ -602,6 +1042,265 @@ export function DemandDetail() {
         description="Tem certeza que deseja remover esta demanda? Esta ação não pode ser desfeita e todos os candidatos serão notificados."
         isLoading={deleteMutation.isPending}
       />
+
+      <ConfirmModal
+        isOpen={isFinishModalOpen}
+        onClose={() => setIsFinishModalOpen(false)}
+        onConfirm={() => finishMutation.mutate()}
+        title="Encerrar Demanda"
+        description="Tem certeza que deseja encerrar esta demanda? Isso marcará o projeto como concluído e não permitirá novos agendamentos."
+        isLoading={finishMutation.isPending}
+        confirmText="Sim, Encerrar"
+        variant="info"
+      />
+
+      <ConfirmModal
+        isOpen={isDeleteLessonModalOpen}
+        onClose={() => setIsDeleteLessonModalOpen(false)}
+        onConfirm={() => selectedLesson && deleteLessonMutation.mutate(selectedLesson.id)}
+        title="Remover Aula"
+        description="Tem certeza que deseja remover esta aula agendada? Esta ação não pode ser desfeita."
+        isLoading={deleteLessonMutation.isPending}
+        variant="danger"
+      />
+
+      <Modal
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+        title="Agendar Nova Aula"
+      >
+        <form onSubmit={handleSubmit((data) => scheduleMutation.mutate(data))} className="space-y-4">
+          <p className="text-sm text-text-muted mb-4">
+            Defina o horário da aula. Lembre-se que deve ser com no mínimo 2 dias de antecedência.
+          </p>
+          
+          <Input
+            label="Início da Aula"
+            type="datetime-local"
+            {...register('scheduledStart')}
+            error={errors.scheduledStart?.message}
+          />
+
+          <Input
+            label="Término da Aula"
+            type="datetime-local"
+            {...register('scheduledEnd')}
+            error={errors.scheduledEnd?.message}
+          />
+
+          <Input
+            label="Quantidade de Alunos"
+            type="number"
+            {...register('enrolledCount', { valueAsNumber: true })}
+            error={errors.enrolledCount?.message}
+          />
+
+          <div className="flex justify-end gap-3 mt-6">
+            <Button variant="outline" onClick={() => setIsScheduleModalOpen(false)}>Cancelar</Button>
+            <Button type="submit" isLoading={scheduleMutation.isPending}>Confirmar Agendamento</Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        isOpen={isViewLessonModalOpen}
+        onClose={() => setIsViewLessonModalOpen(false)}
+        title="Detalhes da Aula"
+      >
+        {selectedLesson && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-text-muted font-medium mb-1">Status</p>
+                <span className={`text-xs px-2 py-1 rounded-full font-bold ${
+                  selectedLesson.status === 'SCHEDULED' ? 'bg-blue-100 text-blue-700' :
+                  selectedLesson.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
+                  (selectedLesson.status === 'REGISTERED' || selectedLesson.status === 'COMPLETED') ? 'bg-purple-100 text-purple-700' :
+                  'bg-emerald-100 text-emerald-700'
+                }`}>
+                  {formatLessonStatus(selectedLesson.status)}
+                </span>
+              </div>
+              <div>
+                <p className="text-xs text-text-muted font-medium mb-1">Data</p>
+                <p className="text-sm font-bold text-text-heading">
+                  {format(new Date(selectedLesson.scheduledStart), 'dd/MM/yyyy')}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-text-muted font-medium mb-1">Horário</p>
+                <p className="text-sm font-bold text-text-heading">
+                  {format(new Date(selectedLesson.scheduledStart), 'HH:mm')} - {format(new Date(selectedLesson.scheduledEnd), 'HH:mm')}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-text-muted font-medium mb-1">Alunos Previstos</p>
+                <p className="text-sm font-bold text-text-heading">{selectedLesson.enrolledCount}</p>
+              </div>
+            </div>
+
+            {selectedLesson.presentCount !== undefined && selectedLesson.presentCount !== null && (
+              <div className="pt-4 border-t border-border-default space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-text-muted font-medium mb-1">Alunos Presentes</p>
+                    <p className="text-sm font-bold text-text-heading">{selectedLesson.presentCount}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-text-muted font-medium mb-1">Registrado em</p>
+                    <p className="text-sm font-bold text-text-heading">
+                      {selectedLesson.registeredAt ? format(new Date(selectedLesson.registeredAt), 'dd/MM/yyyy HH:mm') : '-'}
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-text-muted font-medium mb-1">Conteúdo Ministrado</p>
+                  <p className="text-sm text-text-body bg-slate-50 p-3 rounded-lg border border-border-default whitespace-pre-wrap">
+                    {selectedLesson.contentTaught || 'Não informado'}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-text-muted font-medium mb-1">Desempenho (1-3)</p>
+                    <p className="text-sm font-bold text-text-heading">{selectedLesson.nineBoxPerformance || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-text-muted font-medium mb-1">Potencial (1-3)</p>
+                    <p className="text-sm font-bold text-text-heading">{selectedLesson.nineBoxPotential || '-'}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {selectedLesson.signedAt && (
+              <div className="pt-4 border-t border-border-default">
+                <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 p-3 rounded-lg">
+                  <CheckCircle2 size={18} />
+                  <p className="text-sm font-medium">Validada e assinada pelo diretor</p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end pt-4">
+              <Button onClick={() => setIsViewLessonModalOpen(false)}>Fechar</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={isCancelLessonModalOpen}
+        onClose={() => setIsCancelLessonModalOpen(false)}
+        title={isDirector ? "Remover Aula" : "Cancelar Aula"}
+      >
+        <form 
+          onSubmit={cancelForm.handleSubmit((data) => {
+            if (selectedLesson) {
+              cancelLessonMutation.mutate({ lessonId: selectedLesson.id, data });
+            }
+          })} 
+          className="space-y-4"
+        >
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text-heading">Motivo do Cancelamento</label>
+            <select
+              {...cancelForm.register('reason')}
+              className="flex h-11 w-full rounded-lg border border-border-default bg-white px-3 py-2 text-sm text-text-heading focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+            >
+              <option value="STUDENT_UNAVAILABLE">Estudante indisponível</option>
+              <option value="SCHOOL_UNAVAILABLE">Escola indisponível</option>
+              <option value="PUPILS_ABSENT">Alunos ausentes</option>
+              <option value="INSTITUTIONAL_ISSUE">Questão institucional</option>
+              <option value="OTHER">Outro motivo</option>
+            </select>
+            {cancelForm.formState.errors.reason && <p className="text-xs text-red-500">{cancelForm.formState.errors.reason.message}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text-heading">Observações (opcional)</label>
+            <textarea
+              {...cancelForm.register('notes')}
+              className="flex min-h-[100px] w-full rounded-lg border border-border-default bg-white px-3 py-2 text-sm text-text-heading focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+              placeholder="Descreva brevemente o motivo..."
+            />
+            {cancelForm.formState.errors.notes && <p className="text-xs text-red-500">{cancelForm.formState.errors.notes.message}</p>}
+          </div>
+
+          <div className="flex justify-end gap-3 mt-6">
+            <Button variant="outline" onClick={() => setIsCancelLessonModalOpen(false)}>Voltar</Button>
+            <Button 
+              type="submit" 
+              className="bg-red-500 hover:bg-red-600 text-white"
+              isLoading={cancelLessonMutation.isPending}
+            >
+              Confirmar Cancelamento
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        isOpen={isRegisterLessonModalOpen}
+        onClose={() => setIsRegisterLessonModalOpen(false)}
+        title="Registrar Aula Realizada"
+      >
+        <form 
+          onSubmit={registerForm.handleSubmit((data) => {
+            if (selectedLesson) {
+              registerLessonMutation.mutate({ lessonId: selectedLesson.id, data });
+            }
+          })} 
+          className="space-y-4"
+        >
+          <Input
+            label="Quantidade de Alunos Presentes"
+            type="number"
+            min={0}
+            {...registerForm.register('presentCount', { valueAsNumber: true })}
+            error={registerForm.formState.errors.presentCount?.message}
+          />
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text-heading">Conteúdo Ministrado</label>
+            <textarea
+              {...registerForm.register('contentTaught')}
+              className="flex min-h-[120px] w-full rounded-lg border border-border-default bg-white px-3 py-2 text-sm text-text-heading focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+              placeholder="Descreva o que foi trabalhado nesta aula..."
+            />
+            {registerForm.formState.errors.contentTaught && <p className="text-xs text-red-500">{registerForm.formState.errors.contentTaught.message}</p>}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-text-heading">Desempenho (1-3)</label>
+              <select
+                {...registerForm.register('nineBoxPerformance', { valueAsNumber: true })}
+                className="flex h-11 w-full rounded-lg border border-border-default bg-white px-3 py-2 text-sm text-text-heading focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+              >
+                <option value={1}>1 - Baixo</option>
+                <option value={2}>2 - Médio</option>
+                <option value={3}>3 - Alto</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-text-heading">Potencial (1-3)</label>
+              <select
+                {...registerForm.register('nineBoxPotential', { valueAsNumber: true })}
+                className="flex h-11 w-full rounded-lg border border-border-default bg-white px-3 py-2 text-sm text-text-heading focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+              >
+                <option value={1}>1 - Baixo</option>
+                <option value={2}>2 - Médio</option>
+                <option value={3}>3 - Alto</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 mt-6">
+            <Button variant="outline" onClick={() => setIsRegisterLessonModalOpen(false)}>Cancelar</Button>
+            <Button type="submit" isLoading={registerLessonMutation.isPending}>Salvar Registro</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

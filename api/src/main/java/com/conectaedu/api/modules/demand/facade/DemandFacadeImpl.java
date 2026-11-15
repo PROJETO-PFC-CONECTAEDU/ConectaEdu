@@ -22,6 +22,7 @@ public class DemandFacadeImpl implements IDemandFacade {
     private final DemandDeletionService deletionService;
     private final DemandGetService getService;
     private final DemandApplyService applyService;
+    private final DemandPublishService publishService;
     private final DemandApproveService approveService;
     private final DemandConfirmChangeService confirmChangeService;
     private final DemandUnlinkStudentService unlinkStudentService;
@@ -70,6 +71,11 @@ public class DemandFacadeImpl implements IDemandFacade {
     }
 
     @Override
+    public DemandResponseDTO publishDemand(UUID id) {
+        return publishService.publish(id);
+    }
+
+    @Override
     public DemandResponseDTO approveCandidate(UUID demandId, UUID studentId) {
         return approveService.approve(demandId, studentId);
     }
@@ -92,6 +98,11 @@ public class DemandFacadeImpl implements IDemandFacade {
     @Override
     public List<DemandStudentDTO> getDemandsByStatusAndStudentId(DemandStatus status, UUID studentId) {
         return getService.getDemandsByStatusAndStudentId(status, studentId);
+    }
+
+    @Override
+    public List<DemandStudentDTO> getDemandsByStatusAndDirectorId(DemandStatus status, UUID directorId) {
+        return getService.getDemandsByStatusAndDirectorId(status, directorId);
     }
 
     @Override

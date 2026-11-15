@@ -148,7 +148,7 @@ export function MapComponent({ schools = [] }: MapProps) {
       <GoogleMap
         mapContainerStyle={containerStyle}
         center={center}
-        zoom={12}
+        zoom={14}
         onLoad={onLoad}
         onUnmount={onUnmount}
         options={{

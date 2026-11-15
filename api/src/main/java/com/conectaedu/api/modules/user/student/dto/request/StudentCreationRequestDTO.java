@@ -23,6 +23,9 @@ public record StudentCreationRequestDTO(
         @NotBlank(message = "Disponibilidade é obrigatória")
         String availability,
 
+        @NotBlank(message = "Curso é obrigatório")
+        String course,
+
         @NotBlank(message = "Endereço é obrigatório")
         String address,
 

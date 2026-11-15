@@ -44,5 +44,48 @@ public class User {
     @NotNull
     private LocalDateTime createdAt;
 
+    //Nascem inativos para confirmação do administrador do ConectaEdu
+    private boolean active = false;
+
     private LocalDateTime updatedAt;
+    
+    private String passwordResetToken;
+    
+    private LocalDateTime passwordResetExpiresAt;
+    
+    private String emailConfirmationToken;
+    
+    private boolean emailConfirmed = false;
+    
+    private String secret2fa;
+
+    private boolean is2faEnabled = false;
+
+    private String disable2faCode;
+    
+    public void generatePasswordResetToken() {
+        this.passwordResetToken = java.util.UUID.randomUUID().toString();
+        this.passwordResetExpiresAt = LocalDateTime.now().plusHours(1);
+    }
+
+    public boolean isPasswordResetTokenExpired() {
+        return this.passwordResetExpiresAt != null && this.passwordResetExpiresAt.isBefore(LocalDateTime.now());
+    }
+
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+        this.passwordResetToken = null;
+        this.passwordResetExpiresAt = null;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void generateEmailConfirmationToken() {
+        this.emailConfirmationToken = String.format("%06d", new java.util.Random().nextInt(1000000));
+    }
+
+    public void confirmEmail() {
+        this.emailConfirmed = true;
+        this.emailConfirmationToken = null;
+        this.updatedAt = LocalDateTime.now();
+    }
 }

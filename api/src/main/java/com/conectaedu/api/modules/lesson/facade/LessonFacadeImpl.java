@@ -22,6 +22,7 @@ public class LessonFacadeImpl implements ILessonFacade {
     private final LessonSchedulingService lessonSchedulingService;
     private final LessonConfirmationService lessonConfirmationService;
     private final LessonCancellationService lessonCancellationService;
+    private final LessonDeletionService lessonDeletionService;
     private final LessonRegistrationService lessonRegistrationService;
     private final LessonSignatureService lessonSignatureService;
     private final LessonListByService lessonListByService;
@@ -52,9 +53,24 @@ public class LessonFacadeImpl implements ILessonFacade {
     }
 
     @Override
+    public void deleteLesson(UUID lessonId) {
+        lessonDeletionService.delete(lessonId);
+    }
+
+    @Override
     public List<LessonResponseDTO> getLessonsByStudent(UUID studentId, LocalDateTime from,
                                                        LocalDateTime to, LessonStatus status) {
         return lessonListByService.listByStudent(studentId, from, to, status);
+    }
+
+    @Override
+    public List<LessonResponseDTO> getLessonsBySchool(UUID schoolId) {
+        return lessonListByService.listBySchool(schoolId);
+    }
+
+    @Override
+    public List<LessonResponseDTO> getLessonsByDemand(UUID demandId) {
+        return lessonListByService.listByDemand(demandId);
     }
 
     @Override

@@ -18,11 +18,13 @@ public interface IDemandFacade {
     List<DemandResponseDTO> getDemandsByStatus(DemandStatus status);
     List<DemandStudentDTO> getAvailableDemandsForStudents();
     DemandResponseDTO applyToDemand(UUID id);
+    DemandResponseDTO publishDemand(UUID id);
     DemandResponseDTO approveCandidate(UUID demandId, UUID studentId);
     DemandResponseDTO confirmChange(UUID demandId);
     DemandResponseDTO unlinkStudent(UUID demandId);
     DemandResponseDTO finishDemand(UUID demandId);
 
     List<DemandStudentDTO> getDemandsByStatusAndStudentId(DemandStatus status, UUID studentId);
+    List<DemandStudentDTO> getDemandsByStatusAndDirectorId(DemandStatus status, UUID directorId);
     List<DemandStudentDTO> getRecommendedDemands(UUID studentId);
 }

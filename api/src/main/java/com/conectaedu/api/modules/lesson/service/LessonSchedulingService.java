@@ -25,8 +25,8 @@ import com.conectaedu.api.shared.exceptions.InvalidUniversityStatusException;
 import com.conectaedu.api.shared.exceptions.LessonOverlapException;
 import com.conectaedu.api.shared.exceptions.LessonScheduleTooSoonException;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +41,7 @@ public class LessonSchedulingService {
     private final DemandRepository demandRepository;
     private final LessonMapper lessonMapper;
     private final AuditService auditService;
+    private final TenancyValidator tenancyValidator;
 
     //A ordem das checagens não é estética, as duas primeiras são conta pura e barram a
     //requisição antes de tocar no banco, e a sobreposição fica no fim por ser a consulta mais cara.
@@ -63,21 +64,20 @@ public class LessonSchedulingService {
         Demand demand = demandRepository.findById(request.demandId())
                 .orElseThrow(() -> new DemandNotFoundException("Demanda não encontrada!"));
 
-        if (demand.getStatus() != DemandStatus.ONGOING) {
+        tenancyValidator.validateDemandAccess(demand);
+
+        if (demand.getStatus() != DemandStatus.ONGOING && 
+            demand.getStatus() != DemandStatus.DRAFT && 
+            demand.getStatus() != DemandStatus.WAITING) {
             throw new IllegalArgumentException(
                     "A demanda não aceita novas aulas. Situação atual: " + demand.getStatus());
         }
 
         Student student = demand.getStudent();
-        if (student == null) {
-            throw new IllegalArgumentException("A demanda ainda não tem estudante aprovado.");
-        }
 
-        if (demand.getDirector() == null || !demand.getDirector().getId().equals(directorId)) {
-            throw new AccessDeniedException("Apenas o diretor responsável pela demanda pode agendar aulas.");
+        if (student != null) {
+            validateInternshipLink(student, demand.getSchool());
         }
-
-        validateInternshipLink(student, demand.getSchool());
 
         LessonOrigin origin = request.origin() == null ? LessonOrigin.NEW : request.origin();
         if (origin == LessonOrigin.MAKEUP
@@ -88,12 +88,22 @@ public class LessonSchedulingService {
 
         //O fim da nova aula contra, o início da que já existe, e o início da nova contra o fim dela.
 
-        boolean overlaps = lessonRepository
-                .existsByStudent_IdAndStatusInAndScheduledStartLessThanAndScheduledEndGreaterThan(
-                        student.getId(), LessonRules.BUSY_STATUSES,
+        boolean demandOverlaps = lessonRepository
+                .existsByDemand_IdAndStatusInAndScheduledStartLessThanAndScheduledEndGreaterThan(
+                        demand.getId(), LessonRules.BUSY_STATUSES,
                         request.scheduledEnd(), request.scheduledStart());
-        if (overlaps) {
-            throw new LessonOverlapException("O estudante já tem aula marcada neste horário.");
+        if (demandOverlaps) {
+            throw new LessonOverlapException("Já existe uma aula agendada para esta demanda neste horário.");
+        }
+
+        if (student != null) {
+            boolean studentOverlaps = lessonRepository
+                    .existsByStudent_IdAndStatusInAndScheduledStartLessThanAndScheduledEndGreaterThan(
+                            student.getId(), LessonRules.BUSY_STATUSES,
+                            request.scheduledEnd(), request.scheduledStart());
+            if (studentOverlaps) {
+                throw new LessonOverlapException("O estudante já tem aula marcada neste horário.");
+            }
         }
 
         Lesson lesson = new Lesson();

@@ -19,6 +19,8 @@ public record StudentUpdateRequestDTO(
 
         String availability,
 
+        String course,
+
         String address,
 
         Double latitude,

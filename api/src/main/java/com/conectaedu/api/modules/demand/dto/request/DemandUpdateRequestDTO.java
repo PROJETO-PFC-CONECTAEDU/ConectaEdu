@@ -17,9 +17,6 @@ public record DemandUpdateRequestDTO(
         @Max(value = 10, message = "Quantidade de alunos deve ser no máximo 10")
         Integer pupilAmount,
 
-        @FutureOrPresent(message = "A data da aula não pode ser no passado")
-        LocalDateTime classDate,
-
         String totalHours,
         String room,
         String difficultyLevel,

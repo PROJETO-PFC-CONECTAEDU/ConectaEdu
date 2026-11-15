@@ -47,6 +47,13 @@ public class LessonController {
         return ResponseEntity.ok(lessonFacade.cancelLesson(id, request));
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('SCHOOL_DIRECTOR')")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        lessonFacade.deleteLesson(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @PatchMapping("/{id}/register")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<LessonResponseDTO> register(@PathVariable UUID id,
@@ -69,5 +76,19 @@ public class LessonController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
             @RequestParam(required = false) LessonStatus status) {
         return ResponseEntity.ok(lessonFacade.getLessonsByStudent(studentId, from, to, status));
+    }
+
+    @GetMapping("/school/{schoolId}")
+    @PreAuthorize("hasAnyRole('SCHOOL_DIRECTOR', 'PLATFORM_ADMIN')")
+    public ResponseEntity<List<LessonResponseDTO>> getBySchool(
+            @PathVariable UUID schoolId) {
+        return ResponseEntity.ok(lessonFacade.getLessonsBySchool(schoolId));
+    }
+
+    @GetMapping("/demand/{demandId}")
+    @PreAuthorize("hasAnyRole('STUDENT', 'SCHOOL_DIRECTOR', 'PLATFORM_ADMIN')")
+    public ResponseEntity<List<LessonResponseDTO>> getByDemand(
+            @PathVariable UUID demandId) {
+        return ResponseEntity.ok(lessonFacade.getLessonsByDemand(demandId));
     }
 }

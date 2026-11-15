@@ -2,8 +2,8 @@ package com.conectaedu.api.modules.user.genericUser.facade;
 
 import com.conectaedu.api.modules.user.genericUser.facade.dto.request.UserCreationRequestDTO;
 import com.conectaedu.api.modules.user.genericUser.facade.dto.request.UserUpdateRequestDTO;
-import com.conectaedu.api.modules.user.genericUser.facade.dto.response.UserCreationResponseDTO;
-import com.conectaedu.api.modules.user.genericUser.facade.dto.response.UserResponseDTO;
+import com.conectaedu.api.modules.user.genericUser.dto.response.UserCreationResponseDTO;
+import com.conectaedu.api.modules.user.genericUser.dto.response.UserResponseDTO;
 import com.conectaedu.api.modules.user.genericUser.interfaces.IUserFacade;
 import com.conectaedu.api.modules.user.genericUser.service.*;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +21,7 @@ public class UserFacadeImpl implements IUserFacade {
     private final UserDeletionService userDeletionService;
     private final UserListService userListService;
     private final UserListByService userListByService;
+    private final UserActivationService userActivationService;
 
     @Override
     public UserCreationResponseDTO createUser(UserCreationRequestDTO request) {
@@ -50,5 +51,15 @@ public class UserFacadeImpl implements IUserFacade {
     @Override
     public List<UserResponseDTO> getAllUsers() {
         return userListService.listAll();
+    }
+
+    @Override
+    public UserResponseDTO activateUser(UUID id) {
+        return userActivationService.activateUser(id);
+    }
+
+    @Override
+    public UserResponseDTO deactivateUser(UUID id) {
+        return userActivationService.deactivateUser(id);
     }
 }

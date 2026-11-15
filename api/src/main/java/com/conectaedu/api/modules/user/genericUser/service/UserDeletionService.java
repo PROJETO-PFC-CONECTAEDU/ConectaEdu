@@ -6,12 +6,14 @@ import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.exceptions.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@PreAuthorize( "hasRole('PLATFORM_ADMIN')")
 public class UserDeletionService {
 
     private final UserRepository userRepository;
@@ -21,8 +23,8 @@ public class UserDeletionService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado!"));
 
-        userRepository.deleteById(id);
-
+        user.setActive(false);
+        userRepository.save(user);
         auditService.logDelete(AuditEntityType.USER, user.getId(), user.getName());
     }
 }

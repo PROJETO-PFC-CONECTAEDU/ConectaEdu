@@ -58,7 +58,7 @@ export function ConsentGuard({ children }: { children: React.ReactNode }) {
       setNeedsConsent(false);
       toast.success('Termos aceitos com sucesso!');
     } catch (error) {
-      toast.error('Erro ao aceitar termos. Tente novamente.');
+      // Erro tratado globalmente
     } finally {
       setLoading(false);
     }

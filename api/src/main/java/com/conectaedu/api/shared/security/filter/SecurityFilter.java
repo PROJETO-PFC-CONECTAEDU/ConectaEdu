@@ -1,5 +1,6 @@
 package com.conectaedu.api.shared.security.filter;
 
+import com.conectaedu.api.modules.auth.repository.TokenRepository;
 import com.conectaedu.api.shared.security.domain.AuthenticatedUser;
 import com.conectaedu.api.shared.security.token.ValidateToken;
 import jakarta.servlet.FilterChain;
@@ -22,6 +23,7 @@ import java.util.UUID;
 public class SecurityFilter extends OncePerRequestFilter {
 
     private final ValidateToken validateToken;
+    private final TokenRepository tokenRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -33,16 +35,28 @@ public class SecurityFilter extends OncePerRequestFilter {
             var decodedJWT = validateToken.validateToken(token);
             if (decodedJWT != null) {
 
+                String tokenId = decodedJWT.getId();
+                if (tokenId != null && tokenRepository.existsByTokenId(tokenId)) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    return;
+                }
+
                 String email = decodedJWT.getSubject();
 
                 String role = decodedJWT.getClaim("role").asString();
 
                 String id = decodedJWT.getClaim("id").asString();
 
+                String universityIdClaim = decodedJWT.getClaim("universityId").asString();
+                String schoolIdClaim = decodedJWT.getClaim("schoolId").asString();
+
                 if (id != null) {
                     var authorities = Collections.singletonList(new SimpleGrantedAuthority(role.startsWith("ROLE_") ? role : "ROLE_" + role));
 
-                    var userDetails = new AuthenticatedUser(UUID.fromString(id), email, "", authorities);
+                    UUID universityId = universityIdClaim != null ? UUID.fromString(universityIdClaim) : null;
+                    UUID schoolId = schoolIdClaim != null ? UUID.fromString(schoolIdClaim) : null;
+
+                    var userDetails = new AuthenticatedUser(UUID.fromString(id), email, "", universityId, schoolId, authorities);
 
                     var authentication = new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authentication);

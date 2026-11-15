@@ -3,8 +3,12 @@ package com.conectaedu.api.modules.demand.mapper;
 import com.conectaedu.api.modules.demand.domain.Demand;
 import com.conectaedu.api.modules.demand.dto.response.DemandResponseDTO;
 import com.conectaedu.api.modules.demand.dto.response.DemandStudentDTO;
+import com.conectaedu.api.shared.security.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -19,12 +23,10 @@ public class DemandMapper {
                 demand.getGradeLevel(),
                 demand.getPupilAmount(),
                 demand.getStatus(),
-                demand.getClassDate(),
                 demand.getTotalHours(),
                 demand.getRoom(),
                 demand.getDifficultyLevel(),
                 demand.isArchived(),
-                demand.getPendingClassDate(),
                 demand.getPendingRoom(),
                 demand.getSchool().getId(),
                 demand.getSchool().getName(),
@@ -35,9 +37,7 @@ public class DemandMapper {
                 demand.getDirector().getName(),
                 demand.getStudent() != null ? demand.getStudent().getId() : null,
                 demand.getStudent() != null ? demand.getStudent().getName() : null,
-                demand.getCandidates().stream()
-                        .map(c -> new DemandResponseDTO.CandidateResponseDTO(c.getId(), c.getName()))
-                        .collect(Collectors.toList()),
+                mapCandidates(demand),
                 demand.getStudentHistory().stream()
                         .map(h -> new DemandResponseDTO.HistoryResponseDTO(
                                 h.getStudent().getId(),
@@ -62,12 +62,10 @@ public class DemandMapper {
                 demand.getGradeLevel(),
                 demand.getPupilAmount(),
                 demand.getStatus(),
-                demand.getClassDate(),
                 demand.getTotalHours(),
                 demand.getRoom(),
                 demand.getDifficultyLevel(),
                 demand.isArchived(),
-                demand.getPendingClassDate(),
                 demand.getPendingRoom(),
                 demand.getSchool().getId(),
                 demand.getSchool().getName(),
@@ -78,9 +76,7 @@ public class DemandMapper {
                 demand.getDirector().getName(),
                 demand.getStudent() != null ? demand.getStudent().getId() : null,
                 demand.getStudent() != null ? demand.getStudent().getName() : null,
-                demand.getCandidates().stream()
-                        .map(c -> new DemandResponseDTO.CandidateResponseDTO(c.getId(), c.getName()))
-                        .collect(Collectors.toList()),
+                mapCandidates(demand),
                 demand.getStudentHistory().stream()
                         .map(h -> new DemandResponseDTO.HistoryResponseDTO(
                                 h.getStudent().getId(),
@@ -105,7 +101,6 @@ public class DemandMapper {
                 demand.getGradeLevel(),
                 demand.getPupilAmount(),
                 demand.getStatus(),
-                demand.getClassDate(),
                 demand.getTotalHours(),
                 demand.getRoom(),
                 demand.getDifficultyLevel(),
@@ -119,14 +114,14 @@ public class DemandMapper {
                 demand.getDirector().getName(),
                 demand.getStudent() != null ? demand.getStudent().getId() : null,
                 demand.getStudent() != null ? demand.getStudent().getName() : null,
-                demand.getCandidates().stream()
-                        .map(c -> new DemandStudentDTO.CandidateResponseDTO(c.getId(), c.getName()))
-                        .collect(Collectors.toList()),
+                mapStudentCandidates(demand),
                 demand.getCreatedAt(),
                 demand.getUpdatedAt(),
                 null,
                 null,
-                null
+                null,
+                false,
+                false
         );
     }
 
@@ -139,7 +134,6 @@ public class DemandMapper {
                 demand.getGradeLevel(),
                 demand.getPupilAmount(),
                 demand.getStatus(),
-                demand.getClassDate(),
                 demand.getTotalHours(),
                 demand.getRoom(),
                 demand.getDifficultyLevel(),
@@ -153,14 +147,68 @@ public class DemandMapper {
                 demand.getDirector().getName(),
                 demand.getStudent() != null ? demand.getStudent().getId() : null,
                 demand.getStudent() != null ? demand.getStudent().getName() : null,
-                demand.getCandidates().stream()
-                        .map(c -> new DemandStudentDTO.CandidateResponseDTO(c.getId(), c.getName()))
-                        .collect(Collectors.toList()),
+                mapStudentCandidates(demand),
                 demand.getCreatedAt(),
                 demand.getUpdatedAt(),
                 recommendationScore,
                 distance,
-                recommendationScore != null && recommendationScore >= 100
+                recommendationScore != null && recommendationScore >= 100,
+                false,
+                false
         );
+    }
+
+    public DemandStudentDTO mapToStudentDTO(Demand demand, Double recommendationScore, Double distance, 
+                                          Boolean hasStudentFeedback, Boolean hasDirectorFeedback) {
+        return new DemandStudentDTO(
+                demand.getId(),
+                demand.getTitle(),
+                demand.getDescription(),
+                demand.getSubject(),
+                demand.getGradeLevel(),
+                demand.getPupilAmount(),
+                demand.getStatus(),
+                demand.getTotalHours(),
+                demand.getRoom(),
+                demand.getDifficultyLevel(),
+                demand.isArchived(),
+                demand.getSchool().getId(),
+                demand.getSchool().getName(),
+                demand.getSchool().getAddress(),
+                demand.getSchool().getLatitude(),
+                demand.getSchool().getLongitude(),
+                demand.getDirector().getId(),
+                demand.getDirector().getName(),
+                demand.getStudent() != null ? demand.getStudent().getId() : null,
+                demand.getStudent() != null ? demand.getStudent().getName() : null,
+                mapStudentCandidates(demand),
+                demand.getCreatedAt(),
+                demand.getUpdatedAt(),
+                recommendationScore,
+                distance,
+                recommendationScore != null && recommendationScore >= 100,
+                hasStudentFeedback,
+                hasDirectorFeedback
+        );
+    }
+
+    private List<DemandResponseDTO.CandidateResponseDTO> mapCandidates(Demand demand) {
+        UUID currentUserId = SecurityContextHolder.getAuthenticatedUserId();
+        boolean isStudent = SecurityContextHolder.hasRole("STUDENT");
+
+        return demand.getCandidates().stream()
+                .filter(c -> !isStudent || c.getId().equals(currentUserId))
+                .map(c -> new DemandResponseDTO.CandidateResponseDTO(c.getId(), c.getName()))
+                .collect(Collectors.toList());
+    }
+
+    private List<DemandStudentDTO.CandidateResponseDTO> mapStudentCandidates(Demand demand) {
+        UUID currentUserId = SecurityContextHolder.getAuthenticatedUserId();
+        boolean isStudent = SecurityContextHolder.hasRole("STUDENT");
+
+        return demand.getCandidates().stream()
+                .filter(c -> !isStudent || c.getId().equals(currentUserId))
+                .map(c -> new DemandStudentDTO.CandidateResponseDTO(c.getId(), c.getName()))
+                .collect(Collectors.toList());
     }
 }

@@ -21,7 +21,10 @@ public class LessonMapper {
                 lesson.getPresentCount(),
                 lesson.getConfirmedAt(),
                 lesson.getRegisteredAt(),
-                lesson.getSignedAt()
+                lesson.getSignedAt(),
+                lesson.getContentTaught(),
+                lesson.getNineBoxPerformance(),
+                lesson.getNineBoxPotential()
         );
     }
 }

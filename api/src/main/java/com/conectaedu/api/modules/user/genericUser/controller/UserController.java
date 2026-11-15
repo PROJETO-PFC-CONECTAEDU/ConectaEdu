@@ -2,8 +2,8 @@ package com.conectaedu.api.modules.user.genericUser.controller;
 
 import com.conectaedu.api.modules.user.genericUser.facade.dto.request.UserCreationRequestDTO;
 import com.conectaedu.api.modules.user.genericUser.facade.dto.request.UserUpdateRequestDTO;
-import com.conectaedu.api.modules.user.genericUser.facade.dto.response.UserCreationResponseDTO;
-import com.conectaedu.api.modules.user.genericUser.facade.dto.response.UserResponseDTO;
+import com.conectaedu.api.modules.user.genericUser.dto.response.UserCreationResponseDTO;
+import com.conectaedu.api.modules.user.genericUser.dto.response.UserResponseDTO;
 import com.conectaedu.api.modules.user.genericUser.interfaces.IUserFacade;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -52,5 +52,15 @@ public class UserController {
     @GetMapping
     public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
         return ResponseEntity.ok(userFacade.getAllUsers());
+    }
+
+    @PatchMapping("/{id}/activate")
+    public ResponseEntity<UserResponseDTO> activateUser(@PathVariable UUID id) {
+        return ResponseEntity.ok(userFacade.activateUser(id));
+    }
+
+    @PatchMapping("/{id}/deactivate")
+    public ResponseEntity<UserResponseDTO> deactivateUser(@PathVariable UUID id) {
+        return ResponseEntity.ok(userFacade.deactivateUser(id));
     }
 }

@@ -13,7 +13,6 @@ public record DemandStudentDTO(
         String gradeLevel,
         Integer pupilAmount,
         DemandStatus status,
-        LocalDateTime classDate,
         String totalHours,
         String room,
         String difficultyLevel,
@@ -32,7 +31,9 @@ public record DemandStudentDTO(
         LocalDateTime updatedAt,
         Double recommendationScore,
         Double distance,
-        Boolean isRecommended
+        Boolean isRecommended,
+        Boolean hasStudentFeedback,
+        Boolean hasDirectorFeedback
 ) {
     public record CandidateResponseDTO(UUID id, String name) {}
 }

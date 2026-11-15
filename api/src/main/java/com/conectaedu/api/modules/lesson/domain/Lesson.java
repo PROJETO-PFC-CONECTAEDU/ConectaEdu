@@ -84,8 +84,8 @@ public class Lesson {
     @JoinColumn(name = "demand_id", nullable = false)
     private Demand demand;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "student_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id")
     private Student student;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

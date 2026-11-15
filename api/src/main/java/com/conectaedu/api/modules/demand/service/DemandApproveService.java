@@ -5,18 +5,23 @@ import com.conectaedu.api.modules.demand.domain.Demand;
 import com.conectaedu.api.modules.demand.dto.response.DemandResponseDTO;
 import com.conectaedu.api.modules.demand.mapper.DemandMapper;
 import com.conectaedu.api.modules.demand.repository.DemandRepository;
+import com.conectaedu.api.modules.lesson.domain.Lesson;
+import com.conectaedu.api.modules.lesson.repository.LessonRepository;
 import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.student.repository.StudentRepository;
 import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.audit.support.AuditDiff;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.DemandStatus;
+import com.conectaedu.api.shared.exceptions.*;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -25,29 +30,27 @@ public class DemandApproveService {
 
     private final DemandRepository demandRepository;
     private final StudentRepository studentRepository;
+    private final LessonRepository lessonRepository;
     private final DemandMapper demandMapper;
     private final AuditService auditService;
+    private final TenancyValidator tenancyValidator;
 
     @Transactional
     public DemandResponseDTO approve(UUID demandId, UUID studentId) {
-        UUID directorId = SecurityContextHolder.getAuthenticatedUserId();
-
         Demand demand = demandRepository.findById(demandId)
-                .orElseThrow(() -> new RuntimeException("Demanda não encontrada"));
+                .orElseThrow(() -> new DemandNotFoundException("Demanda não encontrada"));
 
-        if (!demand.getDirector().getId().equals(directorId)) {
-            throw new RuntimeException("Apenas o diretor responsável pode aprovar candidatos");
-        }
+        tenancyValidator.validateDemandAccess(demand);
 
         if (demand.getStatus() != DemandStatus.WAITING) {
-            throw new RuntimeException("Esta demanda não está em espera");
+            throw new InvalidDemandStatusException("Esta demanda não está em espera");
         }
 
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Estudante não encontrado"));
+                .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado"));
 
         if (!demand.getCandidates().contains(student)) {
-            throw new RuntimeException("Este estudante não se candidatou a esta demanda");
+            throw new StudentNotACandidateException("Este estudante não se candidatou a esta demanda");
         }
 
         var beforeStatus = demand.getStatus();
@@ -64,6 +67,15 @@ public class DemandApproveService {
         demand.getStudentHistory().add(history);
         
         demandRepository.save(demand);
+
+        // Vincula as aulas agendadas previamente ao estudante
+        List<Lesson> lessons = lessonRepository.findByDemand_Id(demandId);
+        for (Lesson lesson : lessons) {
+            if (lesson.getStudent() == null) {
+                lesson.setStudent(student);
+            }
+        }
+        lessonRepository.saveAll(lessons);
 
         AuditDiff diff = AuditDiff.create()
                 .field("estudante_aprovado", null, student.getName())

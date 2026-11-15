@@ -5,10 +5,14 @@ import com.conectaedu.api.modules.demand.dto.response.DemandResponseDTO;
 import com.conectaedu.api.modules.demand.dto.response.DemandStudentDTO;
 import com.conectaedu.api.modules.demand.mapper.DemandMapper;
 import com.conectaedu.api.modules.demand.repository.DemandRepository;
+import com.conectaedu.api.modules.feedback.repository.ClassEvaluationRepository;
+import com.conectaedu.api.modules.feedback.repository.StudentEvaluationRepository;
 import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.student.repository.StudentRepository;
 import com.conectaedu.api.shared.enums.DemandStatus;
+import com.conectaedu.api.shared.exceptions.DemandNotFoundException;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,12 +25,17 @@ import java.util.UUID;
 public class DemandGetService {
     private final DemandRepository demandRepository;
     private final StudentRepository studentRepository;
+    private final ClassEvaluationRepository classEvaluationRepository;
+    private final StudentEvaluationRepository studentEvaluationRepository;
     private final DemandMapper demandMapper;
+    private final TenancyValidator tenancyValidator;
 
     @Transactional(readOnly = true)
     public DemandResponseDTO getDemand(UUID id) {
         Demand demand = demandRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Demanda não encontrada"));
+                .orElseThrow(() -> new DemandNotFoundException("Demanda não encontrada"));
+
+        tenancyValidator.validateDemandAccess(demand);
         
         Double distance = null;
         try {
@@ -56,22 +65,66 @@ public class DemandGetService {
 
     @Transactional(readOnly = true)
     public List<DemandResponseDTO> getAllDemands() {
-        return demandRepository.findAll().stream()
-                .map(demandMapper::mapToResponseDTO)
-                .toList();
+        if (SecurityContextHolder.hasRole("PLATFORM_ADMIN")) {
+            return demandRepository.findAll().stream()
+                    .map(demandMapper::mapToResponseDTO)
+                    .toList();
+        }
+
+        UUID schoolId = SecurityContextHolder.getAuthenticatedSchoolId();
+        if (schoolId != null) {
+            return demandRepository.findBySchoolId(schoolId).stream()
+                    .map(demandMapper::mapToResponseDTO)
+                    .toList();
+        }
+
+        return List.of();
     }
 
     @Transactional(readOnly = true)
     public List<DemandResponseDTO> getDemandsByStatus(DemandStatus status) {
-        return demandRepository.findByStatus(status).stream()
-                .map(demandMapper::mapToResponseDTO)
-                .toList();
+        if (SecurityContextHolder.hasRole("PLATFORM_ADMIN") || status == DemandStatus.WAITING) {
+            return demandRepository.findByStatus(status).stream()
+                    .map(demandMapper::mapToResponseDTO)
+                    .toList();
+        }
+
+        UUID schoolId = SecurityContextHolder.getAuthenticatedSchoolId();
+        if (schoolId != null) {
+            return demandRepository.findByStatusAndSchoolId(status, schoolId).stream()
+                    .map(demandMapper::mapToResponseDTO)
+                    .toList();
+        }
+
+        return List.of();
     }
 
     @Transactional(readOnly = true)
     public List<DemandStudentDTO> getDemandsByStatusAndStudentId(DemandStatus status, UUID studentId) {
+        tenancyValidator.validateUserAccess(studentId);
         return demandRepository.findByStatusAndStudentId(status, studentId).stream()
-                .map(demandMapper::mapToStudentDTO)
+                .map(demand -> {
+                    boolean hasStudentFeedback = classEvaluationRepository.existsByDemand_IdAndStudent_Id(demand.getId(), studentId);
+                    boolean hasDirectorFeedback = studentEvaluationRepository.existsByDemand_IdAndStudent_IdAndEvaluatedBy(
+                            demand.getId(), studentId, demand.getDirector().getId());
+                    
+                    return demandMapper.mapToStudentDTO(demand, null, null, hasStudentFeedback, hasDirectorFeedback);
+                })
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<DemandStudentDTO> getDemandsByStatusAndDirectorId(DemandStatus status, UUID directorId) {
+        tenancyValidator.validateUserAccess(directorId);
+        return demandRepository.findByStatusAndDirectorId(status, directorId).stream()
+                .map(demand -> {
+                    UUID studentId = demand.getStudent() != null ? demand.getStudent().getId() : null;
+                    boolean hasStudentFeedback = studentId != null && classEvaluationRepository.existsByDemand_IdAndStudent_Id(demand.getId(), studentId);
+                    boolean hasDirectorFeedback = studentId != null && studentEvaluationRepository.existsByDemand_IdAndStudent_IdAndEvaluatedBy(
+                            demand.getId(), studentId, directorId);
+
+                    return demandMapper.mapToStudentDTO(demand, null, null, hasStudentFeedback, hasDirectorFeedback);
+                })
                 .toList();
     }
 }

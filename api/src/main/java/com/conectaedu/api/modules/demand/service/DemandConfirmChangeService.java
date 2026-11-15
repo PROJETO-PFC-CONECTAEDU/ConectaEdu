@@ -7,8 +7,12 @@ import com.conectaedu.api.modules.demand.repository.DemandRepository;
 import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.audit.support.AuditDiff;
 import com.conectaedu.api.shared.enums.AuditEntityType;
+import com.conectaedu.api.shared.exceptions.DemandNotFoundException;
+import com.conectaedu.api.shared.exceptions.NoPendingChangesException;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,29 +26,25 @@ public class DemandConfirmChangeService {
     private final DemandRepository demandRepository;
     private final DemandMapper demandMapper;
     private final AuditService auditService;
+    private final TenancyValidator tenancyValidator;
 
     @Transactional
     public DemandResponseDTO confirmChange(UUID demandId) {
-        UUID studentId = SecurityContextHolder.getAuthenticatedUserId();
-        
         Demand demand = demandRepository.findById(demandId)
-                .orElseThrow(() -> new RuntimeException("Demanda não encontrada"));
+                .orElseThrow(() -> new DemandNotFoundException("Demanda não encontrada"));
 
+        tenancyValidator.validateDemandAccess(demand);
+
+        UUID studentId = SecurityContextHolder.getAuthenticatedUserId();
         if (demand.getStudent() == null || !demand.getStudent().getId().equals(studentId)) {
-            throw new RuntimeException("Apenas o estudante vinculado pode confirmar alterações");
+            throw new AccessDeniedException("Apenas o estudante vinculado pode confirmar alterações");
         }
 
-        if (demand.getPendingClassDate() == null && demand.getPendingRoom() == null) {
-            throw new RuntimeException("Não há alterações pendentes para confirmar");
+        if (demand.getPendingRoom() == null) {
+            throw new NoPendingChangesException("Não há alterações pendentes para confirmar");
         }
 
         AuditDiff diff = AuditDiff.create();
-
-        if (demand.getPendingClassDate() != null) {
-            diff.field("dataAula", demand.getClassDate(), demand.getPendingClassDate());
-            demand.setClassDate(demand.getPendingClassDate());
-            demand.setPendingClassDate(null);
-        }
 
         if (demand.getPendingRoom() != null) {
             diff.field("sala", demand.getRoom(), demand.getPendingRoom());

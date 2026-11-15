@@ -9,6 +9,9 @@ import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.audit.support.AuditDiff;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.DemandStatus;
+import com.conectaedu.api.shared.exceptions.DemandNotFoundException;
+import com.conectaedu.api.shared.exceptions.StudentNotLinkedException;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,14 +26,17 @@ public class DemandUnlinkStudentService {
     private final DemandRepository demandRepository;
     private final DemandMapper demandMapper;
     private final AuditService auditService;
+    private final TenancyValidator tenancyValidator;
 
     @Transactional
     public DemandResponseDTO unlink(UUID demandId) {
         Demand demand = demandRepository.findById(demandId)
-                .orElseThrow(() -> new RuntimeException("Demanda não encontrada"));
+                .orElseThrow(() -> new DemandNotFoundException("Demanda não encontrada"));
+
+        tenancyValidator.validateDemandAccess(demand);
 
         if (demand.getStudent() == null) {
-            throw new RuntimeException("Não há estudante vinculado a esta demanda");
+            throw new StudentNotLinkedException("Não há estudante vinculado a esta demanda");
         }
 
         var beforeStatus = demand.getStatus();

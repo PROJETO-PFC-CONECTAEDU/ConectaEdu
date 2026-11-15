@@ -9,6 +9,7 @@ import com.conectaedu.api.shared.audit.support.AuditDiff;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.exceptions.CIEAlreadyExistsException;
 import com.conectaedu.api.shared.exceptions.SchoolNotFoundException;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,11 +19,12 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class SchoolUpdateService {
-
     private final SchoolRepository schoolRepository;
     private final AuditService auditService;
+    private final TenancyValidator tenancyValidator;
 
     public SchoolResponseDTO updateSchool(UUID id, SchoolUpdateRequestDTO request) {
+        tenancyValidator.validateSchool(id);
         School school =  schoolRepository.findById(id)
                 .orElseThrow(() -> new SchoolNotFoundException("Escola não encontrada!"));
 

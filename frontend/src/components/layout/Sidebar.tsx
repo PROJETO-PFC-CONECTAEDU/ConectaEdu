@@ -7,7 +7,11 @@ import {
   School,
   FileText,
   Building2,
-  ClipboardList
+  Search,
+  Calendar,
+  Clock,
+  Star,
+  BarChart3
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -18,13 +22,18 @@ function cn(...inputs: ClassValue[]) {
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', roles: ['PLATFORM_ADMIN', 'UNIVERSITY_ADMIN', 'STUDENT', 'SCHOOL_DIRECTOR'] },
-  { icon: MapIcon, label: 'Mapa', path: '/mapa', roles: ['PLATFORM_ADMIN', 'UNIVERSITY_ADMIN', 'STUDENT', 'SCHOOL_DIRECTOR'] },
-  { icon: Users, label: 'Estudantes', path: '/estudantes', roles: ['PLATFORM_ADMIN'] },
+  { icon: Search, label: 'Oportunidades', path: '/demandas', roles: ['STUDENT'] },
+  { icon: Search, label: 'Demandas', path: '/demandas', roles: ['SCHOOL_DIRECTOR'] },
+  { icon: MapIcon, label: 'Mapa', path: '/mapa', roles: ['PLATFORM_ADMIN', 'STUDENT'] },
+  { icon: Calendar, label: 'Agenda', path: '/agenda', roles: ['STUDENT', 'SCHOOL_DIRECTOR'] },
+  { icon: Clock, label: 'Horas', path: '/horas', roles: ['STUDENT'] },
+  { icon: Star, label: 'Avaliações', path: '/avaliacoes', roles: ['STUDENT', 'SCHOOL_DIRECTOR'] },
+  { icon: BarChart3, label: 'Relatórios', path: '/relatorios', roles: ['STUDENT'] },
+  { icon: Users, label: 'Estudantes', path: '/estudantes', roles: ['PLATFORM_ADMIN', 'UNIVERSITY_ADMIN'] },
   { icon: School, label: 'Escolas', path: '/oportunidades', roles: ['PLATFORM_ADMIN'] },
   { icon: Building2, label: 'Universidades', path: '/universidades', roles: ['PLATFORM_ADMIN'] },
+  { icon: Users, label: 'Usuários', path: '/usuarios', roles: ['PLATFORM_ADMIN'] },
   { icon: FileText, label: 'Documentação', path: '/documentos-legais', roles: ['PLATFORM_ADMIN'] },
-  { icon: ClipboardList, label: 'Oportunidades', path: '/demandas', roles: ['STUDENT'] },
-  { icon: ClipboardList, label: 'Demandas', path: '/demandas', roles: ['SCHOOL_DIRECTOR'] },
 ];
 
 export function Sidebar() {
@@ -35,30 +44,43 @@ export function Sidebar() {
   );
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-brand-dark flex flex-col text-white z-30">
-      <div className="p-8">
-        <h1 className="text-2xl font-display font-bold text-white tracking-tight">
+    <aside className="fixed left-0 top-0 h-screen w-[260px] bg-brand-dark flex flex-col text-white z-30 hidden md:flex">
+      <div className="p-[32px_24px_40px_24px] flex items-center gap-2">
+        <h1 className="text-[20px] text-white font-display font-bold tracking-tight">
           Conecta<span className="text-brand-accent">Edu</span>
         </h1>
       </div>
 
-      <nav className="flex-1 px-4 space-y-2">
+      <nav className="flex-1 px-4 space-y-[6px]">
         {filteredItems.map((item) => (
           <NavLink
-            key={item.path}
+            key={item.label + item.path}
             to={item.path}
             className={({ isActive }) => cn(
-              'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors',
+              'relative flex items-center h-[42px] rounded-lg transition-colors',
               isActive 
-                ? 'bg-brand-primary text-white' 
-                : 'text-text-muted hover:bg-white/5 hover:text-white'
+                ? 'bg-brand-primary text-white font-semibold' 
+                : 'text-white/70 hover:bg-white/5 hover:text-white font-medium'
             )}
           >
-            <item.icon size={20} />
-            {item.label}
+            <item.icon size={20} className="absolute left-4" />
+            <span className="absolute left-[46px] text-[14px] font-sans">{item.label}</span>
           </NavLink>
         ))}
       </nav>
+
+      <div className="p-6 border-t border-white/10 mt-auto">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-brand-primary/20 flex items-center justify-center text-brand-primary font-bold">
+            {user?.name?.charAt(0)}
+          </div>
+          <div className="flex flex-col overflow-hidden">
+            <span className="text-[14px] font-sans font-semibold text-white truncate">
+                {user?.name}
+            </span>
+          </div>
+        </div>
+      </div>
     </aside>
   );
 }
