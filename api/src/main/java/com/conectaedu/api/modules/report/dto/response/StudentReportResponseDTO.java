@@ -29,5 +29,4 @@ public record StudentReportResponseDTO(
 
         //avaliações no período.
         Double averageReceived,
-        List<StudentEvaluationResponseDTO> evaluations,
-        List<ClassProgressPointDTO> progress) {}
+        List<StudentEvaluationResponseDTO> evaluations) {}

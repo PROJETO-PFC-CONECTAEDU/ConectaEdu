@@ -1,7 +1,6 @@
 import { Header } from '../components/layout/Header';
 import { Card } from '../components/ui/Card';
 import { MetricCard } from '../components/ui/MetricCard';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Filter, Calendar, BookOpen, CheckCircle, XCircle, Star } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
@@ -10,13 +9,6 @@ import api from '../lib/api';
 import { useState, useMemo } from 'react';
 import { subMonths, startOfYear, format } from 'date-fns';
 import { useParams } from 'react-router-dom';
-
-interface ClassProgressPoint {
-  lessonId: string;
-  lessonDate: string;
-  performance: number;
-  potential: number;
-}
 
 interface StudentEvaluation {
   id: string;
@@ -54,7 +46,6 @@ interface StudentReport {
   notCompletedLessons: number;
   averageReceived: number | null;
   evaluations: StudentEvaluation[];
-  progress: ClassProgressPoint[];
 }
 
 interface School {
@@ -117,15 +108,6 @@ export function Reports() {
     },
     enabled: !!studentId,
   });
-
-  const chartData = useMemo(() => {
-    if (!report?.progress) return [];
-    return report.progress.map(point => ({
-      date: format(new Date(point.lessonDate), 'dd/MM'),
-      performance: point.performance,
-      potential: point.potential,
-    }));
-  }, [report?.progress]);
 
   if (isLoading) {
     return (
@@ -211,28 +193,6 @@ export function Reports() {
             value={report?.canceledLessons?.toString() || '0'}
             note="No período selecionado"
           />
-        </div>
-
-        {/* Gráficos */}
-        <div className="grid grid-cols-1 gap-8">
-          <Card className="p-8">
-            <h3 className="text-lg font-bold text-text-heading mb-8">Evolução da Turma (Nine Box)</h3>
-            <div className="h-[350px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
-                  <YAxis domain={[0, 3]} ticks={[0, 1, 2, 3]} axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
-                  <Tooltip 
-                    contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                  />
-                  <Legend />
-                  <Line type="monotone" dataKey="performance" name="Desempenho" stroke="#2563eb" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                  <Line type="monotone" dataKey="potential" name="Potencial" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
         </div>
 
         {/* Tabela de Detalhamento */}

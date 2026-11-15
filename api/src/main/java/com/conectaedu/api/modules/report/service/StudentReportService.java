@@ -104,8 +104,7 @@ public class StudentReportService {
                 canceled,
                 notCompleted,
                 averageReceived,
-                evaluations,
-                progressOf(lessons));
+                evaluations);
     }
 
     //a série sozinha, para o gráfico trocar de período sem recarregar o relatório todo.

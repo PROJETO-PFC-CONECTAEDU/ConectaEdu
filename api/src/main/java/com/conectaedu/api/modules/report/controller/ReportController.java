@@ -32,7 +32,7 @@ public class ReportController {
     }
 
     @GetMapping("/students/{studentId}/progress")
-    @PreAuthorize("hasAnyRole('STUDENT', 'UNIVERSITY_ADMIN', 'SCHOOL_DIRECTOR', 'PLATFORM_ADMIN')")
+    @PreAuthorize("hasAnyRole('SCHOOL_DIRECTOR', 'PLATFORM_ADMIN')")
     public ResponseEntity<List<ClassProgressPointDTO>> classProgress(
             @PathVariable UUID studentId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
