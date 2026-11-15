@@ -66,7 +66,7 @@ export function Login() {
       navigate('/dashboard');
     },
     onError: () => {
-      toast.error('E-mail ou senha incorretos.');
+      // O erro já é tratado globalmente no interceptor do axios
     },
   });
 

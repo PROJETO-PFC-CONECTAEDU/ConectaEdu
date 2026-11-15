@@ -7,6 +7,7 @@ import com.conectaedu.api.modules.demand.repository.DemandRepository;
 import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.student.repository.StudentRepository;
 import com.conectaedu.api.shared.enums.DemandStatus;
+import com.conectaedu.api.shared.exceptions.UserNotFoundException;
 import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,7 @@ public class DemandRecommendationService {
     @Transactional(readOnly = true)
     public List<DemandStudentDTO> getRecommendedDemands(UUID studentId) {
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Estudante não encontrado"));
+                .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado"));
 
         tenancyValidator.validateStudentAccess(student);
 

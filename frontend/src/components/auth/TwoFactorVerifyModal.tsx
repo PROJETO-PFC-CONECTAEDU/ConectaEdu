@@ -29,7 +29,7 @@ export function TwoFactorVerifyModal({ isOpen, onClose, email, onSuccess }: TwoF
       toast.success('Autenticação realizada com sucesso!');
       onClose();
     } catch (error) {
-      toast.error('Código inválido ou expirado.');
+      // Erro tratado globalmente
     } finally {
       setLoading(false);
     }

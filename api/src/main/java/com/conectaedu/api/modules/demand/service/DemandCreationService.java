@@ -10,6 +10,7 @@ import com.conectaedu.api.modules.user.school_director.repository.SchoolDirector
 import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.DemandStatus;
+import com.conectaedu.api.shared.exceptions.UserNotFoundException;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
 import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,7 @@ public class DemandCreationService {
     public DemandResponseDTO createDemand(DemandCreationRequestDTO request) {
         UUID directorId = SecurityContextHolder.getAuthenticatedUserId();
         SchoolDirector director = schoolDirectorRepository.findById(directorId)
-                .orElseThrow(() -> new RuntimeException("Diretor não encontrado"));
+                .orElseThrow(() -> new UserNotFoundException("Diretor não encontrado"));
 
         if (director.getSchool() != null) {
             tenancyValidator.validateSchool(director.getSchool().getId());

@@ -29,7 +29,7 @@ export function TwoFactorSetupModal({ isOpen, onClose, onSuccess }: TwoFactorSet
       const response = await api.post('/auth/2fa/setup');
       setQrCodeUrl(response.data.qrCodeUrl);
     } catch (error) {
-      toast.error('Erro ao iniciar configuração do 2FA.');
+      // Erro tratado globalmente
       onClose();
     }
   };
@@ -43,7 +43,7 @@ export function TwoFactorSetupModal({ isOpen, onClose, onSuccess }: TwoFactorSet
       onSuccess();
       onClose();
     } catch (error) {
-      toast.error('Código inválido. Tente novamente.');
+      // Erro tratado globalmente
     } finally {
       setLoading(false);
     }

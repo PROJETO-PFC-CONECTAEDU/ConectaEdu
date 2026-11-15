@@ -91,12 +91,8 @@ export function Schedule() {
       toast.success('Aula confirmada com sucesso!');
       setConfirmingId(null);
     },
-    onError: (error: unknown) => {
-      if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Erro ao confirmar aula');
-      } else {
-        toast.error('Erro ao confirmar aula');
-      }
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 
@@ -109,12 +105,8 @@ export function Schedule() {
       toast.success('Aula registrada com sucesso!');
       setRegisteringLesson(null);
     },
-    onError: (error: unknown) => {
-      if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Erro ao registrar aula');
-      } else {
-        toast.error('Erro ao registrar aula');
-      }
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 
@@ -127,12 +119,8 @@ export function Schedule() {
       toast.success('Aula cancelada com sucesso!');
       setCancellingLesson(null);
     },
-    onError: (error: unknown) => {
-      if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Erro ao cancelar aula');
-      } else {
-        toast.error('Erro ao cancelar aula');
-      }
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 

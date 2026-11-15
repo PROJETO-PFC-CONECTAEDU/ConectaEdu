@@ -49,8 +49,7 @@ export function ConfirmEmail() {
       toast.success('E-mail confirmado com sucesso! Sua conta será ativada por um administrador.');
       navigate('/login');
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Código inválido ou expirado.';
-      toast.error(message);
+      // Erro tratado globalmente
     } finally {
       setIsSubmitting(false);
     }

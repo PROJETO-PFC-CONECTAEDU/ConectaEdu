@@ -71,7 +71,7 @@ export function Universities() {
       reset();
     },
     onError: () => {
-      toast.error('Erro ao criar universidade. Verifique se o CNPJ tem 14 dígitos.');
+      // Erro tratado globalmente
     }
   });
 
@@ -88,7 +88,7 @@ export function Universities() {
       reset();
     },
     onError: () => {
-      toast.error('Erro ao atualizar universidade.');
+      // Erro tratado globalmente
     }
   });
 

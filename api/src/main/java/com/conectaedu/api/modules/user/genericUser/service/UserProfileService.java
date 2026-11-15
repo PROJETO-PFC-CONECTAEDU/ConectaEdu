@@ -8,6 +8,7 @@ import com.conectaedu.api.modules.user.genericUser.repository.UserRepository;
 import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.audit.support.AuditDiff;
 import com.conectaedu.api.shared.enums.AuditEntityType;
+import com.conectaedu.api.shared.exceptions.InvalidPasswordException;
 import com.conectaedu.api.shared.exceptions.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -52,7 +53,7 @@ public class UserProfileService {
                 .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado!"));
 
         if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
-            throw new RuntimeException("Senha atual incorreta!");
+            throw new InvalidPasswordException("Senha atual incorreta!");
         }
 
         user.setPassword(passwordEncoder.encode(request.newPassword()));

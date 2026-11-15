@@ -7,6 +7,8 @@ import com.conectaedu.api.modules.demand.repository.DemandRepository;
 import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.audit.support.AuditDiff;
 import com.conectaedu.api.shared.enums.AuditEntityType;
+import com.conectaedu.api.shared.exceptions.DemandNotFoundException;
+import com.conectaedu.api.shared.exceptions.NoPendingChangesException;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
 import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +31,7 @@ public class DemandConfirmChangeService {
     @Transactional
     public DemandResponseDTO confirmChange(UUID demandId) {
         Demand demand = demandRepository.findById(demandId)
-                .orElseThrow(() -> new RuntimeException("Demanda não encontrada"));
+                .orElseThrow(() -> new DemandNotFoundException("Demanda não encontrada"));
 
         tenancyValidator.validateDemandAccess(demand);
 
@@ -39,7 +41,7 @@ public class DemandConfirmChangeService {
         }
 
         if (demand.getPendingRoom() == null) {
-            throw new RuntimeException("Não há alterações pendentes para confirmar");
+            throw new NoPendingChangesException("Não há alterações pendentes para confirmar");
         }
 
         AuditDiff diff = AuditDiff.create();

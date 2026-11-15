@@ -61,7 +61,7 @@ export function PlatformUsers() {
       setActivatingId(null);
     },
     onError: () => {
-      toast.error('Erro ao ativar usuário.');
+      // Erro tratado globalmente
     }
   });
 
@@ -75,7 +75,7 @@ export function PlatformUsers() {
       setDeactivatingId(null);
     },
     onError: () => {
-      toast.error('Erro ao desativar usuário.');
+      // Erro tratado globalmente
     }
   });
 
@@ -89,7 +89,7 @@ export function PlatformUsers() {
       setDeletingId(null);
     },
     onError: () => {
-      toast.error('Erro ao remover usuário.');
+      // Erro tratado globalmente
     }
   });
 
@@ -103,9 +103,8 @@ export function PlatformUsers() {
       setEditingUser(null);
       reset();
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || 'Erro ao atualizar usuário.';
-      toast.error(message);
+    onError: () => {
+      // Erro tratado globalmente
     }
   });
 
