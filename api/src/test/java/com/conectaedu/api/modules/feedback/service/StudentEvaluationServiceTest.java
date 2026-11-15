@@ -8,6 +8,7 @@ import com.conectaedu.api.modules.feedback.dto.request.StudentEvaluationRequestD
 import com.conectaedu.api.modules.feedback.dto.response.StudentEvaluationResponseDTO;
 import com.conectaedu.api.modules.feedback.mapper.FeedbackMapper;
 import com.conectaedu.api.modules.feedback.repository.StudentEvaluationRepository;
+import com.conectaedu.api.modules.lesson.repository.LessonRepository;
 import com.conectaedu.api.modules.school.domain.School;
 import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.shared.audit.service.AuditService;
@@ -16,6 +17,7 @@ import com.conectaedu.api.shared.enums.DemandStatus;
 import com.conectaedu.api.shared.exceptions.DemandNotFoundException;
 import com.conectaedu.api.shared.exceptions.EvaluationAlreadySubmittedException;
 import com.conectaedu.api.shared.exceptions.InvalidDemandStatusException;
+import com.conectaedu.api.shared.exceptions.NoCompletedLessonException;
 import com.conectaedu.api.shared.security.domain.AuthenticatedUser;
 import com.conectaedu.api.shared.security.util.TenancyValidator;
 import org.junit.jupiter.api.AfterEach;
@@ -40,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -55,6 +58,9 @@ class StudentEvaluationServiceTest {
 
     @Mock
     private StudentEvaluationRepository studentEvaluationRepository;
+
+    @Mock
+    private LessonRepository lessonRepository;
 
     @Mock
     private AuditService auditService;
@@ -113,6 +119,12 @@ class StudentEvaluationServiceTest {
                 necessidadeId, estudanteId, 10, 8, 9, 7, 6, "Ótimo trabalho com a turma.");
     }
 
+    //so pode ser avaliado quem concluiu ao menos uma aula na necessidade.
+    private void estudanteConcluiuAula(UUID necessidadeId, UUID estudanteId) {
+        when(lessonRepository.existsByDemand_IdAndStudent_IdAndStatusIn(
+                eq(necessidadeId), eq(estudanteId), any())).thenReturn(true);
+    }
+
     //caminho feliz.
     @Test
     void deveRegistrarAvaliacaoDoEstudanteQuandoNecessidadeEstaConcluida() {
@@ -121,6 +133,7 @@ class StudentEvaluationServiceTest {
         UUID idGerado = UUID.randomUUID();
         Demand necessidade = necessidade(necessidadeId, DemandStatus.FINISHED, estudante(estudanteId));
         when(demandRepository.findById(necessidadeId)).thenReturn(Optional.of(necessidade));
+        estudanteConcluiuAula(necessidadeId, estudanteId);
         when(studentEvaluationRepository.existsByDemand_IdAndStudent_IdAndEvaluatedBy(
                 necessidadeId, estudanteId, diretorId)).thenReturn(false);
         when(studentEvaluationRepository.save(any(StudentEvaluation.class))).thenAnswer(chamada -> {
@@ -167,6 +180,7 @@ class StudentEvaluationServiceTest {
         necessidade.getStudentHistory().add(vinculoAntigo);
 
         when(demandRepository.findById(necessidadeId)).thenReturn(Optional.of(necessidade));
+        estudanteConcluiuAula(necessidadeId, estudanteAntigoId);
         when(studentEvaluationRepository.existsByDemand_IdAndStudent_IdAndEvaluatedBy(
                 necessidadeId, estudanteAntigoId, diretorId)).thenReturn(false);
         ArgumentCaptor<StudentEvaluation> capturada = ArgumentCaptor.forClass(StudentEvaluation.class);
@@ -209,13 +223,30 @@ class StudentEvaluationServiceTest {
     }
 
     @Test
+    void deveLancarExcecaoQuandoEstudanteNaoConcluiuNenhumaAulaNaNecessidade() {
+        UUID necessidadeId = UUID.randomUUID();
+        UUID estudanteId = UUID.randomUUID();
+        when(demandRepository.findById(necessidadeId)).thenReturn(
+                Optional.of(necessidade(necessidadeId, DemandStatus.FINISHED, estudante(estudanteId))));
+
+        NoCompletedLessonException erro = assertThrows(NoCompletedLessonException.class,
+                () -> studentEvaluationService.evaluate(request(necessidadeId, estudanteId)));
+
+        assertEquals("Este estudante não concluiu nenhuma aula nesta Necessidade.", erro.getMessage());
+        verify(studentEvaluationRepository, never()).save(any(StudentEvaluation.class));
+        verify(auditService, never()).logCreate(any(), any(), any());
+    }
+
+    @Test
     void deveLancarExcecaoQuandoEstudanteNaoAtendeuANecessidade() {
         UUID necessidadeId = UUID.randomUUID();
+        UUID estudanteDeFora = UUID.randomUUID();
         when(demandRepository.findById(necessidadeId)).thenReturn(
                 Optional.of(necessidade(necessidadeId, DemandStatus.FINISHED, estudante(UUID.randomUUID()))));
+        estudanteConcluiuAula(necessidadeId, estudanteDeFora);
 
         IllegalArgumentException erro = assertThrows(IllegalArgumentException.class,
-                () -> studentEvaluationService.evaluate(request(necessidadeId, UUID.randomUUID())));
+                () -> studentEvaluationService.evaluate(request(necessidadeId, estudanteDeFora)));
 
         assertEquals("O estudante informado não atendeu esta Necessidade.", erro.getMessage());
         verify(studentEvaluationRepository, never()).save(any(StudentEvaluation.class));
@@ -228,6 +259,7 @@ class StudentEvaluationServiceTest {
         UUID estudanteId = UUID.randomUUID();
         when(demandRepository.findById(necessidadeId)).thenReturn(
                 Optional.of(necessidade(necessidadeId, DemandStatus.FINISHED, estudante(estudanteId))));
+        estudanteConcluiuAula(necessidadeId, estudanteId);
         when(studentEvaluationRepository.existsByDemand_IdAndStudent_IdAndEvaluatedBy(
                 necessidadeId, estudanteId, diretorId)).thenReturn(true);
 

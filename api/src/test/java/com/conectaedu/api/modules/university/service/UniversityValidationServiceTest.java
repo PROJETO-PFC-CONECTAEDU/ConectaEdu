@@ -7,6 +7,7 @@ import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.enums.UniversityStatus;
 import com.conectaedu.api.shared.exceptions.InvalidUniversityStatusException;
 import com.conectaedu.api.shared.exceptions.UniversityNotFoundException;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -42,6 +43,9 @@ class UniversityValidationServiceTest {
 
     @Mock
     private AuditService auditService;
+
+    @Mock
+    private TenancyValidator tenancyValidator;
 
     @InjectMocks
     private UniversityValidationService universityValidationService;

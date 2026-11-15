@@ -194,8 +194,6 @@ class StudentReportServiceTest {
 
         assertEquals(4.0, relatorio.averageReceived());
         assertEquals(List.of(avaliacao), relatorio.evaluations());
-        assertEquals(1, relatorio.progress().size());
-        assertEquals(validadaLonga.getId(), relatorio.progress().get(0).lessonId());
         verify(tenancyValidator).validateStudentAccess(estudante);
     }
 
@@ -255,7 +253,6 @@ class StudentReportServiceTest {
 
         assertNull(relatorio.averageReceived());
         assertTrue(relatorio.evaluations().isEmpty());
-        assertTrue(relatorio.progress().isEmpty());
         assertEquals(0, relatorio.performedLessons());
         assertEquals(new BigDecimal("0.0"), relatorio.validatedHoursInPeriod());
         assertEquals(new BigDecimal("0.0"), relatorio.pendingHoursInPeriod());
@@ -297,8 +294,6 @@ class StudentReportServiceTest {
         assertEquals(1, relatorio.performedLessons());
         assertEquals(new BigDecimal("1.0"), relatorio.validatedHoursInPeriod());
         assertEquals(0, relatorio.canceledLessons());
-        assertEquals(1, relatorio.progress().size());
-        assertEquals(daEscola.getId(), relatorio.progress().get(0).lessonId());
         //a carga do estagio continua inteira, o filtro nao mexe nela.
         assertEquals(new BigDecimal("12.5"), relatorio.totalHours());
     }

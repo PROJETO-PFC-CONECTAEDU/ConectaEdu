@@ -7,6 +7,7 @@ import com.conectaedu.api.modules.consent.repository.LegalDocumentRepository;
 import com.conectaedu.api.shared.enums.ConsentAction;
 import com.conectaedu.api.shared.enums.LegalDocumentStatus;
 import com.conectaedu.api.shared.enums.LegalDocumentType;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,6 +33,9 @@ class ConsentVerificationServiceTest {
 
     @Mock
     private ConsentRecordRepository consentRecordRepository;
+
+    @Mock
+    private TenancyValidator tenancyValidator;
 
     @InjectMocks
     private ConsentVerificationService consentVerificationService;
