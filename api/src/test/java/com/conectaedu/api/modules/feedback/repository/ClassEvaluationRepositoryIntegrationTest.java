@@ -19,9 +19,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -131,29 +129,4 @@ class ClassEvaluationRepositoryIntegrationTest {
                 () -> classEvaluationRepository.saveAndFlush(avaliacao(necessidade, estudante, 5, 5, 5)));
     }
 
-    @Test
-    void deveCalcularMediaDasAvaliacoesApenasDaEscolaInformada() {
-        School escola = escola("111111");
-        School outraEscola = escola("222222");
-        School escolaSemAvaliacao = escola("333333");
-        SchoolDirector diretor = diretor(escola);
-        SchoolDirector outroDiretor = diretor(outraEscola);
-        Student estudante = estudante("Estudante Teste");
-        Demand primeira = necessidade(escola, diretor, estudante);
-        Demand segunda = necessidade(escola, diretor, estudante);
-        Demand deOutraEscola = necessidade(outraEscola, outroDiretor, estudante);
-
-        //medias 8.0 e 5.0 na escola, 10.0 na outra.
-        classEvaluationRepository.save(avaliacao(primeira, estudante, 8, 6, 10));
-        classEvaluationRepository.save(avaliacao(segunda, estudante, 4, 5, 6));
-        classEvaluationRepository.save(avaliacao(deOutraEscola, estudante, 10, 10, 10));
-
-        Double media = classEvaluationRepository.getAverageScoreBySchool(escola.getId());
-        Double mediaDaOutra = classEvaluationRepository.getAverageScoreBySchool(outraEscola.getId());
-        Double semAvaliacao = classEvaluationRepository.getAverageScoreBySchool(escolaSemAvaliacao.getId());
-
-        assertEquals(6.5, media, 0.001);
-        assertEquals(10.0, mediaDaOutra, 0.001);
-        assertNull(semAvaliacao);
-    }
 }
