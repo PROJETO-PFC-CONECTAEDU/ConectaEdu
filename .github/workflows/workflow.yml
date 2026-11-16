@@ -73,9 +73,8 @@ jobs:
             JWT_API_SECRET=${{ secrets.JWT_SECRET }}
             EOF
 
-            docker compose down --remove-orphans --volumes
             docker compose pull
-            docker compose up -d
+            docker compose up -d --remove-orphans
             docker image prune -af
           
             
