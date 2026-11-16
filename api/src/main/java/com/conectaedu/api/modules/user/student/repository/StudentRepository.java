@@ -12,9 +12,19 @@ import java.util.UUID;
 
 @Repository
 public interface StudentRepository extends JpaRepository<Student, UUID> {
-    long countByStatus(StudentStatus status);
-    long countByUniversityId(UUID universityId);
     List<Student> findByUniversityId(UUID universityId);
+
+    @Query("SELECT COUNT(DISTINCT s) FROM Student s " +
+           "LEFT JOIN Demand d ON d.student.id = s.id " +
+           "WHERE s.status = :status " +
+           "AND (:universityId IS NULL OR s.university.id = :universityId) " +
+           "AND (:schoolId IS NULL OR d.school.id = :schoolId) " +
+           "AND (:demandId IS NULL OR d.id = :demandId)")
+    long countByStatusAndFilters(
+            @Param("status") StudentStatus status,
+            @Param("universityId") UUID universityId,
+            @Param("schoolId") UUID schoolId,
+            @Param("demandId") UUID demandId);
 
     @Query("SELECT DISTINCT s FROM Student s WHERE s.id IN (" +
            "SELECT d.student.id FROM Demand d WHERE d.school.id = :schoolId AND d.student IS NOT NULL) OR s.id IN (" +

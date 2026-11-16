@@ -20,14 +20,21 @@ public interface DemandRepository extends JpaRepository<Demand, UUID> {
 
     List<Demand> findByStatusAndDirectorId(DemandStatus status, UUID directorId);
 
-    long countByStatus(DemandStatus status);
-
-    long countBySchoolId(UUID schoolId);
-
-    long countBySchoolIdAndStatus(UUID schoolId, DemandStatus status);
 
     long countByStudentIdAndStatus(UUID studentId, DemandStatus status);
     
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(d) FROM Demand d WHERE d.status = :status " +
+            "AND (:schoolId IS NULL OR d.school.id = :schoolId) " +
+            "AND (:demandId IS NULL OR d.id = :demandId)")
+    long countByStatusAndFilters(@org.springframework.data.repository.query.Param("status") DemandStatus status,
+                                @org.springframework.data.repository.query.Param("schoolId") UUID schoolId,
+                                @org.springframework.data.repository.query.Param("demandId") UUID demandId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(d) FROM Demand d WHERE (:schoolId IS NULL OR d.school.id = :schoolId) " +
+            "AND (:demandId IS NULL OR d.id = :demandId)")
+    long countByFilters(@org.springframework.data.repository.query.Param("schoolId") UUID schoolId,
+                       @org.springframework.data.repository.query.Param("demandId") UUID demandId);
+
     @org.springframework.data.jpa.repository.Query("SELECT COUNT(d) FROM Demand d JOIN d.candidates c WHERE c.id = :studentId")
     long countByCandidateId(UUID studentId);
 
