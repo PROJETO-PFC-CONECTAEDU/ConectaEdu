@@ -10,7 +10,7 @@ import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { Users, Mail, GraduationCap, Trash2, ShieldCheck, XCircle, Plus, MapPin, UserX, Pencil, FileText } from 'lucide-react';
+import { Users, Mail, GraduationCap, Trash2, ShieldCheck, XCircle, Plus, MapPin, UserX, Pencil, FileText, Link as LinkIcon } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { AddressAutocomplete } from '../components/map/AddressAutocomplete';
 import { useAuth } from '../context/AuthContext';
@@ -57,9 +57,12 @@ export function Students() {
   const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [bindingStudent, setBindingStudent] = useState<Student | null>(null);
+  const [selectedUniversityId, setSelectedUniversityId] = useState<string>('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const isUniAdmin = user?.role === 'UNIVERSITY_ADMIN';
+  const isPlatformAdmin = user?.role === 'PLATFORM_ADMIN';
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<StudentFormData>({
     resolver: zodResolver(studentSchema),
@@ -197,6 +200,18 @@ export function Students() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['students'] });
       toast.success('Estudante inativado!');
+    }
+  });
+
+  const bindMutation = useMutation({
+    mutationFn: async ({ userId, institutionId }: { userId: string; institutionId: string }) => {
+      await api.patch(`/users/${userId}/bind-institution`, { institutionId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+      toast.success('Universidade vinculada com sucesso!');
+      setBindingStudent(null);
+      setSelectedUniversityId('');
     }
   });
 
@@ -361,6 +376,18 @@ export function Students() {
                   >
                     <FileText size={18} />
                   </Link>
+                  {isPlatformAdmin && (
+                    <button 
+                      onClick={() => {
+                        setBindingStudent(student);
+                        setSelectedUniversityId(student.universityId || '');
+                      }}
+                      className="text-text-muted hover:text-brand-primary p-1"
+                      title="Vincular Universidade"
+                    >
+                      <LinkIcon size={18} />
+                    </button>
+                  )}
                   <button 
                     onClick={() => handleEdit(student)}
                     className="text-text-muted hover:text-brand-primary p-1"
@@ -466,6 +493,57 @@ export function Students() {
           description="Tem certeza que deseja remover este estudante? Esta ação não pode ser desfeita."
           isLoading={deleteMutation.isPending}
         />
+
+        <Modal
+          isOpen={!!bindingStudent}
+          onClose={() => setBindingStudent(null)}
+          title="Vincular Universidade"
+        >
+          <div className="space-y-4">
+            <div className="p-4 bg-gray-50 rounded-lg border border-border-default">
+              <p className="text-sm font-semibold text-text-heading">{bindingStudent?.name}</p>
+              <p className="text-xs text-text-muted">{bindingStudent?.email}</p>
+              <p className="text-[10px] font-bold uppercase mt-1 text-brand-primary">
+                Estudante
+              </p>
+            </div>
+
+            <div className="w-full space-y-1.5">
+              <label className="text-sm font-medium text-text-heading">
+                Selecionar Universidade
+              </label>
+              <select
+                value={selectedUniversityId}
+                onChange={(e) => setSelectedUniversityId(e.target.value)}
+                className="flex h-11 w-full rounded-lg border border-border-default bg-white px-3 py-2 text-sm text-text-heading focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+              >
+                <option value="">Selecione uma universidade</option>
+                {universities?.map(uni => (
+                  <option key={uni.id} value={uni.id}>{uni.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => setBindingStudent(null)}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="button" 
+                className="flex-1"
+                disabled={!selectedUniversityId || bindMutation.isPending}
+                onClick={() => bindingStudent && bindMutation.mutate({ userId: bindingStudent.id, institutionId: selectedUniversityId })}
+              >
+                {bindMutation.isPending ? 'Vinculando...' : 'Vincular Agora'}
+              </Button>
+            </div>
+          </div>
+        </Modal>
 
         {students?.length === 0 && (
           <Card className="p-12 text-center">

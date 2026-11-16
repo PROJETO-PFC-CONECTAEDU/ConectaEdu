@@ -28,8 +28,6 @@ public class SchoolCreationService {
 
         school.setName(request.name());
 
-        school.setDirector(request.director());
-
         school.setCie(request.cie());
 
         school.setAddress(request.address());
