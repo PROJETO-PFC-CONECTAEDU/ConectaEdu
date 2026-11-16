@@ -36,6 +36,7 @@ public class RegisterDirectorService {
                 .password(passwordEncoder.encode(data.password()))
                 .userType(UserType.PERSON)
                 .school(null)
+                .schoolCIE(data.schoolCIE().trim())
                 .userRole(UserRole.SCHOOL_DIRECTOR)
                 .createdAt(LocalDateTime.now())
                 .emailConfirmed(false)

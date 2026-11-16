@@ -14,10 +14,18 @@ const registerSchema = z.object({
   email: z.string().email('E-mail inválido'),
   password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
   confirmPassword: z.string().min(6, 'A confirmação de senha deve ter pelo menos 6 caracteres'),
+  universityCNPJ: z.string().optional(),
+  schoolCIE: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
-});
+}).refine((data) => {
+  // A validação real de obrigatoriedade será feita aqui ou deixada para o backend
+  // Mas para melhor UX, podemos validar aqui.
+  // Note: 'role' não está disponível aqui no esquema estático, 
+  // então podemos deixar como opcional no Zod e tratar no handleSubmit ou usar superRefine
+  return true;
+}, {});
 
 type RegisterForm = z.infer<typeof registerSchema>;
 
@@ -57,6 +65,8 @@ export function Register() {
         name: data.name,
         email: data.email,
         password: data.password,
+        ...(role === 'UNIVERSITY_ADMIN' ? { universityCNPJ: data.universityCNPJ } : {}),
+        ...(role === 'SCHOOL_DIRECTOR' ? { schoolCIE: data.schoolCIE } : {}),
       };
 
       await api.post(endpoint, payload);
@@ -140,6 +150,34 @@ export function Register() {
             />
             <Lock className="absolute left-3 top-[38px] h-5 w-5 text-text-muted" />
           </div>
+
+          {role === 'UNIVERSITY_ADMIN' && (
+            <div className="relative">
+              <Input
+                {...register('universityCNPJ')}
+                label="CNPJ da Universidade"
+                placeholder="00.000.000/0000-00"
+                error={errors.universityCNPJ?.message}
+                className="pl-10"
+                required
+              />
+              <Building2 className="absolute left-3 top-[38px] h-5 w-5 text-text-muted" />
+            </div>
+          )}
+
+          {role === 'SCHOOL_DIRECTOR' && (
+            <div className="relative">
+              <Input
+                {...register('schoolCIE')}
+                label="CIE da Escola"
+                placeholder="Código CIE"
+                error={errors.schoolCIE?.message}
+                className="pl-10"
+                required
+              />
+              <SchoolIcon className="absolute left-3 top-[38px] h-5 w-5 text-text-muted" />
+            </div>
+          )}
 
           <Button type="submit" className="w-full mt-6" disabled={isSubmitting}>
             {isSubmitting ? 'Enviando...' : 'Enviar Solicitação'}

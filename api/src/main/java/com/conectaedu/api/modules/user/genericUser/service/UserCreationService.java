@@ -1,6 +1,6 @@
 package com.conectaedu.api.modules.user.genericUser.service;
 
-import com.conectaedu.api.modules.user.genericUser.facade.dto.request.UserCreationRequestDTO;
+import com.conectaedu.api.modules.user.genericUser.dto.request.UserCreationRequestDTO;
 import com.conectaedu.api.modules.user.genericUser.dto.response.UserCreationResponseDTO;
 import com.conectaedu.api.modules.user.genericUser.repository.UserRepository;
 import com.conectaedu.api.shared.audit.service.AuditService;

@@ -1,4 +1,4 @@
-package com.conectaedu.api.modules.user.genericUser.facade.dto.request;
+package com.conectaedu.api.modules.user.genericUser.dto.request;
 
 import com.conectaedu.api.shared.enums.UserType;
 import jakarta.validation.constraints.Email;
@@ -9,6 +9,8 @@ public record UserUpdateRequestDTO(
         @Email(message = "Email inválido")
         String email,
 
-        UserType userType
+        UserType userType,
+        String universityCNPJ,
+        String schoolCIE
 ) {
 }

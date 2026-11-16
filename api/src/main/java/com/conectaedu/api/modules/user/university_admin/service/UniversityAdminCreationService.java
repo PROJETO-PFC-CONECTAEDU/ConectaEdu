@@ -52,6 +52,7 @@ public class UniversityAdminCreationService {
                 .userRole(UserRole.UNIVERSITY_ADMIN)
                 .createdAt(LocalDateTime.now())
                 .university(university)
+                .universityCNPJ(request.universityCNPJ().trim())
                 .build();
 
         universityAdminRepository.save(admin);
@@ -68,6 +69,7 @@ public class UniversityAdminCreationService {
                 admin.getEmail(),
                 admin.getUniversity().getId(),
                 admin.getUniversity().getName(),
+                admin.getUniversityCNPJ(),
                 admin.getCreatedAt(),
                 admin.getUpdatedAt()
         );

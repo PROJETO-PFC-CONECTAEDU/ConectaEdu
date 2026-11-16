@@ -20,6 +20,9 @@ public record UniversityAdminCreationRequestDTO(
         String password,
 
         @NotNull(message = "ID da universidade é obrigatório")
-        UUID universityId
+        UUID universityId,
+
+        @NotBlank(message = "CNPJ da universidade é obrigatório")
+        String universityCNPJ
 ) {
 }

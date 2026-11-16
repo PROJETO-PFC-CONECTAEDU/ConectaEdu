@@ -39,6 +39,7 @@ public class RegisterUniversityAdminService {
                 .userType(UserType.PERSON)
                 .userRole(UserRole.UNIVERSITY_ADMIN)
                 .university(null)
+                .universityCNPJ(data.universityCNPJ().trim())
                 .createdAt(LocalDateTime.now())
                 .emailConfirmed(false)
                 .active(false)

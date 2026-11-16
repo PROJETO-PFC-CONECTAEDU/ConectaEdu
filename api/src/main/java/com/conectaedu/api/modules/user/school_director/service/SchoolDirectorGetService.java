@@ -42,6 +42,7 @@ public class SchoolDirectorGetService {
                 director.getEmail(),
                 director.getSchool() != null ? director.getSchool().getId() : null,
                 director.getSchool() != null ? director.getSchool().getName() : "Sem Escola",
+                director.getSchoolCIE(),
                 director.getCreatedAt(),
                 director.getUpdatedAt()
         );

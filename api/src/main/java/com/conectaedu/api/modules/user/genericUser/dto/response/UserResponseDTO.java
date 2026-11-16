@@ -14,7 +14,9 @@ public record UserResponseDTO(
         UserRole userRole,
         boolean active,
         boolean emailConfirmed,
-        String institutionName
+        String institutionName,
+        String universityCNPJ,
+        String schoolCIE
 ) {
     //  Mapper "manual"
     public UserResponseDTO(User user) {
@@ -26,8 +28,24 @@ public record UserResponseDTO(
                 user.getUserRole(),
                 user.isActive(),
                 user.isEmailConfirmed(),
-                getInstitutionName(user)
+                getInstitutionName(user),
+                getUniversityCNPJ(user),
+                getSchoolCIE(user)
         );
+    }
+
+    private static String getUniversityCNPJ(User user) {
+        if (user instanceof com.conectaedu.api.modules.user.university_admin.domain.UniversityAdmin universityAdmin) {
+            return universityAdmin.getUniversityCNPJ();
+        }
+        return null;
+    }
+
+    private static String getSchoolCIE(User user) {
+        if (user instanceof com.conectaedu.api.modules.user.school_director.domain.SchoolDirector schoolDirector) {
+            return schoolDirector.getSchoolCIE();
+        }
+        return null;
     }
 
     private static String getInstitutionName(User user) {

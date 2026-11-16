@@ -14,6 +14,9 @@ public record UniversityAdminRegisterDTO(
     String email,
 
     @NotBlank(message = "A senha é obrigatória")
-    String password
+    String password,
+
+    @NotBlank(message = "O CNPJ da universidade é obrigatório")
+    String universityCNPJ
 ) {
 }

@@ -60,6 +60,10 @@ public class UniversityAdminUpdateService {
             admin.setUniversity(university);
         }
 
+        if (request.universityCNPJ() != null && !request.universityCNPJ().trim().isEmpty()) {
+            admin.setUniversityCNPJ(request.universityCNPJ().trim());
+        }
+
         admin.setUpdatedAt(LocalDateTime.now());
         universityAdminRepository.save(admin);
 
@@ -79,6 +83,7 @@ public class UniversityAdminUpdateService {
                 admin.getEmail(),
                 admin.getUniversity().getId(),
                 admin.getUniversity().getName(),
+                admin.getUniversityCNPJ(),
                 admin.getCreatedAt(),
                 admin.getUpdatedAt()
         );

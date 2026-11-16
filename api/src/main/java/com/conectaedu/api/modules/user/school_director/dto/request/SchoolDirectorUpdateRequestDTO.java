@@ -10,6 +10,8 @@ public record SchoolDirectorUpdateRequestDTO(
         @Email(message = "Email inválido")
         String email,
 
-        UUID schoolId
+        UUID schoolId,
+
+        String schoolCIE
 ) {
 }
