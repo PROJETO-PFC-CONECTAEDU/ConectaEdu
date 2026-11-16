@@ -7,7 +7,7 @@ import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Modal } from '../components/ui/Modal';
 import { Header } from '../components/layout/Header';
 import toast from 'react-hot-toast';
-import { User, Shield, CheckCircle, XCircle, Key, Download, Trash2, Smartphone, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { User, Shield, CheckCircle, XCircle, Key, Download, Trash2, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { formatRole, formatLegalDocumentType, formatDateTime } from '../utils/format';
 import { Input } from '../components/ui/Input';
 import { TwoFactorSetupModal } from '../components/auth/TwoFactorSetupModal';

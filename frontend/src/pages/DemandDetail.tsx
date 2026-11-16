@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { Header } from '../components/layout/Header';
@@ -85,7 +84,7 @@ const schedulingSchema = z.object({
 
 const cancellationSchema = z.object({
   reason: z.enum(['STUDENT_UNAVAILABLE', 'SCHOOL_UNAVAILABLE', 'PUPILS_ABSENT', 'INSTITUTIONAL_ISSUE', 'OTHER'], {
-    errorMap: () => ({ message: 'Selecione um motivo válido' })
+    message: 'Selecione um motivo válido'
   }),
   notes: z.string().max(500, 'Máximo 500 caracteres').optional(),
 });
@@ -391,20 +390,6 @@ export function DemandDetail() {
       case 'FINISHED': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
       case 'ARCHIVED': return 'bg-gray-100 text-gray-700 border-gray-200';
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    try {
-      return new Intl.DateTimeFormat('pt-BR', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      }).format(new Date(dateString));
-    } catch (_) {
-      return dateString;
     }
   };
 
