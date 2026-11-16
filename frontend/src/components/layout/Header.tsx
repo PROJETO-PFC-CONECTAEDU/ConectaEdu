@@ -1,4 +1,4 @@
-import { Bell, User as UserIcon, LogOut, UserCircle } from 'lucide-react';
+import { User as UserIcon, LogOut, UserCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -26,10 +26,6 @@ export function Header({ title, subtitle, action }: HeaderProps) {
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-4">
           {action}
-          <button className="relative p-2 text-text-body hover:text-brand-primary transition-colors rounded-full hover:bg-slate-50">
-            <Bell size={22} />
-          </button>
-
           <div className="relative">
             <button 
               onClick={() => setIsProfileOpen(!isProfileOpen)}
