@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, Mail, Lock, Building2, School as SchoolIcon, ChevronDown } from 'lucide-react';
+import { User, Mail, Lock, Building2, School as SchoolIcon } from 'lucide-react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -19,20 +19,9 @@ const registerSchema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
-}).refine((data) => {
-  // A validação real de obrigatoriedade será feita aqui ou deixada para o backend
-  // Mas para melhor UX, podemos validar aqui.
-  // Note: 'role' não está disponível aqui no esquema estático, 
-  // então podemos deixar como opcional no Zod e tratar no handleSubmit ou usar superRefine
-  return true;
-}, {});
+});
 
 type RegisterForm = z.infer<typeof registerSchema>;
-
-interface Institution {
-  id: string;
-  name: string;
-}
 
 export function Register() {
   const [searchParams] = useSearchParams();
