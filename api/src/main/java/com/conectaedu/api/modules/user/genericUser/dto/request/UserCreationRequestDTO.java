@@ -1,4 +1,4 @@
-package com.conectaedu.api.modules.user.genericUser.facade.dto.request;
+package com.conectaedu.api.modules.user.genericUser.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

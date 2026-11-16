@@ -10,6 +10,8 @@ public record UniversityAdminUpdateRequestDTO(
         @Email(message = "Email inválido")
         String email,
 
-        UUID universityId
+        UUID universityId,
+
+        String universityCNPJ
 ) {
 }

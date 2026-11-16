@@ -1,7 +1,7 @@
 package com.conectaedu.api.modules.user.genericUser.controller;
 
-import com.conectaedu.api.modules.user.genericUser.facade.dto.request.UserCreationRequestDTO;
-import com.conectaedu.api.modules.user.genericUser.facade.dto.request.UserUpdateRequestDTO;
+import com.conectaedu.api.modules.user.genericUser.dto.request.UserCreationRequestDTO;
+import com.conectaedu.api.modules.user.genericUser.dto.request.UserUpdateRequestDTO;
 import com.conectaedu.api.modules.user.genericUser.dto.response.UserCreationResponseDTO;
 import com.conectaedu.api.modules.user.genericUser.dto.response.UserResponseDTO;
 import com.conectaedu.api.modules.user.genericUser.interfaces.IUserFacade;

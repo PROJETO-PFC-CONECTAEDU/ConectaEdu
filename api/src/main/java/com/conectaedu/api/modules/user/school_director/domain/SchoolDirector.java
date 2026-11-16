@@ -21,4 +21,6 @@ public class SchoolDirector extends User {
     @ManyToOne
     @JoinColumn(name = "school_id")
     private School school;
+
+    private String schoolCIE;
 }

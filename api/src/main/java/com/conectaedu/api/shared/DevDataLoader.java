@@ -120,6 +120,7 @@ public class DevDataLoader implements CommandLineRunner {
             user.setUserRole(UserRole.UNIVERSITY_ADMIN);
             user.setUserType(UserType.PERSON);
             user.setUniversity(university);
+            user.setUniversityCNPJ("10000000/0000");
             user.setEmailConfirmed(true);
             user.setCreatedAt(LocalDateTime.now());
             user.setUpdatedAt(LocalDateTime.now());
@@ -137,6 +138,7 @@ public class DevDataLoader implements CommandLineRunner {
             user.setUserRole(UserRole.SCHOOL_DIRECTOR);
             user.setUserType(UserType.PERSON);
             user.setSchool(school);
+            user.setSchoolCIE("10000000");
             user.setEmailConfirmed(true);
             user.setCreatedAt(LocalDateTime.now());
             user.setUpdatedAt(LocalDateTime.now());

@@ -14,6 +14,9 @@ public record SchoolDirectorRegisterDTO(
     String email,
 
     @NotBlank(message = "A senha é obrigatória")
-    String password
+    String password,
+
+    @NotBlank(message = "O CIE da escola é obrigatório")
+    String schoolCIE
 ) {
 }

@@ -62,6 +62,10 @@ public class SchoolDirectorUpdateService {
             director.setSchool(school);
         }
 
+        if (request.schoolCIE() != null && !request.schoolCIE().trim().isEmpty()) {
+            director.setSchoolCIE(request.schoolCIE().trim());
+        }
+
         director.setUpdatedAt(LocalDateTime.now());
         schoolDirectorRepository.save(director);
 
@@ -81,6 +85,7 @@ public class SchoolDirectorUpdateService {
                 director.getEmail(),
                 director.getSchool().getId(),
                 director.getSchool().getName(),
+                director.getSchoolCIE(),
                 director.getCreatedAt(),
                 director.getUpdatedAt()
         );

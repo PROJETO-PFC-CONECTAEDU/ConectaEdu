@@ -11,6 +11,8 @@ interface User {
   schoolId?: string;
   emailConfirmed: boolean;
   twoFactorEnabled: boolean;
+  universityCNPJ?: string;
+  schoolCIE?: string;
 }
 
 interface AuthContextData {

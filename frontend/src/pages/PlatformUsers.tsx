@@ -22,11 +22,15 @@ interface User {
   active: boolean;
   emailConfirmed: boolean;
   institutionName?: string;
+  universityCNPJ?: string;
+  schoolCIE?: string;
 }
 
 const userSchema = z.object({
   name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
   email: z.string().email('Email inválido'),
+  universityCNPJ: z.string().optional(),
+  schoolCIE: z.string().optional(),
 });
 
 type UserFormData = z.infer<typeof userSchema>;
@@ -119,6 +123,8 @@ export function PlatformUsers() {
     reset({
       name: user.name,
       email: user.email,
+      universityCNPJ: user.universityCNPJ || '',
+      schoolCIE: user.schoolCIE || '',
     });
   };
 
@@ -173,9 +179,21 @@ export function PlatformUsers() {
                     <h4 className="font-bold text-text-heading group-hover:text-brand-primary transition-colors">
                       {user.name}
                     </h4>
-                    <p className="text-xs text-text-muted">
-                      {user.institutionName || 'Plataforma ConectaEdu'}
-                    </p>
+                    <div className="flex flex-col">
+                      <p className="text-xs text-text-muted">
+                        {user.institutionName || 'Plataforma ConectaEdu'}
+                      </p>
+                      {user.userRole === 'UNIVERSITY_ADMIN' && user.universityCNPJ && (
+                        <p className="text-[10px] text-blue-600 font-bold mt-0.5">
+                          CNPJ: {user.universityCNPJ}
+                        </p>
+                      )}
+                      {user.userRole === 'SCHOOL_DIRECTOR' && user.schoolCIE && (
+                        <p className="text-[10px] text-purple-600 font-bold mt-0.5">
+                          CIE: {user.schoolCIE}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -273,6 +291,20 @@ export function PlatformUsers() {
             error={errors.email?.message}
             {...register('email')}
           />
+          {editingUser?.userRole === 'UNIVERSITY_ADMIN' && (
+            <Input
+              label="CNPJ da Universidade"
+              error={errors.universityCNPJ?.message}
+              {...register('universityCNPJ')}
+            />
+          )}
+          {editingUser?.userRole === 'SCHOOL_DIRECTOR' && (
+            <Input
+              label="CIE da Escola"
+              error={errors.schoolCIE?.message}
+              {...register('schoolCIE')}
+            />
+          )}
           <div className="flex gap-3 pt-2">
             <Button 
               type="button" 

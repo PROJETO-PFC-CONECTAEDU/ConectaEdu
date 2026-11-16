@@ -20,4 +20,6 @@ public class UniversityAdmin extends User {
     @ManyToOne
     @JoinColumn(name = "university_id")
     private University university;
+
+    private String universityCNPJ;
 }
