@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
-import axios from 'axios';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { Header } from '../components/layout/Header';
@@ -49,7 +48,7 @@ type RegistrationFormData = z.infer<typeof registrationSchema>;
 
 const cancellationSchema = z.object({
   reason: z.enum(['STUDENT_UNAVAILABLE', 'SCHOOL_UNAVAILABLE', 'PUPILS_ABSENT', 'INSTITUTIONAL_ISSUE', 'OTHER'], {
-    errorMap: () => ({ message: 'Selecione um motivo válido' })
+    message: 'Selecione um motivo válido'
   }),
   notes: z.string().max(500, 'Máximo 500 caracteres').optional(),
 });
