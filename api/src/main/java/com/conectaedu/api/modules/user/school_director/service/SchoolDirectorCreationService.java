@@ -54,6 +54,7 @@ public class SchoolDirectorCreationService {
                 .userRole(UserRole.SCHOOL_DIRECTOR)
                 .createdAt(LocalDateTime.now())
                 .school(school)
+                .schoolCIE(request.schoolCIE().trim())
                 .build();
 
         schoolDirectorRepository.save(director);
@@ -70,6 +71,7 @@ public class SchoolDirectorCreationService {
                 director.getEmail(),
                 director.getSchool().getId(),
                 director.getSchool().getName(),
+                director.getSchoolCIE(),
                 director.getCreatedAt(),
                 director.getUpdatedAt()
         );

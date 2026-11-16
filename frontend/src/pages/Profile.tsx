@@ -242,6 +242,18 @@ export function Profile() {
                     )}
                   </div>
                 </div>
+                {user?.role === 'UNIVERSITY_ADMIN' && user?.universityCNPJ && (
+                  <div>
+                    <p className="text-sm font-medium text-text-muted mb-1">CNPJ da Instituição</p>
+                    <p className="text-text-heading font-medium">{user.universityCNPJ}</p>
+                  </div>
+                )}
+                {user?.role === 'SCHOOL_DIRECTOR' && user?.schoolCIE && (
+                  <div>
+                    <p className="text-sm font-medium text-text-muted mb-1">CIE da Escola</p>
+                    <p className="text-text-heading font-medium">{user.schoolCIE}</p>
+                  </div>
+                )}
               </div>
             )}
           </Card>

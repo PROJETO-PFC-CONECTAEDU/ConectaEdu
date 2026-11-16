@@ -10,7 +10,7 @@ import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { MapPin, Users, School as SchoolIcon, Trash2, Plus, ShieldCheck, XCircle } from 'lucide-react';
+import { MapPin, School as SchoolIcon, Trash2, Plus, ShieldCheck, XCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { AddressAutocomplete } from '../components/map/AddressAutocomplete';
 import { useAuth } from '../context/AuthContext';
@@ -20,7 +20,6 @@ interface School {
   id: string;
   name: string;
   cie: string;
-  director?: string;
   address?: string;
   active: boolean;
   latitude: number;
@@ -30,7 +29,6 @@ interface School {
 const schoolSchema = z.object({
   name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
   cie: z.string().min(1, 'CIE é obrigatório'),
-  director: z.string().min(1, 'Diretor é obrigatório'),
   address: z.string().min(1, 'Endereço é obrigatório'),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
@@ -111,7 +109,6 @@ export function Schools() {
     setEditingSchool(school);
     setValue('name', school.name);
     setValue('cie', school.cie);
-    setValue('director', school.director || '');
     setValue('address', school.address || '');
     setValue('latitude', school.latitude);
     setValue('longitude', school.longitude);
@@ -175,12 +172,6 @@ export function Schools() {
             placeholder="Código de identificação"
             error={errors.cie?.message}
             {...register('cie')}
-          />
-          <Input
-            label="Diretor"
-            placeholder="Nome do diretor"
-            error={errors.director?.message}
-            {...register('director')}
           />
           <AddressAutocomplete
             key={editingSchool?.id || 'new'}
@@ -266,10 +257,6 @@ export function Schools() {
                 </div>
 
                 <div className="space-y-3 pt-4 border-t border-border-default">
-                  <div className="flex items-center gap-2 text-sm text-text-body">
-                    <Users size={16} className="text-text-muted shrink-0" />
-                    <span>Dir: {school.director || 'Não informado'}</span>
-                  </div>
                   <div className="flex items-start gap-2 text-sm text-text-body">
                     <MapPin size={16} className="mt-0.5 text-text-muted shrink-0" />
                     <span>{school.address || 'Endereço não informado'}</span>

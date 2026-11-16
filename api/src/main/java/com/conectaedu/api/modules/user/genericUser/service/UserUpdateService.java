@@ -1,7 +1,7 @@
 package com.conectaedu.api.modules.user.genericUser.service;
 
 import com.conectaedu.api.modules.user.genericUser.domain.User;
-import com.conectaedu.api.modules.user.genericUser.facade.dto.request.UserUpdateRequestDTO;
+import com.conectaedu.api.modules.user.genericUser.dto.request.UserUpdateRequestDTO;
 import com.conectaedu.api.modules.user.genericUser.dto.response.UserResponseDTO;
 import com.conectaedu.api.modules.user.genericUser.repository.UserRepository;
 import com.conectaedu.api.shared.audit.service.AuditService;
@@ -45,6 +45,14 @@ public class UserUpdateService {
 
         if (request.userType() != null) {
             user.setUserType(request.userType());
+        }
+
+        if (request.universityCNPJ() != null && user instanceof com.conectaedu.api.modules.user.university_admin.domain.UniversityAdmin universityAdmin) {
+            universityAdmin.setUniversityCNPJ(request.universityCNPJ());
+        }
+
+        if (request.schoolCIE() != null && user instanceof com.conectaedu.api.modules.user.school_director.domain.SchoolDirector schoolDirector) {
+            schoolDirector.setSchoolCIE(request.schoolCIE());
         }
 
         user.setUpdatedAt(LocalDateTime.now());

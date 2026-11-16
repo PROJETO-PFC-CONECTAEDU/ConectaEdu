@@ -10,7 +10,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { Users, Mail, ShieldCheck, UserX, CheckCircle, XCircle, Pencil, Trash2 } from 'lucide-react';
+import { Users, Mail, ShieldCheck, UserX, CheckCircle, XCircle, Pencil, Trash2, Link as LinkIcon } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 interface User {
@@ -22,11 +22,15 @@ interface User {
   active: boolean;
   emailConfirmed: boolean;
   institutionName?: string;
+  universityCNPJ?: string;
+  schoolCIE?: string;
 }
 
 const userSchema = z.object({
   name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
   email: z.string().email('Email inválido'),
+  universityCNPJ: z.string().optional(),
+  schoolCIE: z.string().optional(),
 });
 
 type UserFormData = z.infer<typeof userSchema>;
@@ -37,6 +41,8 @@ export function PlatformUsers() {
   const [deactivatingId, setDeactivatingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [bindingUser, setBindingUser] = useState<User | null>(null);
+  const [selectedInstitutionId, setSelectedInstitutionId] = useState<string>('');
   const [filter, setFilter] = useState<'ALL' | 'UNIVERSITY_ADMIN' | 'SCHOOL_DIRECTOR'>('ALL');
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<UserFormData>({
@@ -47,6 +53,22 @@ export function PlatformUsers() {
     queryKey: ['platform-users'],
     queryFn: async () => {
       const response = await api.get('/users');
+      return response.data;
+    },
+  });
+
+  const { data: universities } = useQuery<any[]>({
+    queryKey: ['universities'],
+    queryFn: async () => {
+      const response = await api.get('/universities');
+      return response.data;
+    },
+  });
+
+  const { data: schools } = useQuery<any[]>({
+    queryKey: ['schools'],
+    queryFn: async () => {
+      const response = await api.get('/schools');
       return response.data;
     },
   });
@@ -108,6 +130,18 @@ export function PlatformUsers() {
     }
   });
 
+  const bindMutation = useMutation({
+    mutationFn: async ({ userId, institutionId }: { userId: string; institutionId: string }) => {
+      await api.patch(`/users/${userId}/bind-institution`, { institutionId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['platform-users'] });
+      toast.success('Instituição vinculada com sucesso!');
+      setBindingUser(null);
+      setSelectedInstitutionId('');
+    }
+  });
+
   const onUpdateSubmit = (data: UserFormData) => {
     if (editingUser) {
       updateMutation.mutate({ id: editingUser.id, data });
@@ -119,6 +153,8 @@ export function PlatformUsers() {
     reset({
       name: user.name,
       email: user.email,
+      universityCNPJ: user.universityCNPJ || '',
+      schoolCIE: user.schoolCIE || '',
     });
   };
 
@@ -173,12 +209,34 @@ export function PlatformUsers() {
                     <h4 className="font-bold text-text-heading group-hover:text-brand-primary transition-colors">
                       {user.name}
                     </h4>
-                    <p className="text-xs text-text-muted">
-                      {user.institutionName || 'Plataforma ConectaEdu'}
-                    </p>
+                    <div className="flex flex-col">
+                      <p className="text-xs text-text-muted">
+                        {user.institutionName || 'Plataforma ConectaEdu'}
+                      </p>
+                      {user.userRole === 'UNIVERSITY_ADMIN' && user.universityCNPJ && (
+                        <p className="text-[10px] text-blue-600 font-bold mt-0.5">
+                          CNPJ: {user.universityCNPJ}
+                        </p>
+                      )}
+                      {user.userRole === 'SCHOOL_DIRECTOR' && user.schoolCIE && (
+                        <p className="text-[10px] text-purple-600 font-bold mt-0.5">
+                          CIE: {user.schoolCIE}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="flex gap-2">
+                  <button 
+                    onClick={() => {
+                      setBindingUser(user);
+                      setSelectedInstitutionId('');
+                    }}
+                    className="text-text-muted hover:text-brand-primary p-1"
+                    title="Vincular Instituição"
+                  >
+                    <LinkIcon size={18} />
+                  </button>
                   <button 
                     onClick={() => handleEdit(user)}
                     className="text-text-muted hover:text-brand-primary p-1"
@@ -273,6 +331,20 @@ export function PlatformUsers() {
             error={errors.email?.message}
             {...register('email')}
           />
+          {editingUser?.userRole === 'UNIVERSITY_ADMIN' && (
+            <Input
+              label="CNPJ da Universidade"
+              error={errors.universityCNPJ?.message}
+              {...register('universityCNPJ')}
+            />
+          )}
+          {editingUser?.userRole === 'SCHOOL_DIRECTOR' && (
+            <Input
+              label="CIE da Escola"
+              error={errors.schoolCIE?.message}
+              {...register('schoolCIE')}
+            />
+          )}
           <div className="flex gap-3 pt-2">
             <Button 
               type="button" 
@@ -291,6 +363,58 @@ export function PlatformUsers() {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      <Modal
+        isOpen={!!bindingUser}
+        onClose={() => setBindingUser(null)}
+        title="Vincular Instituição"
+      >
+        <div className="space-y-4">
+          <div className="p-4 bg-gray-50 rounded-lg border border-border-default">
+            <p className="text-sm font-semibold text-text-heading">{bindingUser?.name}</p>
+            <p className="text-xs text-text-muted">{bindingUser?.email}</p>
+            <p className="text-[10px] font-bold uppercase mt-1 text-brand-primary">
+              {bindingUser?.userRole === 'UNIVERSITY_ADMIN' ? 'Administrador de Universidade' : 'Diretor de Escola'}
+            </p>
+          </div>
+
+          <div className="w-full space-y-1.5">
+            <label className="text-sm font-medium text-text-heading">
+              Selecionar {bindingUser?.userRole === 'UNIVERSITY_ADMIN' ? 'Universidade' : 'Escola'}
+            </label>
+            <select
+              value={selectedInstitutionId}
+              onChange={(e) => setSelectedInstitutionId(e.target.value)}
+              className="flex h-11 w-full rounded-lg border border-border-default bg-white px-3 py-2 text-sm text-text-heading focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+            >
+              <option value="">Selecione uma opção</option>
+              {bindingUser?.userRole === 'UNIVERSITY_ADMIN' 
+                ? universities?.map(uni => <option key={uni.id} value={uni.id}>{uni.name}</option>)
+                : schools?.map(school => <option key={school.id} value={school.id}>{school.name}</option>)
+              }
+            </select>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="flex-1"
+              onClick={() => setBindingUser(null)}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              type="button" 
+              className="flex-1"
+              disabled={!selectedInstitutionId || bindMutation.isPending}
+              onClick={() => bindingUser && bindMutation.mutate({ userId: bindingUser.id, institutionId: selectedInstitutionId })}
+            >
+              {bindMutation.isPending ? 'Vinculando...' : 'Vincular Agora'}
+            </Button>
+          </div>
+        </div>
       </Modal>
 
       <ConfirmModal

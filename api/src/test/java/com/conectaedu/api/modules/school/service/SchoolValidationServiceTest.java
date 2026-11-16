@@ -9,6 +9,7 @@ import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.SchoolStatus;
 import com.conectaedu.api.shared.exceptions.InvalidSchoolStatusException;
 import com.conectaedu.api.shared.exceptions.SchoolNotFoundException;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -39,6 +40,9 @@ class SchoolValidationServiceTest {
 
     @Mock
     private AuditService auditService;
+
+    @Mock
+    private TenancyValidator tenancyValidator;
 
     @InjectMocks
     private SchoolValidationService schoolValidationService;

@@ -4,6 +4,7 @@ import com.conectaedu.api.shared.exceptions.DemandNotFoundException;
 import com.conectaedu.api.shared.exceptions.EvaluationAlreadySubmittedException;
 import com.conectaedu.api.shared.exceptions.EvaluationNotFoundException;
 import com.conectaedu.api.shared.exceptions.InvalidDemandStatusException;
+import com.conectaedu.api.shared.exceptions.NoCompletedLessonException;
 import com.conectaedu.api.shared.exceptions.UserNotFoundException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -46,9 +47,12 @@ public class FeedbackExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Esta avaliação já foi enviada.");
     }
 
-    //400 impossível avaliar um estudante que não atendeu a necessidade.
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ProblemDetail illegalArgument(IllegalArgumentException ex) {
+    //400 impossível avaliar um estudante que não atendeu a necessidade ou não concluiu aula nela.
+    @ExceptionHandler({
+            IllegalArgumentException.class,
+            NoCompletedLessonException.class
+    })
+    public ProblemDetail illegalArgument(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 

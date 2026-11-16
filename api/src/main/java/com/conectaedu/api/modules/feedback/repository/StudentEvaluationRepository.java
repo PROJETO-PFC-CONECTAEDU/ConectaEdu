@@ -24,11 +24,14 @@ public interface StudentEvaluationRepository extends JpaRepository<StudentEvalua
 
     List<StudentEvaluation> findByDemand_IdOrderByCreatedAtDesc(UUID demandId);
 
-    @Query("SELECT AVG((e.knowledge + e.punctuality + e.teaching + e.commitment + e.empathy) / 5.0) " +
-           "FROM StudentEvaluation e WHERE e.student.university.id = :universityId")
-    Double getAverageScoreByUniversity(@Param("universityId") UUID universityId);
 
     @Query("SELECT AVG((e.knowledge + e.punctuality + e.teaching + e.commitment + e.empathy) / 5.0) " +
-           "FROM StudentEvaluation e WHERE e.demand.school.id = :schoolId")
-    Double getAverageScoreBySchool(@Param("schoolId") UUID schoolId);
+           "FROM StudentEvaluation e " +
+           "WHERE (:universityId IS NULL OR e.student.university.id = :universityId) " +
+           "AND (:schoolId IS NULL OR e.demand.school.id = :schoolId) " +
+           "AND (:demandId IS NULL OR e.demand.id = :demandId)")
+    Double getAverageScoreByFilters(
+            @Param("universityId") UUID universityId,
+            @Param("schoolId") UUID schoolId,
+            @Param("demandId") UUID demandId);
 }

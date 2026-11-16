@@ -5,6 +5,7 @@ import com.conectaedu.api.modules.school.repository.SchoolRepository;
 import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.exceptions.SchoolNotFoundException;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -34,6 +35,9 @@ class SchoolDeletionServiceTest {
 
     @Mock
     private AuditService auditService;
+
+    @Mock
+    private TenancyValidator tenancyValidator;
 
     @InjectMocks
     private SchoolDeletionService schoolDeletionService;

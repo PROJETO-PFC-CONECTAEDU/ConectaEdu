@@ -1,0 +1,81 @@
+name: Deploy Oracle Cloud
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Login no Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build e Push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./api
+          push: true
+          tags: jjsalustiano/conectaedubackend-java:latest
+
+      - name: Build e Push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: jjsalustiano/conectaedufrontend-react:latest
+          build-args: |
+            VITE_GOOGLE_MAPS_API_KEY=${{ secrets.VITE_API_KEY }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código (para pegar o docker-compose.yml)
+        uses: actions/checkout@v4
+
+      - name: Copiar docker-compose.yml via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.OCI_HOST }}
+          username: ${{ secrets.OCI_USER }}
+          key: ${{ secrets.OCI_SSH_KEY }}
+          source: "docker-compose.yml"
+          target: "~/app"
+
+
+      - name: Executar comandos na VM via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.OCI_HOST }}
+          username: ${{ secrets.OCI_USER }}
+          key: ${{ secrets.OCI_SSH_KEY }}
+          script: |
+            mkdir -p ~/app
+            cd ~/app
+
+            docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+
+            cat <<EOF > .env
+            SPRING_PROFILES_ACTIVE=dev
+            DB_USER=ADMIN
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_URL=jdbc:oracle:thin:@dumplydb_high?TNS_ADMIN=/app/wallet
+            TNS_ADMIN=/app/wallet
+            APP_PASSWORD=${{ secrets.APP_PASSWORD }}
+            VITE_API_KEY=${{ secrets.VITE_API_KEY }}
+            JWT_API_SECRET=${{ secrets.JWT_SECRET }}
+            EOF
+
+            docker compose down --remove-orphans --volumes
+            docker compose pull
+            docker compose up -d
+            docker image prune -af
+          
+            

@@ -11,9 +11,6 @@ public record SchoolCreationRequestDTO(
         @NotBlank(message = "Código identificador da escola é obrigatório")
         String cie,
 
-        @NotBlank(message = "Nome do diretor é obrigatório")
-        String director,
-
         @NotBlank(message = "O endereço é obrigatório")
         String address,
 

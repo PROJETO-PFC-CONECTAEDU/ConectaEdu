@@ -9,6 +9,7 @@ public record UniversityAdminResponseDTO(
         String email,
         UUID universityId,
         String universityName,
+        String universityCNPJ,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {

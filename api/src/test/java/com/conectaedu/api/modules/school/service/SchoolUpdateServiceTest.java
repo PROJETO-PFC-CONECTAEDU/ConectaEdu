@@ -8,6 +8,7 @@ import com.conectaedu.api.shared.audit.service.AuditService;
 import com.conectaedu.api.shared.audit.support.AuditDiff;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.exceptions.SchoolNotFoundException;
+import com.conectaedu.api.shared.security.util.TenancyValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -35,7 +36,6 @@ class SchoolUpdateServiceTest {
 
     private static final String CIE = "123456";
     private static final String NOME_ORIGINAL = "Escola Estadual ABCD";
-    private static final String DIRETOR_ORIGINAL = "Maria Sousa";
     private static final String ENDERECO_ORIGINAL = "R. teste, 100";
     private static final double LATITUDE_ORIGINAL = -23.5505;
     private static final double LONGITUDE_ORIGINAL = -46.6333;
@@ -46,6 +46,9 @@ class SchoolUpdateServiceTest {
     @Mock
     private AuditService auditService;
 
+    @Mock
+    private TenancyValidator tenancyValidator;
+
     @InjectMocks
     private SchoolUpdateService schoolUpdateService;
 
@@ -54,7 +57,6 @@ class SchoolUpdateServiceTest {
         escola.setId(UUID.randomUUID());
         escola.setName(NOME_ORIGINAL);
         escola.setCie(CIE);
-        escola.setDirector(DIRETOR_ORIGINAL);
         escola.setAddress(ENDERECO_ORIGINAL);
         escola.setLatitude(LATITUDE_ORIGINAL);
         escola.setLongitude(LONGITUDE_ORIGINAL);
@@ -70,10 +72,9 @@ class SchoolUpdateServiceTest {
 
         SchoolResponseDTO resposta = schoolUpdateService.updateSchool(
                 escola.getId(),
-                new SchoolUpdateRequestDTO("Escola Estadual Abcde", "Joao Paulo", "Av. nova, 500", -22.9068, -43.1729));
+                new SchoolUpdateRequestDTO("Escola Estadual Abcde", "Av. nova, 500", -22.9068, -43.1729));
 
         assertEquals("Escola Estadual Abcde", resposta.name());
-        assertEquals("Joao Paulo", resposta.director());
         assertEquals("Av. nova, 500", resposta.address());
         assertEquals(-22.9068, resposta.latitude());
         assertEquals(-43.1729, resposta.longitude());
@@ -86,7 +87,6 @@ class SchoolUpdateServiceTest {
         AuditDiff alteracoes = capturado.getValue();
         assertFalse(alteracoes.isEmpty());
         assertTrue(alteracoes.describe().contains("name"));
-        assertTrue(alteracoes.describe().contains("director"));
         assertTrue(alteracoes.describe().contains("address"));
     }
 
@@ -98,7 +98,7 @@ class SchoolUpdateServiceTest {
 
         SchoolNotFoundException erro = assertThrows(SchoolNotFoundException.class,
                 () -> schoolUpdateService.updateSchool(
-                        id, new SchoolUpdateRequestDTO("Escola XYZ", "Joao P", "Av. nova, 500", null, null)));
+                        id, new SchoolUpdateRequestDTO("Escola XYZ", "Av. nova, 500", null, null)));
 
         assertEquals("Escola não encontrada!", erro.getMessage());
         verify(schoolRepository, never()).save(any(School.class));
@@ -113,7 +113,7 @@ class SchoolUpdateServiceTest {
 
         schoolUpdateService.updateSchool(
                 escola.getId(),
-                new SchoolUpdateRequestDTO(NOME_ORIGINAL, DIRETOR_ORIGINAL, ENDERECO_ORIGINAL,
+                new SchoolUpdateRequestDTO(NOME_ORIGINAL, ENDERECO_ORIGINAL,
                         LATITUDE_ORIGINAL, LONGITUDE_ORIGINAL));
 
         verify(auditService).logUpdate(any(), any(), any(), capturado.capture());
@@ -130,10 +130,9 @@ class SchoolUpdateServiceTest {
         ArgumentCaptor<AuditDiff> capturado = ArgumentCaptor.forClass(AuditDiff.class);
 
         SchoolResponseDTO resposta = schoolUpdateService.updateSchool(
-                escola.getId(), new SchoolUpdateRequestDTO(null, null, null, null, null));
+                escola.getId(), new SchoolUpdateRequestDTO(null, null, null, null));
 
         assertEquals(NOME_ORIGINAL, resposta.name());
-        assertEquals(DIRETOR_ORIGINAL, resposta.director());
         assertEquals(ENDERECO_ORIGINAL, resposta.address());
         assertEquals(LATITUDE_ORIGINAL, resposta.latitude());
         assertEquals(LONGITUDE_ORIGINAL, resposta.longitude());

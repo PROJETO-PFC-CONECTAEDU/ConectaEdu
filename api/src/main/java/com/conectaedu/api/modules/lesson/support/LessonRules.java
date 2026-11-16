@@ -12,8 +12,6 @@ public final class LessonRules {
     private LessonRules() {}
 
     public static final int MIN_NOTICE_DAYS = 2;
-    public static final int MIN_ENROLLED = 3;
-    public static final int MAX_ENROLLED = 10;
     public static final int CONFIRMATION_DEADLINE_DAYS = 3;
     public static final int CONFIRMATION_CUTOFF_HOURS = 24;
     public static final int REGISTRATION_WINDOW_HOURS = 48;

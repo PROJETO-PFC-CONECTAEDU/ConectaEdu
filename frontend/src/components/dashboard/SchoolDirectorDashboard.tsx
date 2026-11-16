@@ -1,4 +1,4 @@
-import { ClipboardList, DoorOpen, Activity, Trophy, BarChart3, Star, TrendingUp, ScatterChart as ScatterIcon } from 'lucide-react';
+import { ClipboardList, DoorOpen, Activity, Trophy, BarChart3, Star, TrendingUp, ScatterChart as ScatterIcon, CheckCircle } from 'lucide-react';
 import { MetricCard } from '../ui/MetricCard';
 import { Card } from '../ui/Card';
 import { 
@@ -50,31 +50,37 @@ export function SchoolDirectorDashboard({ stats }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard 
           icon={<ClipboardList className="text-brand-primary" size={24} />}
-          label="Minhas Demandas"
+          label="Total de Projetos"
           value={stats.myDemandsCount || 0}
-          note="Total de solicitações criadas"
+          note="Total de demandas criadas"
         />
         <MetricCard 
           icon={<DoorOpen className="text-yellow-500" size={24} />}
           label="Vagas em Aberto"
           value={stats.openVacanciesCount || 0}
-          note="Demandas aguardando universitário"
+          note="Projetos aguardando universitário"
         />
         <MetricCard 
           icon={<Activity className="text-brand-accent" size={24} />}
-          label="Aulas em Andamento"
+          label="Projetos em Andamento"
           value={stats.ongoingClassesCount || 0}
           note="Projetos ocorrendo no momento"
         />
         <MetricCard 
           icon={<Trophy className="text-green-500" size={24} />}
-          label="Histórico de Apoio"
+          label="Projetos Realizados"
           value={stats.successfulDemandsCount || 0}
           note="Demandas concluídas com sucesso"
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <MetricCard 
+          icon={<CheckCircle className="text-brand-primary" size={24} />}
+          label="Aulas Realizadas"
+          value={stats.validatedLessonsCount || 0}
+          note="Total de aulas validadas"
+        />
         <MetricCard 
           icon={<Star className="text-yellow-500" size={24} />}
           label="Média da Escola"

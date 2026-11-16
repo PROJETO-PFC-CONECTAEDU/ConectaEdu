@@ -1,7 +1,8 @@
 package com.conectaedu.api.modules.user.genericUser.facade;
 
-import com.conectaedu.api.modules.user.genericUser.facade.dto.request.UserCreationRequestDTO;
-import com.conectaedu.api.modules.user.genericUser.facade.dto.request.UserUpdateRequestDTO;
+import com.conectaedu.api.modules.user.genericUser.dto.request.UserCreationRequestDTO;
+import com.conectaedu.api.modules.user.genericUser.dto.request.UserInstitutionBindingRequestDTO;
+import com.conectaedu.api.modules.user.genericUser.dto.request.UserUpdateRequestDTO;
 import com.conectaedu.api.modules.user.genericUser.dto.response.UserCreationResponseDTO;
 import com.conectaedu.api.modules.user.genericUser.dto.response.UserResponseDTO;
 import com.conectaedu.api.modules.user.genericUser.interfaces.IUserFacade;
@@ -22,6 +23,7 @@ public class UserFacadeImpl implements IUserFacade {
     private final UserListService userListService;
     private final UserListByService userListByService;
     private final UserActivationService userActivationService;
+    private final UserInstitutionBindingService userInstitutionBindingService;
 
     @Override
     public UserCreationResponseDTO createUser(UserCreationRequestDTO request) {
@@ -61,5 +63,10 @@ public class UserFacadeImpl implements IUserFacade {
     @Override
     public UserResponseDTO deactivateUser(UUID id) {
         return userActivationService.deactivateUser(id);
+    }
+
+    @Override
+    public UserResponseDTO bindInstitution(UUID userId, UserInstitutionBindingRequestDTO request) {
+        return userInstitutionBindingService.bindInstitution(userId, request);
     }
 }

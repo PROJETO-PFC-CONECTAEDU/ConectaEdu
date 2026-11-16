@@ -59,7 +59,6 @@ class SchoolIntegrationTest {
                 {
                   "name": "Escola Estadual ABCD",
                   "cie": "%s",
-                  "director": "Maria Sousa",
                   "address": "R. teste, 100",
                   "latitude": -23.5505,
                   "longitude": -46.6333
@@ -90,7 +89,6 @@ class SchoolIntegrationTest {
 
         School persistida = schoolRepository.findByCie(CIE).orElseThrow();
         assertEquals("Escola Estadual ABCD", persistida.getName());
-        assertEquals("Maria Sousa", persistida.getDirector());
         assertEquals(SchoolStatus.PENDING_ACTIVATION, persistida.getStatus());
         assertFalse(persistida.isActive());
         assertNotNull(persistida.getCreatedAt());
@@ -168,13 +166,11 @@ class SchoolIntegrationTest {
                         .content("""
                                 {
                                   "name": "Escola Estadual ABCDE",
-                                  "director": "Joao Paulo",
                                   "address": "Av. nova, 500"
                                 }
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Escola Estadual ABCDE"))
-                .andExpect(jsonPath("$.director").value("Joao Paulo"))
                 .andExpect(jsonPath("$.cie").value(CIE));
 
         School persistida = schoolRepository.findById(id).orElseThrow();

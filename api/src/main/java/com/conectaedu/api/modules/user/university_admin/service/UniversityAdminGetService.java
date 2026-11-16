@@ -40,6 +40,7 @@ public class UniversityAdminGetService {
                 admin.getEmail(),
                 admin.getUniversity() != null ? admin.getUniversity().getId() : null,
                 admin.getUniversity() != null ? admin.getUniversity().getName() : "Sem Universidade",
+                admin.getUniversityCNPJ(),
                 admin.getCreatedAt(),
                 admin.getUpdatedAt()
         );

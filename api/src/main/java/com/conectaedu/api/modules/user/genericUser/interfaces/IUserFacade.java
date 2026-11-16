@@ -1,7 +1,8 @@
 package com.conectaedu.api.modules.user.genericUser.interfaces;
 
-import com.conectaedu.api.modules.user.genericUser.facade.dto.request.UserCreationRequestDTO;
-import com.conectaedu.api.modules.user.genericUser.facade.dto.request.UserUpdateRequestDTO;
+import com.conectaedu.api.modules.user.genericUser.dto.request.UserCreationRequestDTO;
+import com.conectaedu.api.modules.user.genericUser.dto.request.UserInstitutionBindingRequestDTO;
+import com.conectaedu.api.modules.user.genericUser.dto.request.UserUpdateRequestDTO;
 import com.conectaedu.api.modules.user.genericUser.dto.response.UserCreationResponseDTO;
 import com.conectaedu.api.modules.user.genericUser.dto.response.UserResponseDTO;
 
@@ -17,4 +18,5 @@ public interface IUserFacade {
     List<UserResponseDTO> getAllUsers();
     UserResponseDTO activateUser(UUID id);
     UserResponseDTO deactivateUser(UUID id);
+    UserResponseDTO bindInstitution(UUID userId, UserInstitutionBindingRequestDTO request);
 }

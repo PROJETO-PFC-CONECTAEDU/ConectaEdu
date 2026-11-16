@@ -9,6 +9,7 @@ public record SchoolDirectorResponseDTO(
         String email,
         UUID schoolId,
         String schoolName,
+        String schoolCIE,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {

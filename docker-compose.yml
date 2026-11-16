@@ -1,0 +1,40 @@
+services:
+  backend:
+    image: jjsalustiano/conectaedubackend-java:latest
+    container_name: conectaedu-backend
+
+    expose:
+      - "8080"
+
+    volumes:
+      - /home/opc/app/wallet:/app/wallet
+
+    environment:
+      JAVA_OPTS: "-Xms128m -Xmx200m"
+      SPRING_PROFILES_ACTIVE: prod
+
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_URL: ${DB_URL}
+
+      APP_PASSWORD: ${APP_PASSWORD}
+      TNS_ADMIN: /app/wallet
+
+      JWT_API_SECRET: ${JWT_API_SECRET}
+
+    restart: unless-stopped
+
+  frontend:
+    image: jjsalustiano/conectaedufrontend-react:latest
+    container_name: conectaedu-frontend
+
+    ports:
+      - "80:80"
+
+    volumes:
+      - ./certbot/www:/var/www/certbot
+
+    depends_on:
+      - backend
+
+    restart: unless-stopped

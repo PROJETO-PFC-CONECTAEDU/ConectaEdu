@@ -20,6 +20,9 @@ public record SchoolDirectorCreationRequestDTO(
         String password,
 
         @NotNull(message = "ID da escola é obrigatório")
-        UUID schoolId
+        UUID schoolId,
+
+        @NotBlank(message = "CIE da escola é obrigatório")
+        String schoolCIE
 ) {
 }
