@@ -29,16 +29,12 @@ public class SchoolUpdateService {
                 .orElseThrow(() -> new SchoolNotFoundException("Escola não encontrada!"));
 
         String beforeName = school.getName();
-        String beforeDirector = school.getDirector();
         String beforeAddress = school.getAddress();
 
         if (request.name() != null) {
             school.setName(request.name());
         }
 
-        if (request.director() != null) {
-            school.setDirector(request.director());
-        }
 
         if (request.address() != null) {
             school.setAddress(request.address());
@@ -58,7 +54,6 @@ public class SchoolUpdateService {
 
         AuditDiff diff = AuditDiff.create()
                 .field("name", beforeName, school.getName())
-                .field("director", beforeDirector, school.getDirector())
                 .field("address", beforeAddress, school.getAddress());
         auditService.logUpdate(AuditEntityType.SCHOOL, school.getId(), school.getName(), diff);
 

@@ -1,6 +1,7 @@
 package com.conectaedu.api.modules.user.genericUser.controller;
 
 import com.conectaedu.api.modules.user.genericUser.dto.request.UserCreationRequestDTO;
+import com.conectaedu.api.modules.user.genericUser.dto.request.UserInstitutionBindingRequestDTO;
 import com.conectaedu.api.modules.user.genericUser.dto.request.UserUpdateRequestDTO;
 import com.conectaedu.api.modules.user.genericUser.dto.response.UserCreationResponseDTO;
 import com.conectaedu.api.modules.user.genericUser.dto.response.UserResponseDTO;
@@ -62,5 +63,10 @@ public class UserController {
     @PatchMapping("/{id}/deactivate")
     public ResponseEntity<UserResponseDTO> deactivateUser(@PathVariable UUID id) {
         return ResponseEntity.ok(userFacade.deactivateUser(id));
+    }
+
+    @PatchMapping("/{id}/bind-institution")
+    public ResponseEntity<UserResponseDTO> bindInstitution(@PathVariable UUID id, @RequestBody @Valid UserInstitutionBindingRequestDTO request) {
+        return ResponseEntity.ok(userFacade.bindInstitution(id, request));
     }
 }

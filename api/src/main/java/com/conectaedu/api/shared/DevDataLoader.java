@@ -67,6 +67,7 @@ public class DevDataLoader implements CommandLineRunner {
             user.setPassword(passwordEncoder.encode(password));
             user.setUserRole(UserRole.PLATFORM_ADMIN);
             user.setUserType(UserType.PERSON);
+            user.setActive(true);
             user.setCreatedAt(LocalDateTime.now());
             user.setUpdatedAt(LocalDateTime.now());
             userRepository.save(user);
@@ -101,7 +102,6 @@ public class DevDataLoader implements CommandLineRunner {
             school.setAddress("Rua das Escolas, 500");
             school.setLatitude(-23.55052);
             school.setLongitude(-46.633308);
-            school.setDirector("Maria Oliveira");
             school.setStatus(SchoolStatus.ACTIVE);
             school.setActive(true);
             school.setCreatedAt(LocalDateTime.now());
@@ -120,6 +120,7 @@ public class DevDataLoader implements CommandLineRunner {
             user.setUserRole(UserRole.UNIVERSITY_ADMIN);
             user.setUserType(UserType.PERSON);
             user.setUniversity(university);
+            user.setActive(true);
             user.setUniversityCNPJ("10000000/0000");
             user.setEmailConfirmed(true);
             user.setCreatedAt(LocalDateTime.now());
@@ -138,6 +139,7 @@ public class DevDataLoader implements CommandLineRunner {
             user.setUserRole(UserRole.SCHOOL_DIRECTOR);
             user.setUserType(UserType.PERSON);
             user.setSchool(school);
+            user.setActive(true);
             user.setSchoolCIE("10000000");
             user.setEmailConfirmed(true);
             user.setCreatedAt(LocalDateTime.now());

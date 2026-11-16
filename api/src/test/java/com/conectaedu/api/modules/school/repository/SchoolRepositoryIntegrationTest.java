@@ -28,7 +28,6 @@ class SchoolRepositoryIntegrationTest {
         School escola = new School();
         escola.setName(nome);
         escola.setCie(cie);
-        escola.setDirector("Maria S");
         escola.setAddress("R. teste, 100");
         escola.setLatitude(-23.5505);
         escola.setLongitude(-46.6333);

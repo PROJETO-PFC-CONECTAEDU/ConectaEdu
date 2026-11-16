@@ -33,7 +33,6 @@ class SchoolCreationServiceTest {
 
     private static final String CIE = "123456";
     private static final String NOME = "Escola Estadual ABCD";
-    private static final String DIRETOR = "Maria Sousa";
     private static final String ENDERECO = "R. teste, 100";
 
     @Mock
@@ -47,7 +46,7 @@ class SchoolCreationServiceTest {
 
     private SchoolCreationRequestDTO request() {
         return new SchoolCreationRequestDTO(
-                NOME, CIE, DIRETOR, ENDERECO, -23.5505, -46.6333);
+                NOME, CIE, ENDERECO, -23.5505, -46.6333);
     }
 
     //caminho feliz, CIE não utilizado, escola criada e registrada.
@@ -97,7 +96,6 @@ class SchoolCreationServiceTest {
         assertNotNull(salva.getCreatedAt());
         assertEquals(NOME, salva.getName());
         assertEquals(CIE, salva.getCie());
-        assertEquals(DIRETOR, salva.getDirector());
         assertEquals(ENDERECO, salva.getAddress());
         assertEquals(-23.5505, salva.getLatitude());
         assertEquals(-46.6333, salva.getLongitude());
@@ -110,7 +108,7 @@ class SchoolCreationServiceTest {
         ArgumentCaptor<School> capturada = ArgumentCaptor.forClass(School.class);
 
         schoolCreationService.createSchool(
-                new SchoolCreationRequestDTO(NOME, CIE, DIRETOR, ENDERECO, null, null));
+                new SchoolCreationRequestDTO(NOME, CIE, ENDERECO, null, null));
 
         verify(schoolRepository).save(capturada.capture());
         School salva = capturada.getValue();

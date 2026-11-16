@@ -55,6 +55,9 @@ public record UserResponseDTO(
         if (user instanceof com.conectaedu.api.modules.user.school_director.domain.SchoolDirector schoolDirector) {
             return schoolDirector.getSchool() != null ? schoolDirector.getSchool().getName() : null;
         }
+        if (user instanceof com.conectaedu.api.modules.user.student.domain.Student student) {
+            return student.getUniversity() != null ? student.getUniversity().getName() : null;
+        }
         return null;
     }
 }

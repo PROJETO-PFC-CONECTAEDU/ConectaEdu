@@ -29,8 +29,6 @@ public class School {
     @Column(name = "CIE", nullable = false)
     private String cie;
 
-    private String director;
-
     private String address;
 
     private double latitude;
