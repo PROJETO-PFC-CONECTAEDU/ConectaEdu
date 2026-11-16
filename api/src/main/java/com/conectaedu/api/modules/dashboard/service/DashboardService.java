@@ -56,10 +56,12 @@ public class DashboardService {
             stats.put("waitingDemands", demandRepository.countByStatusAndFilters(DemandStatus.WAITING, schoolId, demandId));
             stats.put("finishedDemands", demandRepository.countByStatusAndFilters(DemandStatus.FINISHED, schoolId, demandId));
 
+            // Indicadores extras de Feedback (Sempre globais para Admin)
+            stats.put("studentsAverageScore", studentEvaluationRepository.getAverageScoreByFilters(null, null, null));
+            stats.put("classAverageScore", classEvaluationRepository.getAverageScoreByFilters(null, null, null));
+
             // Indicadores extras para Admin quando filtrado
             if (schoolId != null || demandId != null) {
-                stats.put("studentsAverageScore", studentEvaluationRepository.getAverageScoreByFilters(null, schoolId, demandId));
-                stats.put("classAverageScore", classEvaluationRepository.getAverageScoreByFilters(null, schoolId, demandId));
                 stats.put("lessonsByPeriod", lessonRepository.countByFiltersAndPeriod(null, schoolId, demandId, null));
                 stats.put("nineBoxDistribution", lessonRepository.countNineBoxByFilters(null, schoolId, demandId, null));
             }
@@ -80,9 +82,9 @@ public class DashboardService {
 
             stats.put("completedDemands", demandRepository.countFinishedDemandsByUniversityId(universityId));
 
-            // Indicadores de Feedback filtrados
-            stats.put("studentsAverageScore", studentEvaluationRepository.getAverageScoreByFilters(universityId, schoolId, demandId));
-            stats.put("classAverageScore", classEvaluationRepository.getAverageScoreByFilters(universityId, schoolId, demandId));
+            // Indicadores de Feedback (Sem filtros dinâmicos de escola/demanda)
+            stats.put("studentsAverageScore", studentEvaluationRepository.getAverageScoreByFilters(universityId, null, null));
+            stats.put("classAverageScore", classEvaluationRepository.getAverageScoreByFilters(universityId, null, null));
 
             // Gráfico para Universidade filtrado
             stats.put("lessonsByPeriod", lessonRepository.countByFiltersAndPeriod(universityId, schoolId, demandId, null));
@@ -101,10 +103,11 @@ public class DashboardService {
             stats.put("openVacanciesCount", demandRepository.countByStatusAndFilters(DemandStatus.WAITING, userSchoolId, demandId));
             stats.put("ongoingClassesCount", demandRepository.countByStatusAndFilters(DemandStatus.ONGOING, userSchoolId, demandId));
             stats.put("successfulDemandsCount", demandRepository.countByStatusAndFilters(DemandStatus.FINISHED, userSchoolId, demandId));
+            stats.put("validatedLessonsCount", lessonRepository.countValidatedByFilters(userSchoolId, demandId));
 
-            // Indicadores de Feedback filtrados
-            stats.put("schoolAverageScore", classEvaluationRepository.getAverageScoreByFilters(null, userSchoolId, demandId));
-            stats.put("studentsAverageScore", studentEvaluationRepository.getAverageScoreByFilters(null, userSchoolId, demandId));
+            // Indicadores de Feedback (Sem filtro dinâmico de demanda)
+            stats.put("schoolAverageScore", classEvaluationRepository.getAverageScoreByFilters(null, userSchoolId, null));
+            stats.put("studentsAverageScore", studentEvaluationRepository.getAverageScoreByFilters(null, userSchoolId, null));
 
             // Gráfico para Diretor filtrado
             stats.put("lessonsByPeriodAndDemand", lessonRepository.countBySchoolAndPeriodAndDemandFiltered(userSchoolId, demandId));

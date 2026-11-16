@@ -91,6 +91,11 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
             @Param("demandId") UUID demandId,
             @Param("studentId") UUID studentId);
 
+    @Query("SELECT COUNT(l) FROM Lesson l WHERE (:schoolId IS NULL OR l.school.id = :schoolId) " +
+            "AND (:demandId IS NULL OR l.demand.id = :demandId) " +
+            "AND l.status = 'VALIDATED'")
+    long countValidatedByFilters(@Param("schoolId") UUID schoolId, @Param("demandId") UUID demandId);
+
 
     //O prazo de confirmação é o menor entre 3 dias do agendamento e 24h antes da aula.
     //Venceu se passou de um dos dois, e é esse OR que a consulta derivada não escreve.
