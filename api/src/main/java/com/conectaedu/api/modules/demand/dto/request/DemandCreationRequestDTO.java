@@ -24,6 +24,7 @@ public record DemandCreationRequestDTO(
 
         //Deixa de ter minimo e máximo e passa a ter validação na service
         @NotNull(message = "Quantidade de alunos é obrigatória")
+        @Range(min = 3, max = 10, message = "Deve ser maior que 3 alunos e menor que 10 alunos")
         Integer pupilAmount,
 
         @NotBlank(message = "Total de horas é obrigatório")
