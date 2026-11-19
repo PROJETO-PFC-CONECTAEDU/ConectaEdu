@@ -18,7 +18,7 @@ interface ConsentStatus {
 }
 
 export function ConsentGuard({ children }: { children: React.ReactNode }) {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, signOut } = useAuth();
   const [needsConsent, setNeedsConsent] = useState(false);
   const [pendingDocs, setPendingDocs] = useState<LegalDocument[]>([]);
   const [loading, setLoading] = useState(false);
@@ -64,6 +64,11 @@ export function ConsentGuard({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const handleDecline = () => {
+    toast.error('Você não aceitou os termos e será desconectado.');
+    signOut();
+  };
+
   if (!needsConsent) {
     return <>{children}</>;
   }
@@ -73,8 +78,9 @@ export function ConsentGuard({ children }: { children: React.ReactNode }) {
       {children}
       <Modal 
         isOpen={needsConsent} 
-        onClose={() => {}} 
+        onClose={signOut}
         title="Termos e Condições (LGPD)"
+        showCloseButton={false}
       >
         <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
           {loading ? (
@@ -91,7 +97,10 @@ export function ConsentGuard({ children }: { children: React.ReactNode }) {
             ))
           )}
         </div>
-        <div className="mt-6 flex justify-end">
+        <div className="mt-6 flex justify-end gap-3">
+          <Button variant="ghost" onClick={handleDecline} disabled={loading}>
+            Não aceito
+          </Button>
           <Button onClick={handleAccept} disabled={loading}>
             Aceitar e Continuar
           </Button>
