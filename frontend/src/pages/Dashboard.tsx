@@ -19,11 +19,15 @@ export function Dashboard() {
 
   useEffect(() => {
     if (user?.role === 'PLATFORM_ADMIN' || user?.role === 'UNIVERSITY_ADMIN') {
-      api.get('/schools/active').then(res => setSchools(res.data));
+      api.get('/schools/active')
+        .then(res => setSchools(res.data))
+        .catch(() => setSchools([]));
     }
     
     if (user?.role === 'PLATFORM_ADMIN' || user?.role === 'SCHOOL_DIRECTOR') {
-      api.get('/demands').then(res => setDemands(res.data));
+      api.get('/demands')
+        .then(res => setDemands(res.data))
+        .catch(() => setDemands([]));
     }
   }, [user]);
 
@@ -48,6 +52,10 @@ export function Dashboard() {
       const response = await api.get('/dashboard/stats', { params });
       return response.data.statistics;
     },
+    retry: (failureCount, error: any) => {
+      if (error.response?.status === 403 || error.response?.status === 401) return false;
+      return failureCount < 3;
+    }
   });
 
   const renderDashboard = () => {

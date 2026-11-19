@@ -1,4 +1,4 @@
-import { Users, Activity, Clock, CheckCircle, BarChart3, Star, TrendingUp, ScatterChart as ScatterIcon } from 'lucide-react';
+import { Users, Activity, Clock, CheckCircle, BarChart3, Star, TrendingUp } from 'lucide-react';
 import { MetricCard } from '../ui/MetricCard';
 import { Card } from '../ui/Card';
 import { 
@@ -8,11 +8,7 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer,
-  ScatterChart,
-  Scatter,
-  ZAxis,
-  Cell
+  ResponsiveContainer
 } from 'recharts';
 
 interface Props {
@@ -22,12 +18,6 @@ interface Props {
 export function UniversityAdminDashboard({ stats }: Props) {
   const chartData = stats.lessonsByPeriod?.map((item: any) => ({
     period: item.PERIOD || item.period,
-    count: item.COUNT || item.count
-  })) || [];
-
-  const nineBoxData = stats.nineBoxDistribution?.map((item: any) => ({
-    performance: item.PERFORMANCE || item.performance,
-    potential: item.POTENTIAL || item.potential,
     count: item.COUNT || item.count
   })) || [];
 
@@ -75,7 +65,7 @@ export function UniversityAdminDashboard({ stats }: Props) {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-6">
             <BarChart3 className="text-brand-primary" size={20} />
@@ -98,36 +88,6 @@ export function UniversityAdminDashboard({ stats }: Props) {
             ) : (
               <div className="h-full flex items-center justify-center text-text-muted italic text-sm">
                 Dados de atividades aparecerão aqui conforme os alunos registrarem aulas.
-              </div>
-            )}
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <ScatterIcon className="text-brand-accent" size={20} />
-            <h3 className="text-lg font-bold text-text-heading">Impacto Pedagógico na Escola (Nine Box)</h3>
-          </div>
-          
-          <div className="h-[300px] w-full">
-            {nineBoxData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                  <CartesianGrid />
-                  <XAxis type="number" dataKey="performance" name="Desempenho" domain={[0.5, 3.5]} ticks={[1, 2, 3]} />
-                  <YAxis type="number" dataKey="potential" name="Potencial" domain={[0.5, 3.5]} ticks={[1, 2, 3]} />
-                  <ZAxis type="number" dataKey="count" range={[100, 1000]} name="Qtd. Aulas" />
-                  <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-                  <Scatter name="Aulas" data={nineBoxData} fill="#8884d8">
-                    {nineBoxData.map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={entry.performance + entry.potential >= 5 ? '#10b981' : entry.performance + entry.potential >= 3 ? '#f59e0b' : '#ef4444'} />
-                    ))}
-                  </Scatter>
-                </ScatterChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-text-muted italic text-sm">
-                A distribuição aparecerá conforme os estudantes preencherem o Nine Box nas aulas.
               </div>
             )}
           </div>
