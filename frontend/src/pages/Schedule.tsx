@@ -12,6 +12,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Input } from '../components/ui/Input';
+import { Tooltip } from '../components/ui/Tooltip';
 import { MonthCalendar } from '../components/calendar/MonthCalendar';
 import { SessionRow } from '../components/schedule/SessionRow';
 import { parseISO, isSameDay, format } from 'date-fns';
@@ -280,10 +281,13 @@ export function Schedule() {
           </div>
 
           <div className="space-y-2 pt-2 border-t border-border-default">
-            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">Avaliação da Turma (Impacto Nine Box)</p>
+            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">Avaliação da Turma</p>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-sm font-medium text-text-heading">Desempenho (1-3)</label>
+                <div className="flex items-center gap-1">
+                  <label className="text-sm font-medium text-text-heading">Desempenho (1-3)</label>
+                  <Tooltip content="Avalie o nível de participação, envolvimento e aproveitamento da turma durante as atividades realizadas." />
+                </div>
                 <select 
                   className="w-full p-2.5 rounded-lg border border-border-default bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" 
                   {...register('nineBoxPerformance', { valueAsNumber: true })}
@@ -294,7 +298,10 @@ export function Schedule() {
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium text-text-heading">Potencial (1-3)</label>
+                <div className="flex items-center gap-1">
+                  <label className="text-sm font-medium text-text-heading">Potencial (1-3)</label>
+                  <Tooltip content="Avalie a capacidade de evolução da turma, considerando sua receptividade às atividades e as oportunidades de desenvolvimento identificadas." />
+                </div>
                 <select 
                   className="w-full p-2.5 rounded-lg border border-border-default bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" 
                   {...register('nineBoxPotential', { valueAsNumber: true })}
@@ -383,7 +390,10 @@ export function Schedule() {
               <p className="text-xs text-text-muted font-medium uppercase tracking-wider px-1">Avaliação da Turma (Nine Box)</p>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-brand-primary/5 p-4 rounded-lg border border-brand-primary/10">
-                  <p className="text-[10px] text-brand-primary font-bold uppercase mb-1">Desempenho</p>
+                  <div className="flex items-center gap-1 mb-1">
+                    <p className="text-[10px] text-brand-primary font-bold uppercase">Desempenho</p>
+                    <Tooltip content="Representa o nível de participação, envolvimento e aproveitamento demonstrado pela turma durante as atividades realizadas." className="text-brand-primary" />
+                  </div>
                   <p className="text-sm font-semibold text-text-heading">
                     {viewingLesson.nineBoxPerformance === 1 ? 'Abaixo do esperado' : 
                      viewingLesson.nineBoxPerformance === 2 ? 'Atende ao esperado' : 
@@ -391,7 +401,10 @@ export function Schedule() {
                   </p>
                 </div>
                 <div className="bg-brand-primary/5 p-4 rounded-lg border border-brand-primary/10">
-                  <p className="text-[10px] text-brand-primary font-bold uppercase mb-1">Potencial</p>
+                  <div className="flex items-center gap-1 mb-1">
+                    <p className="text-[10px] text-brand-primary font-bold uppercase">Potencial</p>
+                    <Tooltip content="Representa as possibilidades de evolução da turma, considerando sua receptividade às atividades e as oportunidades de desenvolvimento identificadas pelo estagiário." className="text-brand-primary" />
+                  </div>
                   <p className="text-sm font-semibold text-text-heading">
                     {viewingLesson.nineBoxPotential === 1 ? 'Baixo' : 
                      viewingLesson.nineBoxPotential === 2 ? 'Médio' : 
