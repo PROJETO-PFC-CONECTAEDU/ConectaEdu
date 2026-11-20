@@ -50,6 +50,8 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
               AND (:schoolId IS NULL OR l.school_id = :schoolId)
               AND (:demandId IS NULL OR l.demand_id = :demandId)
               AND (:studentId IS NULL OR l.student_id = :studentId)
+              AND (:startDate IS NULL OR l.scheduled_start >= :startDate)
+              AND (:endDate IS NULL OR l.scheduled_start <= :endDate)
               AND l.status = 'VALIDATED'
             GROUP BY period
             ORDER BY period DESC
@@ -58,7 +60,9 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
             @Param("universityId") UUID universityId,
             @Param("schoolId") UUID schoolId,
             @Param("demandId") UUID demandId,
-            @Param("studentId") UUID studentId);
+            @Param("studentId") UUID studentId,
+            @Param("startDate") java.time.LocalDate startDate,
+            @Param("endDate") java.time.LocalDate endDate);
 
     @Query(value = """
             SELECT FORMATDATETIME(l.scheduled_start, 'MM/yyyy') as period, d.title as demand, COUNT(l.id) as count
@@ -66,13 +70,17 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
             INNER JOIN demand d ON l.demand_id = d.id
             WHERE (:schoolId IS NULL OR l.school_id = :schoolId)
               AND (:demandId IS NULL OR l.demand_id = :demandId)
+              AND (:startDate IS NULL OR l.scheduled_start >= :startDate)
+              AND (:endDate IS NULL OR l.scheduled_start <= :endDate)
               AND l.status = 'VALIDATED'
             GROUP BY period, demand
             ORDER BY period DESC
             """, nativeQuery = true)
     List<Map<String, Object>> countBySchoolAndPeriodAndDemandFiltered(
             @Param("schoolId") UUID schoolId,
-            @Param("demandId") UUID demandId);
+            @Param("demandId") UUID demandId,
+            @Param("startDate") java.time.LocalDate startDate,
+            @Param("endDate") java.time.LocalDate endDate);
 
     @Query(value = """
             SELECT l.nine_box_performance as performance, l.nine_box_potential as potential, COUNT(l.id) as count
@@ -82,6 +90,8 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
               AND (:schoolId IS NULL OR l.school_id = :schoolId)
               AND (:demandId IS NULL OR l.demand_id = :demandId)
               AND (:studentId IS NULL OR l.student_id = :studentId)
+              AND (:startDate IS NULL OR l.scheduled_start >= :startDate)
+              AND (:endDate IS NULL OR l.scheduled_start <= :endDate)
               AND l.status = 'VALIDATED' AND l.nine_box_performance IS NOT NULL AND l.nine_box_potential IS NOT NULL
             GROUP BY performance, potential
             """, nativeQuery = true)
@@ -89,7 +99,9 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
             @Param("universityId") UUID universityId,
             @Param("schoolId") UUID schoolId,
             @Param("demandId") UUID demandId,
-            @Param("studentId") UUID studentId);
+            @Param("studentId") UUID studentId,
+            @Param("startDate") java.time.LocalDate startDate,
+            @Param("endDate") java.time.LocalDate endDate);
 
     @Query("SELECT COUNT(l) FROM Lesson l WHERE (:schoolId IS NULL OR l.school.id = :schoolId) " +
             "AND (:demandId IS NULL OR l.demand.id = :demandId) " +

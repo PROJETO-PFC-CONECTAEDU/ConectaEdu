@@ -54,11 +54,13 @@ class SchoolDeletionServiceTest {
     @Test
     void deveExcluirEscolaERegistrarNaAuditoria() {
         School escola = escolaCadastrada();
+        escola.setActive(true);
         when(schoolRepository.findById(escola.getId())).thenReturn(Optional.of(escola));
 
         schoolDeletionService.deleteSchool(escola.getId());
 
-        verify(schoolRepository).deleteById(escola.getId());
+        assertEquals(false, escola.isActive());
+        verify(schoolRepository).save(escola);
         verify(auditService).logDelete(AuditEntityType.SCHOOL, escola.getId(), NOME);
     }
 
@@ -71,7 +73,7 @@ class SchoolDeletionServiceTest {
                 () -> schoolDeletionService.deleteSchool(id));
 
         assertEquals("Escola não encontrada!", erro.getMessage());
-        verify(schoolRepository, never()).deleteById(any(UUID.class));
+        verify(schoolRepository, never()).save(any(School.class));
         verifyNoInteractions(auditService);
     }
 }

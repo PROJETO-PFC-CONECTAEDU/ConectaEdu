@@ -1,6 +1,7 @@
 import { ClipboardList, DoorOpen, Activity, Trophy, BarChart3, Star, TrendingUp, ScatterChart as ScatterIcon, CheckCircle } from 'lucide-react';
 import { MetricCard } from '../ui/MetricCard';
 import { Card } from '../ui/Card';
+import { Tooltip as UITooltip } from '../ui/Tooltip';
 import { 
   BarChart, 
   Bar, 
@@ -112,7 +113,6 @@ export function SchoolDirectorDashboard({ stats }: Props) {
                   <Tooltip 
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
-                  <Legend />
                   {demands.map((demand, index) => (
                     <Bar 
                       key={demand} 
@@ -133,9 +133,21 @@ export function SchoolDirectorDashboard({ stats }: Props) {
         </Card>
 
         <Card className="p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <ScatterIcon className="text-brand-accent" size={20} />
-            <h3 className="text-lg font-bold text-text-heading">Avaliação do Impacto na Turma (Nine Box)</h3>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <ScatterIcon className="text-brand-accent" size={20} />
+              <h3 className="text-lg font-bold text-text-heading">Avaliação do Impacto na Turma (Nine Box)</h3>
+            </div>
+            <div className="flex gap-4">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-medium text-text-muted">Desempenho</span>
+                <UITooltip content="Representa o nível de participação, envolvimento e aproveitamento demonstrado pela turma durante as atividades realizadas." />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-medium text-text-muted">Potencial</span>
+                <UITooltip content="Representa as possibilidades de evolução da turma, considerando sua receptividade às atividades e as oportunidades de desenvolvimento identificadas pelos estagiários." />
+              </div>
+            </div>
           </div>
           
           <div className="h-[350px] w-full">

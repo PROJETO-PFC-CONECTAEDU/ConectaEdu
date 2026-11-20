@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import org.hibernate.annotations.SQLRestriction;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -17,6 +19,7 @@ import java.util.UUID;
 @Table(name = "users")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "user_role", discriminatorType = DiscriminatorType.STRING)
+@SQLRestriction("deleted = false")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -46,6 +49,8 @@ public class User {
 
     //Nascem inativos para confirmação do administrador do ConectaEdu
     private boolean active = false;
+
+    private boolean deleted = false;
 
     private LocalDateTime updatedAt;
     
@@ -86,6 +91,18 @@ public class User {
     public void confirmEmail() {
         this.emailConfirmed = true;
         this.emailConfirmationToken = null;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void anonymize() {
+        this.name = "Usuário Anonimizado";
+        this.email = "deleted_" + this.id + "@conectaedu.com.br";
+        this.password = "********";
+        this.active = false;
+        this.deleted = true;
+        this.emailConfirmed = false;
+        this.is2faEnabled = false;
+        this.secret2fa = null;
         this.updatedAt = LocalDateTime.now();
     }
 }

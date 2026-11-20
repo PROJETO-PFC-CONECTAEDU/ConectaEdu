@@ -45,7 +45,9 @@ export function handleApiError(error: unknown) {
       toast.error(message);
       break;
     case 401:
-      // O tratamento de redirecionamento para login já é feito no interceptor
+      if (window.location.pathname.includes('/login')) {
+        toast.error(message);
+      }
       break;
     case 403:
       toast.error('Você não tem permissão para realizar esta ação.');

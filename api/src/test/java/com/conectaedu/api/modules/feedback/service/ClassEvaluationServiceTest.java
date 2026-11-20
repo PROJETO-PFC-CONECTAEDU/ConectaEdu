@@ -77,7 +77,7 @@ class ClassEvaluationServiceTest {
         estudanteId = UUID.randomUUID();
         var permissoes = List.of(new SimpleGrantedAuthority("ROLE_STUDENT"));
         AuthenticatedUser estudante = new AuthenticatedUser(
-                estudanteId, "estudante.teste@conectaedu.com", "", UUID.randomUUID(), null, permissoes);
+                estudanteId, "estudante.teste@conectaedu.com", "", true, UUID.randomUUID(), null, permissoes);
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(estudante, null, permissoes));
     }

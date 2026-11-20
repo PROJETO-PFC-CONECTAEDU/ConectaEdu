@@ -91,6 +91,10 @@ export function Reports() {
       const response = await api.get('/schools/active');
       return response.data;
     },
+    retry: (failureCount, error: any) => {
+      if (error.response?.status === 403 || error.response?.status === 401) return false;
+      return failureCount < 3;
+    }
   });
 
   const { data: report, isLoading } = useQuery<StudentReport>({
@@ -107,6 +111,10 @@ export function Reports() {
       return response.data;
     },
     enabled: !!studentId,
+    retry: (failureCount, error: any) => {
+      if (error.response?.status === 403 || error.response?.status === 401) return false;
+      return failureCount < 3;
+    }
   });
 
   if (isLoading) {

@@ -14,12 +14,22 @@ interface ModalProps {
   title: string;
   children: React.ReactNode;
   className?: string;
+  closeButtonLabel?: string;
+  showCloseButton?: boolean;
 }
 
-export function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
+export function Modal({ 
+  isOpen, 
+  onClose, 
+  title, 
+  children, 
+  className,
+  closeButtonLabel,
+  showCloseButton = true
+}: ModalProps) {
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape' && showCloseButton) onClose();
     };
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -43,12 +53,17 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
       >
         <div className="flex items-center justify-between p-6 border-b border-border-default">
           <h3 className="text-xl font-bold text-text-heading">{title}</h3>
-          <button 
-            onClick={onClose}
-            className="p-2 text-text-muted hover:text-text-heading hover:bg-slate-100 rounded-lg transition-colors"
-          >
-            <X size={20} />
-          </button>
+          {showCloseButton && (
+            <button 
+              onClick={onClose}
+              className={cn(
+                "p-2 text-text-muted hover:text-text-heading hover:bg-slate-100 rounded-lg transition-colors",
+                closeButtonLabel && "text-sm font-medium px-3 text-text-body"
+              )}
+            >
+              {closeButtonLabel ? closeButtonLabel : <X size={20} />}
+            </button>
+          )}
         </div>
         <div className="p-6">
           {children}

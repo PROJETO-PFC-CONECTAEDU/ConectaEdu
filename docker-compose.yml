@@ -11,14 +11,15 @@ services:
 
     environment:
       JAVA_OPTS: "-Xms128m -Xmx200m"
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_PROFILES_ACTIVE: prod
 
-      app_frontend_url: ${app_frontend_url}
+      APP_FRONTEND_URL: ${APP_FRONTEND_URL}
 
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_URL: ${DB_URL}
 
+      APP_USERNAME: ${APP_USERNAME}
       APP_PASSWORD: ${APP_PASSWORD}
       TNS_ADMIN: /app/wallet
 
@@ -30,7 +31,8 @@ services:
     image: jjsalustiano/conectaedufrontend-react:latest
     container_name: conectaedu-frontend
     environment:
-      app_frontend_url:
+      APP_FRONTEND_URL: ${APP_FRONTEND_URL}
+      VITE_GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY}
 
     ports:
       - "80:80"

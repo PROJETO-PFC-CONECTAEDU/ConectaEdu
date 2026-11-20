@@ -70,4 +70,12 @@ public class Demand {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "director_id", nullable = false)
     private SchoolDirector director;
+
+    public void anonymize() {
+        this.title = "Demanda Anonimizada";
+        this.description = "Conteúdo removido por conformidade com LGPD";
+        this.isArchived = true;
+        this.status = DemandStatus.ARCHIVED;
+        this.updatedAt = LocalDateTime.now();
+    }
 }

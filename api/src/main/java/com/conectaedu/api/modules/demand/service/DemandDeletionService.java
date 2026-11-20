@@ -3,16 +3,13 @@ package com.conectaedu.api.modules.demand.service;
 import com.conectaedu.api.modules.demand.domain.Demand;
 import com.conectaedu.api.modules.demand.repository.DemandRepository;
 import com.conectaedu.api.shared.audit.service.AuditService;
-import com.conectaedu.api.shared.audit.support.AuditDiff;
 import com.conectaedu.api.shared.enums.AuditEntityType;
-import com.conectaedu.api.shared.enums.DemandStatus;
 import com.conectaedu.api.shared.exceptions.DemandNotFoundException;
 import com.conectaedu.api.shared.security.util.TenancyValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -30,19 +27,9 @@ public class DemandDeletionService {
 
         tenancyValidator.validateDemandAccess(demand);
 
-        var beforeStatus = demand.getStatus();
-        var beforeArchived = demand.isArchived();
-
-        demand.setArchived(true);
-        demand.setStatus(DemandStatus.ARCHIVED);
-        demand.setUpdatedAt(LocalDateTime.now());
-        
+        demand.anonymize();
         demandRepository.save(demand);
 
-        AuditDiff diff = AuditDiff.create()
-                .field("status", beforeStatus, demand.getStatus())
-                .field("arquivado", beforeArchived, demand.isArchived());
-        
-        auditService.logUpdate(AuditEntityType.DEMAND, demand.getId(), demand.getTitle(), diff);
+        auditService.logDelete(AuditEntityType.DEMAND, demand.getId(), "Demanda Anonimizada");
     }
 }

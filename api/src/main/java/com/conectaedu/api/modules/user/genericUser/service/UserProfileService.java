@@ -68,11 +68,10 @@ public class UserProfileService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado!"));
 
-        user.setActive(false);
-        user.setUpdatedAt(LocalDateTime.now());
+        user.anonymize();
         userRepository.save(user);
 
-        auditService.logDelete(AuditEntityType.USER, user.getId(), user.getName());
+        auditService.logDelete(AuditEntityType.USER, user.getId(), "Usuário Anonimizado");
     }
 
     public Map<String, Object> exportUserData(UUID userId) {

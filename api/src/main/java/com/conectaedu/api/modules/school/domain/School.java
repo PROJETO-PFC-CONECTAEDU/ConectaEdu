@@ -8,11 +8,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import org.hibernate.annotations.SQLRestriction;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "schools")
+@SQLRestriction("deleted = false")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -42,6 +45,9 @@ public class School {
    @Column(name = "active", nullable = false)
    private boolean active = false;
 
+   @Column(name = "deleted", nullable = false)
+   private boolean deleted = false;
+
    @Column(name = "validated_at")
    private LocalDateTime validatedAt;
 
@@ -52,4 +58,10 @@ public class School {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    public void deactivate() {
+        this.active = false;
+        this.deleted = true;
+        this.updatedAt = LocalDateTime.now();
+    }
 }

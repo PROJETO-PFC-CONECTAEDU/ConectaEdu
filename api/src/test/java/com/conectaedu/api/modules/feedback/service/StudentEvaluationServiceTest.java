@@ -83,7 +83,7 @@ class StudentEvaluationServiceTest {
         diretorId = UUID.randomUUID();
         var permissoes = List.of(new SimpleGrantedAuthority("ROLE_SCHOOL_DIRECTOR"));
         AuthenticatedUser diretor = new AuthenticatedUser(
-                diretorId, "diretor.teste@conectaedu.com", "", null, UUID.randomUUID(), permissoes);
+                diretorId, "diretor.teste@conectaedu.com", "", true, null, UUID.randomUUID(), permissoes);
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(diretor, null, permissoes));
     }

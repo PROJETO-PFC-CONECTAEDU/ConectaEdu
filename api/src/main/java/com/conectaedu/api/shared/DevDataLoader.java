@@ -68,6 +68,7 @@ public class DevDataLoader implements CommandLineRunner {
             user.setUserRole(UserRole.PLATFORM_ADMIN);
             user.setUserType(UserType.PERSON);
             user.setActive(true);
+            user.setDeleted(false);
             user.setCreatedAt(LocalDateTime.now());
             user.setUpdatedAt(LocalDateTime.now());
             userRepository.save(user);
@@ -85,6 +86,7 @@ public class DevDataLoader implements CommandLineRunner {
             university.setCoordinator("Dr. Carlos Silva");
             university.setStatus(UniversityStatus.APPROVED);
             university.setActive(true);
+            university.setDeleted(false);
             university.setRequiredInternshipHours(120);
             university.setCreatedAt(LocalDateTime.now());
             university.setUpdatedAt(LocalDateTime.now());
@@ -104,6 +106,7 @@ public class DevDataLoader implements CommandLineRunner {
             school.setLongitude(-46.633308);
             school.setStatus(SchoolStatus.ACTIVE);
             school.setActive(true);
+            school.setDeleted(false);
             school.setCreatedAt(LocalDateTime.now());
             school.setUpdatedAt(LocalDateTime.now());
             System.out.println("[DEV] Escola criada: " + school.getName());
@@ -121,6 +124,7 @@ public class DevDataLoader implements CommandLineRunner {
             user.setUserType(UserType.PERSON);
             user.setUniversity(university);
             user.setActive(true);
+            user.setDeleted(false);
             user.setUniversityCNPJ("10000000/0000");
             user.setEmailConfirmed(true);
             user.setCreatedAt(LocalDateTime.now());
@@ -140,6 +144,7 @@ public class DevDataLoader implements CommandLineRunner {
             user.setUserType(UserType.PERSON);
             user.setSchool(school);
             user.setActive(true);
+            user.setDeleted(false);
             user.setSchoolCIE("10000000");
             user.setEmailConfirmed(true);
             user.setCreatedAt(LocalDateTime.now());
@@ -196,6 +201,8 @@ public class DevDataLoader implements CommandLineRunner {
             user.setUserRole(UserRole.STUDENT);
             user.setUserType(UserType.PERSON);
             user.setUniversity(university);
+            user.setActive(true);
+            user.setDeleted(false);
             user.setEmailConfirmed(true);
             user.setStatus(StudentStatus.VALIDATED);
             user.setAvailability("Manhã e Tarde");
@@ -239,9 +246,12 @@ public class DevDataLoader implements CommandLineRunner {
         lesson1.setDemand(ongoingDemand);
         lesson1.setStudent(student);
         lesson1.setSchool(school);
+        lesson1.setActive(true);
+        lesson1.setDeleted(false);
         lesson1.setSignedAt(LocalDateTime.now().minusDays(4));
         lesson1.setSignedBy(director.getId());
         lesson1.setCreatedAt(LocalDateTime.now().minusDays(5));
+        lesson1.setUpdatedAt(LocalDateTime.now().minusDays(5));
         lessonRepository.save(lesson1);
 
         // Aula Pendente de Assinatura (Status COMPLETED)
@@ -253,7 +263,10 @@ public class DevDataLoader implements CommandLineRunner {
         lesson2.setDemand(ongoingDemand);
         lesson2.setStudent(student);
         lesson2.setSchool(school);
+        lesson2.setActive(true);
+        lesson2.setDeleted(false);
         lesson2.setCreatedAt(LocalDateTime.now().minusDays(3));
+        lesson2.setUpdatedAt(LocalDateTime.now().minusDays(3));
         lessonRepository.save(lesson2);
 
         // 3. Demanda FINISHED (Concluída) com avaliações
