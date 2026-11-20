@@ -337,7 +337,7 @@ export function Profile() {
                   </div>
                   <div>
                     <p className="text-red-600 font-bold">Excluir minha conta</p>
-                    <p className="text-sm text-text-body">Ao excluir sua conta, todos os seus dados serão anonimizados ou removidos.</p>
+                    <p className="text-sm text-text-body">Ao excluir sua conta, todos os seus dados serão anonimizados.</p>
                   </div>
                 </div>
                 <Button 
@@ -418,7 +418,7 @@ export function Profile() {
         onClose={() => setIsModalOpen(false)}
         onConfirm={handleConfirmRevoke}
         title="Revogar Consentimento"
-        description="Ao revogar seu consentimento, você poderá perder o acesso a certas funcionalidades da plataforma até que aceite os termos novamente. Deseja continuar?"
+        description="Ao revogar seu consentimento, você poderá perderá o acesso a plataforma até que aceite os termos novamente. Deseja continuar?"
         confirmText="Revogar"
         cancelText="Cancelar"
       />

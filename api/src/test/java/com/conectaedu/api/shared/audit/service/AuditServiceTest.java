@@ -54,7 +54,7 @@ class AuditServiceTest {
 
     private void autenticar(String email) {
         AuthenticatedUser usuario = new AuthenticatedUser(
-                UUID.randomUUID(), email, "senha", null, null,
+                UUID.randomUUID(), email, "senha", true, null, null,
                 List.of(new SimpleGrantedAuthority("ROLE_PLATFORM_ADMIN")));
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities()));

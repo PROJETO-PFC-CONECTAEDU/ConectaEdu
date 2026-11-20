@@ -25,8 +25,9 @@ public class PlatformAdminDeletionService {
         PlatformAdmin admin = platformAdminRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Administrador da plataforma não encontrado!"));
 
-        platformAdminRepository.deleteById(id);
+        admin.anonymize();
+        platformAdminRepository.save(admin);
 
-        auditService.logDelete(AuditEntityType.USER, admin.getId(), admin.getName());
+        auditService.logDelete(AuditEntityType.USER, admin.getId(), "Usuário Anonimizado");
     }
 }

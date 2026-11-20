@@ -29,8 +29,9 @@ public class StudentDeletionService {
 
         tenancyValidator.validateStudentAccess(student);
 
-        studentRepository.deleteById(id);
+        student.anonymize();
+        studentRepository.save(student);
 
-        auditService.logDelete(AuditEntityType.STUDENT, student.getId(), student.getName());
+        auditService.logDelete(AuditEntityType.STUDENT, student.getId(), "Usuário Anonimizado");
     }
 }

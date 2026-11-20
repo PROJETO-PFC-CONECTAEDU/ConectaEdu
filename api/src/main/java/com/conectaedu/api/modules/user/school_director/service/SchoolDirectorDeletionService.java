@@ -25,8 +25,9 @@ public class SchoolDirectorDeletionService {
         SchoolDirector director = schoolDirectorRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Diretor de escola não encontrado!"));
 
-        schoolDirectorRepository.deleteById(id);
+        director.anonymize();
+        schoolDirectorRepository.save(director);
 
-        auditService.logDelete(AuditEntityType.SCHOOL_DIRECTOR, director.getId(), director.getName());
+        auditService.logDelete(AuditEntityType.SCHOOL_DIRECTOR, director.getId(), "Usuário Anonimizado");
     }
 }
