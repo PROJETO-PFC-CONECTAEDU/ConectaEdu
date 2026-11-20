@@ -24,11 +24,12 @@ O projeto visa solucionar a fragmentação na comunicação entre escolas e univ
 - **Mapa Interativo**: Localização geográfica das instituições parceiras.
 - **Sistema de Notificações**: Alertas sobre agendamentos, novas demandas e feedbacks.
 
+
 ## Tecnologias Utilizadas
 
 ### Backend
 - **Linguagem**: Java 21
-- **Framework**: Spring Boot 4.1.0
+- **Framework**: Spring Boot 3.3.5
 - **Segurança**: Spring Security com autenticação JWT
 - **Banco de Dados**: H2 (Desenvolvimento) / Oracle Database (Produção)
 - **Documentação API**: Notion
@@ -68,8 +69,6 @@ Crie um arquivo `.env` na pasta `api/` (para o Maven) e opcionalmente na raiz do
 ```env
 # URL do Frontend (CORS e links de redirecionamento)
 APP_FRONTEND_URL=http://localhost:5173
-# Caso o docker-compose peça em minúsculo:
-app_frontend_url=http://localhost:5173
 
 # Segurança
 JWT_SECRET=sua_chave_secreta_aqui
@@ -118,5 +117,11 @@ npm install
 npm run dev
 ```
 O frontend estará disponível em `http://localhost:5173`.
+
+### Passo 5: Configuração para Produção (Oracle Autonomous)
+Para rodar em produção com Oracle Autonomous Database:
+1. Certifique-se de que a **Wallet** do banco de dados está na pasta `/home/opc/app/wallet` no servidor.
+2. O arquivo `.env` deve conter as credenciais e a URL correta (ex: `jdbc:oracle:thin:@nome_db_high?TNS_ADMIN=/app/wallet`).
+3. As dependências de segurança (PKI) já estão incluídas no `pom.xml`.
 
 
