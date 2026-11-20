@@ -22,9 +22,11 @@ public interface ClassEvaluationRepository extends JpaRepository<ClassEvaluation
            "FROM ClassEvaluation e " +
            "WHERE (:universityId IS NULL OR e.student.university.id = :universityId) " +
            "AND (:schoolId IS NULL OR e.demand.school.id = :schoolId) " +
-           "AND (:demandId IS NULL OR e.demand.id = :demandId)")
+           "AND (:demandId IS NULL OR e.demand.id = :demandId) " +
+           "AND (:studentId IS NULL OR e.student.id = :studentId)")
     Double getAverageScoreByFilters(
             @Param("universityId") UUID universityId,
             @Param("schoolId") UUID schoolId,
-            @Param("demandId") UUID demandId);
+            @Param("demandId") UUID demandId,
+            @Param("studentId") UUID studentId);
 }

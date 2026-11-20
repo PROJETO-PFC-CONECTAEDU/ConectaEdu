@@ -14,8 +14,12 @@ export function Dashboard() {
   const { user } = useAuth();
   const [schoolId, setSchoolId] = useState<string>('');
   const [demandId, setDemandId] = useState<string>('');
+  const [studentId, setStudentId] = useState<string>('');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const [schools, setSchools] = useState<any[]>([]);
   const [demands, setDemands] = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
 
   useEffect(() => {
     if (user?.role === 'PLATFORM_ADMIN' || user?.role === 'UNIVERSITY_ADMIN') {
@@ -28,6 +32,12 @@ export function Dashboard() {
       api.get('/demands')
         .then(res => setDemands(res.data))
         .catch(() => setDemands([]));
+    }
+
+    if (user?.role === 'PLATFORM_ADMIN' || user?.role === 'UNIVERSITY_ADMIN') {
+      api.get('/students')
+        .then(res => setStudents(res.data))
+        .catch(() => setStudents([]));
     }
   }, [user]);
 
@@ -44,11 +54,14 @@ export function Dashboard() {
   }, [filteredDemands, demandId]);
 
   const { data: stats, isLoading } = useQuery({
-    queryKey: ['dashboard-stats', schoolId, demandId],
+    queryKey: ['dashboard-stats', schoolId, demandId, studentId, startDate, endDate],
     queryFn: async () => {
       const params: any = {};
       if (schoolId) params.schoolId = schoolId;
       if (demandId) params.demandId = demandId;
+      if (studentId) params.studentId = studentId;
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
       const response = await api.get('/dashboard/stats', { params });
       return response.data.statistics;
     },
@@ -90,6 +103,8 @@ export function Dashboard() {
 
   const showSchoolFilter = user?.role === 'PLATFORM_ADMIN' || user?.role === 'UNIVERSITY_ADMIN';
   const showDemandFilter = user?.role === 'PLATFORM_ADMIN' || user?.role === 'UNIVERSITY_ADMIN' || user?.role === 'SCHOOL_DIRECTOR';
+  const showStudentFilter = user?.role === 'PLATFORM_ADMIN' || user?.role === 'UNIVERSITY_ADMIN';
+  const showPeriodFilter = true;
 
   return (
     <div className="flex-1">
@@ -124,7 +139,9 @@ export function Dashboard() {
 
             {showDemandFilter && (
               <div className="flex flex-col min-w-[200px]">
-                <label className="text-xs text-text-body mb-1 font-medium">Demanda / Projeto</label>
+                <label className="text-xs text-text-body mb-1 font-medium">
+                  {user?.role === 'SCHOOL_DIRECTOR' ? 'Aula de Reforço / Projeto' : 'Demanda / Projeto'}
+                </label>
                 <select 
                   value={demandId} 
                   onChange={(e) => setDemandId(e.target.value)}
@@ -138,9 +155,54 @@ export function Dashboard() {
               </div>
             )}
 
-            {(schoolId || demandId) && (
+            {showStudentFilter && (
+              <div className="flex flex-col min-w-[200px]">
+                <label className="text-xs text-text-body mb-1 font-medium">Estudante</label>
+                <select 
+                  value={studentId} 
+                  onChange={(e) => setStudentId(e.target.value)}
+                  className="px-3 py-2 border border-border-light rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                >
+                  <option value="">Todos os Estudantes</option>
+                  {students.map(student => (
+                    <option key={student.id} value={student.id}>{student.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {showPeriodFilter && (
+              <>
+                <div className="flex flex-col">
+                  <label className="text-xs text-text-body mb-1 font-medium">Data Inicial</label>
+                  <input 
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="px-3 py-2 border border-border-light rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-xs text-text-body mb-1 font-medium">Data Final</label>
+                  <input 
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="px-3 py-2 border border-border-light rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                  />
+                </div>
+              </>
+            )}
+
+            {(schoolId || demandId || studentId || startDate || endDate) && (
               <button 
-                onClick={() => { setSchoolId(''); setDemandId(''); }}
+                onClick={() => { 
+                  setSchoolId(''); 
+                  setDemandId(''); 
+                  setStudentId('');
+                  setStartDate('');
+                  setEndDate('');
+                }}
                 className="mt-5 text-xs text-brand-primary hover:underline font-medium"
               >
                 Limpar filtros
@@ -150,13 +212,6 @@ export function Dashboard() {
         )}
 
         {renderDashboard()}
-        
-        <Card className="p-8">
-          <h3 className="text-xl font-bold text-text-heading mb-4">Plataforma ConectaEdu</h3>
-          <p className="text-text-body leading-relaxed">
-            Esta plataforma conecta estudantes universitários a escolas para apoio pedagógico, promovendo a formação acadêmica e o impacto social.
-          </p>
-        </Card>
       </div>
     </div>
   );
