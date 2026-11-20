@@ -71,12 +71,12 @@ jobs:
             TNS_ADMIN=/app/wallet
             APP_USERNAME=${{ secrets.APP_USERNAME }}
             APP_PASSWORD=${{ secrets.APP_PASSWORD }}
-            VITE_API_KEY=${{ secrets.VITE_API_KEY }}
+            VITE_GOOGLE_MAPS_API_KEY=${{ secrets.VITE_API_KEY }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             EOF
 
             docker compose pull
-            docker compose up -d --remove-orphans
+            docker compose up -d --force-recreate --remove-orphans
             docker image prune -af
           
             
