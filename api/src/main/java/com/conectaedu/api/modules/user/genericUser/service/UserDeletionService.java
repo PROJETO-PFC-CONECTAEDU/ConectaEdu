@@ -23,8 +23,8 @@ public class UserDeletionService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado!"));
 
-        user.setActive(false);
+        user.anonymize();
         userRepository.save(user);
-        auditService.logDelete(AuditEntityType.USER, user.getId(), user.getName());
+        auditService.logDelete(AuditEntityType.USER, user.getId(), "Usuário Anonimizado");
     }
 }

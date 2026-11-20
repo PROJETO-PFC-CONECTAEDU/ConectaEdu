@@ -49,6 +49,7 @@ public class CustomUserDetails implements UserDetailsService {
                 user.getId(),
                 user.getEmail(),
                 user.getPassword(),
+                user.isActive(),
                 universityId,
                 schoolId,
                 authorities);

@@ -38,4 +38,11 @@ public class ProfileController {
         UUID userId = SecurityContextHolder.getAuthenticatedUserId();
         return ResponseEntity.ok(userProfileService.exportUserData(userId));
     }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteOwnAccount() {
+        UUID userId = SecurityContextHolder.getAuthenticatedUserId();
+        userProfileService.deleteOwnAccount(userId);
+        return ResponseEntity.noContent().build();
+    }
 }

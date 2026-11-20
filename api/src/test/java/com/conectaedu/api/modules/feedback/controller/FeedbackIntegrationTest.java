@@ -150,7 +150,7 @@ class FeedbackIntegrationTest {
     private RequestPostProcessor autenticado(UUID id, String papel, UUID escolaId) {
         var permissoes = List.of(new SimpleGrantedAuthority("ROLE_" + papel));
         return SecurityMockMvcRequestPostProcessors.user(
-                new AuthenticatedUser(id, papel.toLowerCase() + "@conectaedu.com", "", null, escolaId, permissoes));
+                new AuthenticatedUser(id, papel.toLowerCase() + "@conectaedu.com", "", true, null, escolaId, permissoes));
     }
 
     private RequestPostProcessor comoDiretor() {

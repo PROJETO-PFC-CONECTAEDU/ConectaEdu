@@ -23,8 +23,9 @@ public class UniversityAdminDeletionService {
         UniversityAdmin admin = universityAdminRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Administrador de universidade não encontrado!"));
 
-        universityAdminRepository.deleteById(id);
+        admin.anonymize();
+        universityAdminRepository.save(admin);
 
-        auditService.logDelete(AuditEntityType.UNIVERSITY_ADMIN, admin.getId(), admin.getName());
+        auditService.logDelete(AuditEntityType.UNIVERSITY_ADMIN, admin.getId(), "Usuário Anonimizado");
     }
 }

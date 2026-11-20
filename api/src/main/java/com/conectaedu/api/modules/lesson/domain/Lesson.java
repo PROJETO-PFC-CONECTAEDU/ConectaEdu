@@ -12,12 +12,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import org.hibernate.annotations.SQLRestriction;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "lesson")
+@SQLRestriction("deleted = false")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -76,9 +79,19 @@ public class Lesson {
     private LocalDateTime reminderSentAt;
     private LocalDateTime escalatedAt;
 
+    private boolean active = true;
+    private boolean deleted = false;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private UUID createdBy;
+
+    public void deactivate() {
+        this.active = false;
+        this.deleted = true;
+        this.contentTaught = "Conteúdo Anonimizado";
+        this.updatedAt = LocalDateTime.now();
+    }
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "demand_id", nullable = false)

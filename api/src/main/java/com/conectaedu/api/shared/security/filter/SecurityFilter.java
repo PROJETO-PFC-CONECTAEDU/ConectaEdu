@@ -56,7 +56,7 @@ public class SecurityFilter extends OncePerRequestFilter {
                     UUID universityId = universityIdClaim != null ? UUID.fromString(universityIdClaim) : null;
                     UUID schoolId = schoolIdClaim != null ? UUID.fromString(schoolIdClaim) : null;
 
-                    var userDetails = new AuthenticatedUser(UUID.fromString(id), email, "", universityId, schoolId, authorities);
+                    var userDetails = new AuthenticatedUser(UUID.fromString(id), email, "", true, universityId, schoolId, authorities);
 
                     var authentication = new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
