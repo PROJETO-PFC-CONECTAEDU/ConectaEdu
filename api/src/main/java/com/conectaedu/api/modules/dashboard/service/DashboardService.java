@@ -48,6 +48,9 @@ public class DashboardService {
 
         UUID schoolId = filter != null ? filter.getSchoolId() : null;
         UUID demandId = filter != null ? filter.getDemandId() : null;
+        UUID studentId = filter != null ? filter.getStudentId() : null;
+        java.time.LocalDate startDate = filter != null ? filter.getStartDate() : null;
+        java.time.LocalDate endDate = filter != null ? filter.getEndDate() : null;
 
         if (user.getUserRole() == UserRole.PLATFORM_ADMIN) {
             stats.put("schoolsCount", schoolRepository.count());
@@ -56,15 +59,13 @@ public class DashboardService {
             stats.put("waitingDemands", demandRepository.countByStatusAndFilters(DemandStatus.WAITING, schoolId, demandId));
             stats.put("finishedDemands", demandRepository.countByStatusAndFilters(DemandStatus.FINISHED, schoolId, demandId));
 
-            // Indicadores extras de Feedback (Sempre globais para Admin)
-            stats.put("studentsAverageScore", studentEvaluationRepository.getAverageScoreByFilters(null, null, null));
-            stats.put("classAverageScore", classEvaluationRepository.getAverageScoreByFilters(null, null, null));
+            // Indicadores extras de Feedback (Sempre globais para Admin, a menos que filtrado)
+            stats.put("studentsAverageScore", studentEvaluationRepository.getAverageScoreByFilters(null, schoolId, demandId, studentId));
+            stats.put("classAverageScore", classEvaluationRepository.getAverageScoreByFilters(null, schoolId, demandId, studentId));
 
             // Indicadores extras para Admin quando filtrado
-            if (schoolId != null || demandId != null) {
-                stats.put("lessonsByPeriod", lessonRepository.countByFiltersAndPeriod(null, schoolId, demandId, null));
-                stats.put("nineBoxDistribution", lessonRepository.countNineBoxByFilters(null, schoolId, demandId, null));
-            }
+            stats.put("lessonsByPeriod", lessonRepository.countByFiltersAndPeriod(null, schoolId, demandId, studentId, startDate, endDate));
+            stats.put("nineBoxDistribution", lessonRepository.countNineBoxByFilters(null, schoolId, demandId, studentId, startDate, endDate));
         } else if (user instanceof UniversityAdmin admin) {
             if (admin.getUniversity() == null) {
                 return DashboardStatsDTO.builder().statistics(stats).build();
@@ -82,15 +83,15 @@ public class DashboardService {
 
             stats.put("completedDemands", demandRepository.countFinishedDemandsByUniversityId(universityId));
 
-            // Indicadores de Feedback (Sem filtros dinâmicos de escola/demanda)
-            stats.put("studentsAverageScore", studentEvaluationRepository.getAverageScoreByFilters(universityId, null, null));
-            stats.put("classAverageScore", classEvaluationRepository.getAverageScoreByFilters(universityId, null, null));
+            // Indicadores de Feedback
+            stats.put("studentsAverageScore", studentEvaluationRepository.getAverageScoreByFilters(universityId, schoolId, demandId, studentId));
+            stats.put("classAverageScore", classEvaluationRepository.getAverageScoreByFilters(universityId, schoolId, demandId, studentId));
 
             // Gráfico para Universidade filtrado
-            stats.put("lessonsByPeriod", lessonRepository.countByFiltersAndPeriod(universityId, schoolId, demandId, null));
+            stats.put("lessonsByPeriod", lessonRepository.countByFiltersAndPeriod(universityId, schoolId, demandId, studentId, startDate, endDate));
 
             // Distribuição Nine Box filtrada
-            stats.put("nineBoxDistribution", lessonRepository.countNineBoxByFilters(universityId, schoolId, demandId, null));
+            stats.put("nineBoxDistribution", lessonRepository.countNineBoxByFilters(universityId, schoolId, demandId, studentId, startDate, endDate));
         } else if (user instanceof SchoolDirector director) {
             if (director.getSchool() == null) {
                 return DashboardStatsDTO.builder().statistics(stats).build();
@@ -98,22 +99,22 @@ public class DashboardService {
             var userSchoolId = director.getSchool().getId();
             tenancyValidator.validateSchool(userSchoolId);
 
-            // O diretor já está restrito à sua escola, mas pode filtrar por demanda
+            // O diretor já está restrito à sua escola, mas pode filtrar por demanda e período
             stats.put("myDemandsCount", demandRepository.countByFilters(userSchoolId, demandId));
             stats.put("openVacanciesCount", demandRepository.countByStatusAndFilters(DemandStatus.WAITING, userSchoolId, demandId));
             stats.put("ongoingClassesCount", demandRepository.countByStatusAndFilters(DemandStatus.ONGOING, userSchoolId, demandId));
             stats.put("successfulDemandsCount", demandRepository.countByStatusAndFilters(DemandStatus.FINISHED, userSchoolId, demandId));
             stats.put("validatedLessonsCount", lessonRepository.countValidatedByFilters(userSchoolId, demandId));
 
-            // Indicadores de Feedback (Sem filtro dinâmico de demanda)
-            stats.put("schoolAverageScore", classEvaluationRepository.getAverageScoreByFilters(null, userSchoolId, null));
-            stats.put("studentsAverageScore", studentEvaluationRepository.getAverageScoreByFilters(null, userSchoolId, null));
+            // Indicadores de Feedback
+            stats.put("schoolAverageScore", classEvaluationRepository.getAverageScoreByFilters(null, userSchoolId, demandId, studentId));
+            stats.put("studentsAverageScore", studentEvaluationRepository.getAverageScoreByFilters(null, userSchoolId, demandId, studentId));
 
             // Gráfico para Diretor filtrado
-            stats.put("lessonsByPeriodAndDemand", lessonRepository.countBySchoolAndPeriodAndDemandFiltered(userSchoolId, demandId));
+            stats.put("lessonsByPeriodAndDemand", lessonRepository.countBySchoolAndPeriodAndDemandFiltered(userSchoolId, demandId, startDate, endDate));
 
             // Distribuição Nine Box filtrada
-            stats.put("nineBoxDistribution", lessonRepository.countNineBoxByFilters(null, userSchoolId, demandId, null));
+            stats.put("nineBoxDistribution", lessonRepository.countNineBoxByFilters(null, userSchoolId, demandId, studentId, startDate, endDate));
         } else if (user instanceof Student student) {
             tenancyValidator.validateUserAccess(student.getId());
 
@@ -123,8 +124,8 @@ public class DashboardService {
             stats.put("applicationsCount", demandRepository.countByCandidateId(student.getId()));
             stats.put("interestAreas", student.getInterestAreas());
 
-            // Gráfico para Estudante filtrado (embora estudante geralmente só veja o dele, demandId pode ser útil se ele estiver em várias)
-            stats.put("lessonsByPeriod", lessonRepository.countByFiltersAndPeriod(null, schoolId, demandId, student.getId()));
+            // Gráfico para Estudante filtrado
+            stats.put("lessonsByPeriod", lessonRepository.countByFiltersAndPeriod(null, schoolId, demandId, student.getId(), startDate, endDate));
             
             Optional<Demand> currentDemand = demandRepository.findFirstByStudentIdAndStatus(student.getId(), DemandStatus.ONGOING);
             currentDemand.ifPresent(demand -> stats.put("currentProject", Map.of(
