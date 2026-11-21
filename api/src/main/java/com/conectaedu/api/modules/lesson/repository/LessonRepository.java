@@ -43,7 +43,7 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
     List<Lesson> findBySchool_IdOrderByScheduledStartAsc(UUID schoolId);
 
     @Query(value = """
-            SELECT FORMATDATETIME(l.scheduled_start, 'MM/yyyy') as period, COUNT(l.id) as count
+            SELECT TO_CHAR(l.scheduled_start, 'MM/YYYY') as period, COUNT(l.id) as count
             FROM lesson l
             INNER JOIN users s ON l.student_id = s.id
             WHERE (:universityId IS NULL OR s.university_id = :universityId)
@@ -65,7 +65,7 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
             @Param("endDate") java.time.LocalDate endDate);
 
     @Query(value = """
-            SELECT FORMATDATETIME(l.scheduled_start, 'MM/yyyy') as period, d.title as demand, COUNT(l.id) as count
+            SELECT TO_CHAR(l.scheduled_start, 'MM/YYYY') as period, d.title as demand, COUNT(l.id) as count
             FROM lesson l
             INNER JOIN demand d ON l.demand_id = d.id
             WHERE (:schoolId IS NULL OR l.school_id = :schoolId)
