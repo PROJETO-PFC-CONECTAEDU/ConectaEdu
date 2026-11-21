@@ -17,7 +17,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/platform-admins")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('PLATFORM_ADMIN')")
 public class PlatformAdminController {
 
     private final IPlatformAdminFacade platformAdminFacade;
