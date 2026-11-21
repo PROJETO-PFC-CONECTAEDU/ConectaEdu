@@ -36,7 +36,7 @@ public class StudentUpdateService {
 
     @Transactional
     public StudentResponseDTO updateStudent(UUID id, StudentUpdateRequestDTO request) {
-        Student student = studentRepository.findById(id)
+        Student student = studentRepository.findWithInterestAreasById(id)
                 .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado!"));
 
         tenancyValidator.validateStudentAccess(student);

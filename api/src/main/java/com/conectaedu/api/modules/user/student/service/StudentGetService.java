@@ -51,7 +51,7 @@ public class StudentGetService {
 
     @Transactional(readOnly = true)
     public StudentResponseDTO getStudent(UUID id) {
-        Student student = studentRepository.findById(id)
+        Student student = studentRepository.findWithInterestAreasById(id)
                 .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado!"));
 
         tenancyValidator.validateStudentAccess(student);

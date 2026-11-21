@@ -479,7 +479,7 @@ export function DemandDetail() {
                         </div>
                       </div>
                       <div className="flex items-center gap-3 flex-wrap">
-                        {isStudent && demand.status === 'FINISHED' && (
+                        {isStudent && demand.studentId === user?.id && demand.status === 'FINISHED' && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -843,7 +843,7 @@ export function DemandDetail() {
                                 </button>
                               )}
 
-                              {(isDirector || isStudent) && lesson.status === 'CONFIRMED' && (
+                              {(isDirector || (isStudent && demand.studentId === user?.id)) && lesson.status === 'CONFIRMED' && (
                                 <button 
                                   onClick={() => { setSelectedLesson(lesson); setIsCancelLessonModalOpen(true); }}
                                   className="p-1.5 text-text-muted hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
@@ -864,7 +864,7 @@ export function DemandDetail() {
                                 </button>
                               )}
 
-                              {isStudent && lesson.status === 'SCHEDULED' && (
+                              {isStudent && demand.studentId === user?.id && lesson.status === 'SCHEDULED' && (
                                 <button 
                                   onClick={() => confirmLessonMutation.mutate(lesson.id)}
                                   disabled={confirmLessonMutation.isPending}
@@ -875,7 +875,7 @@ export function DemandDetail() {
                                 </button>
                               )}
 
-                              {isStudent && lesson.status === 'CONFIRMED' && (
+                              {isStudent && demand.studentId === user?.id && lesson.status === 'CONFIRMED' && (
                                 <button 
                                   onClick={() => { setSelectedLesson(lesson); setIsRegisterLessonModalOpen(true); }}
                                   className="p-1.5 text-text-muted hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"

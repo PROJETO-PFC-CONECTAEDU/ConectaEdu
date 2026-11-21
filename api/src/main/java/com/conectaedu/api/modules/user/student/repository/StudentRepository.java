@@ -2,17 +2,24 @@ package com.conectaedu.api.modules.user.student.repository;
 
 import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.shared.enums.StudentStatus;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface StudentRepository extends JpaRepository<Student, UUID> {
+    @EntityGraph(attributePaths = "interestAreas")
     List<Student> findByUniversityId(UUID universityId);
+
+    @Override
+    @EntityGraph(attributePaths = "interestAreas")
+    List<Student> findAll();
 
     @Query("SELECT COUNT(DISTINCT s) FROM Student s " +
            "LEFT JOIN Demand d ON d.student.id = s.id " +
@@ -26,6 +33,7 @@ public interface StudentRepository extends JpaRepository<Student, UUID> {
             @Param("schoolId") UUID schoolId,
             @Param("demandId") UUID demandId);
 
+    @EntityGraph(attributePaths = "interestAreas")
     @Query("SELECT DISTINCT s FROM Student s WHERE s.id IN (" +
            "SELECT d.student.id FROM Demand d WHERE d.school.id = :schoolId AND d.student IS NOT NULL) OR s.id IN (" +
            "SELECT c.id FROM Demand d JOIN d.candidates c WHERE d.school.id = :schoolId)")
@@ -35,4 +43,7 @@ public interface StudentRepository extends JpaRepository<Student, UUID> {
            "SELECT d.student.id FROM Demand d WHERE d.school.id = :schoolId AND d.student IS NOT NULL) OR s.id IN (" +
            "SELECT c.id FROM Demand d JOIN d.candidates c WHERE d.school.id = :schoolId))")
     boolean isStudentLinkedToSchool(@Param("studentId") UUID studentId, @Param("schoolId") UUID schoolId);
+
+    @EntityGraph(attributePaths = "interestAreas")
+    Optional<Student> findWithInterestAreasById(UUID id);
 }

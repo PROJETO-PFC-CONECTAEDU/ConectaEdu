@@ -30,7 +30,7 @@ public class DemandRecommendationService {
 
     @Transactional(readOnly = true)
     public List<DemandStudentDTO> getRecommendedDemands(UUID studentId) {
-        Student student = studentRepository.findById(studentId)
+        Student student = studentRepository.findWithInterestAreasById(studentId)
                 .orElseThrow(() -> new UserNotFoundException("Estudante não encontrado"));
 
         tenancyValidator.validateStudentAccess(student);

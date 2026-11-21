@@ -29,10 +29,7 @@ import com.conectaedu.api.modules.lesson.domain.Lesson;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -139,7 +136,13 @@ public class DashboardService {
             stats.put("myHours", myHours);
             
             stats.put("applicationsCount", demandRepository.countByCandidateId(student.getId()));
-            stats.put("interestAreas", student.getInterestAreas());
+
+            //Alterado por questão de incompatibilidade com Oracle DB
+            Student studentWithInterestAreas = studentRepository
+                    .findWithInterestAreasById(student.getId())
+                    .orElseThrow();
+
+            stats.put("interestAreas", new ArrayList<>(studentWithInterestAreas.getInterestAreas()));
 
             // Gráfico para Estudante filtrado
             stats.put("lessonsByPeriod", lessonRepository.countByFiltersAndPeriod(null, schoolId, demandId, student.getId(), startDate, endDate));
