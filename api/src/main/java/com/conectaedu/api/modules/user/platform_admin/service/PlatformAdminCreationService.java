@@ -20,7 +20,6 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
-@PreAuthorize( "hasRole('PLATFORM_ADMIN')")
 public class PlatformAdminCreationService {
 
     private final UserRepository userRepository;
