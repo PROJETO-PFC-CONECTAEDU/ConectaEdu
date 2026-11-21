@@ -40,6 +40,15 @@ jobs:
       - name: Checkout do código (para pegar o docker-compose.yml)
         uses: actions/checkout@v4
 
+      - name: Executar comandos na VM via SSH (Preparar diretório)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.OCI_HOST }}
+          username: ${{ secrets.OCI_USER }}
+          key: ${{ secrets.OCI_SSH_KEY }}
+          script: |
+            mkdir -p ~/app
+
       - name: Copiar docker-compose.yml via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -49,15 +58,13 @@ jobs:
           source: "docker-compose.yml"
           target: "~/app"
 
-
-      - name: Executar comandos na VM via SSH
+      - name: Executar comandos na VM via SSH (Deploy)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.OCI_HOST }}
           username: ${{ secrets.OCI_USER }}
           key: ${{ secrets.OCI_SSH_KEY }}
           script: |
-            mkdir -p ~/app
             cd ~/app
 
             docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
@@ -75,8 +82,9 @@ jobs:
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             EOF
 
-            docker compose pull
-            docker compose up -d --force-recreate --remove-orphans
+            docker-compose down --remove-orphans --volumes
+            docker-compose pull
+            docker-compose up -d
             docker image prune -af
           
             
