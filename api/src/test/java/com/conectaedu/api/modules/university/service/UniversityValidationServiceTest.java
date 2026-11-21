@@ -96,9 +96,36 @@ class UniversityValidationServiceTest {
         verify(universityRepository).save(universidade);
     }
 
-    //APPROVED e REJECTED sao situacoes finais, nao voltam para validacao.
     @Test
-    void deveLancarExcecaoQuandoUniversidadeJaFoiAvaliada() {
+    void deveInativarUniversidadeAtiva() {
+        University universidade = universidadePendente();
+        universidade.setStatus(UniversityStatus.APPROVED);
+        universidade.setActive(true);
+        when(universityRepository.findById(universidade.getId())).thenReturn(Optional.of(universidade));
+
+        UniversityResponseDTO resposta = universityValidationService.deactivateUniversity(universidade.getId());
+
+        assertEquals(UniversityStatus.INACTIVE.name(), resposta.status());
+        assertFalse(resposta.active());
+        verify(universityRepository).save(universidade);
+    }
+
+    @Test
+    void deveReativarUniversidadeInativa() {
+        University universidade = universidadePendente();
+        universidade.setStatus(UniversityStatus.INACTIVE);
+        universidade.setActive(false);
+        when(universityRepository.findById(universidade.getId())).thenReturn(Optional.of(universidade));
+
+        UniversityResponseDTO resposta = universityValidationService.validateUniversity(universidade.getId(), "Reativando");
+
+        assertEquals(UniversityStatus.APPROVED.name(), resposta.status());
+        assertTrue(resposta.active());
+        verify(universityRepository).save(universidade);
+    }
+
+    @Test
+    void deveLancarExcecaoQuandoUniversidadeJaEstaAtiva() {
         // preparacao
         University universidade = universidadePendente();
         universidade.setStatus(UniversityStatus.APPROVED);
@@ -109,7 +136,7 @@ class UniversityValidationServiceTest {
                 () -> universityValidationService.validateUniversity(universidade.getId(), "Reavaliando"));
 
         // verificacao
-        assertEquals("Universidade já avaliada. Situação atual: APPROVED", erro.getMessage());
+        assertEquals("Universidade já aprovada/ativa!", erro.getMessage());
         verify(universityRepository, never()).save(any(University.class));
         verify(auditService, never()).logUpdate(any(), any(), any(), any());
     }

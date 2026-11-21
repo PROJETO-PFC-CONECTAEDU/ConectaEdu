@@ -3,6 +3,7 @@ package com.conectaedu.api.modules.auth.handler;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.conectaedu.api.shared.exceptions.BusinessException;
 import com.conectaedu.api.shared.exceptions.EmailAlreadyExistsException;
+import com.conectaedu.api.shared.exceptions.InactiveInstitutionException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,11 @@ public class AuthExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ProblemDetail handleBusiness(BusinessException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(InactiveInstitutionException.class)
+    public ProblemDetail handleInactiveInstitution(InactiveInstitutionException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 
     @ExceptionHandler(EmailAlreadyExistsException.class)

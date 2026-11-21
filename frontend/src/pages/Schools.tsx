@@ -22,6 +22,7 @@ interface School {
   cie: string;
   address?: string;
   active: boolean;
+  status: 'PENDING_ACTIVATION' | 'ACTIVE' | 'INACTIVE';
   latitude: number;
   longitude: number;
 }
@@ -130,9 +131,9 @@ export function Schools() {
   const isAdmin = user?.role === 'PLATFORM_ADMIN';
 
   const toggleStatusMutation = useMutation({
-    mutationFn: async ({ id, active, cie }: { id: string, active: boolean, cie: string }) => {
+    mutationFn: async ({ id, active }: { id: string, active: boolean }) => {
       const endpoint = active ? 'deactivate' : 'activate';
-      await api.patch(`/schools/${id}/${endpoint}`, { cie });
+      await api.patch(`/schools/${id}/${endpoint}`, { validationNotes: active ? 'Inativada pelo administrador' : 'Ativada pelo administrador' });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schools'] });
@@ -265,14 +266,18 @@ export function Schools() {
 
                 <div className="mt-6 flex items-center justify-between">
                   <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${
-                    school.active ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                    school.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 
+                    school.status === 'INACTIVE' ? 'bg-red-100 text-red-700' :
+                    'bg-amber-100 text-amber-700'
                   }`}>
-                    {school.active ? 'Ativa' : 'Pendente'}
+                    {school.status === 'ACTIVE' ? 'Ativa' : 
+                     school.status === 'INACTIVE' ? 'Inativa' : 
+                     'Pendente'}
                   </span>
                   
                   {!school.active && isAdmin && (
                     <button 
-                      onClick={() => toggleStatusMutation.mutate({ id: school.id, active: school.active, cie: school.cie })}
+                      onClick={() => toggleStatusMutation.mutate({ id: school.id, active: school.active })}
                       className="text-emerald-500 hover:text-emerald-600 transition-colors"
                       title="Ativar"
                     >
@@ -288,7 +293,7 @@ export function Schools() {
                       </div>
                       {isAdmin && (
                         <button 
-                          onClick={() => toggleStatusMutation.mutate({ id: school.id, active: school.active, cie: school.cie })}
+                          onClick={() => toggleStatusMutation.mutate({ id: school.id, active: school.active })}
                           className="text-text-muted hover:text-red-500 transition-colors"
                           title="Desativar"
                         >

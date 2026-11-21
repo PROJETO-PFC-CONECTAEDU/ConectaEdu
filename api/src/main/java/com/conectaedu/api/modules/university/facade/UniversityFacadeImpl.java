@@ -52,6 +52,16 @@ public class UniversityFacadeImpl implements IUniversityFacade {
         return universityValidationService.validateUniversity(id, request.validationNotes());
     }
 
+    @Override
+    public UniversityResponseDTO activateUniversity(UUID id, UniversityValidationRequestDTO request) {
+        return universityValidationService.validateUniversity(id, request.validationNotes());
+    }
+
+    @Override
+    public UniversityResponseDTO deactivateUniversity(UUID id, UniversityValidationRequestDTO request) {
+        return universityValidationService.deactivateUniversity(id);
+    }
+
     public UniversityResponseDTO rejectUniversity(UUID id, UniversityValidationRequestDTO request) {
         return universityValidationService.rejectUniversity(id, request.validationNotes());
     }
