@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -71,7 +72,9 @@ public class StudentGetService {
                 student.getAddress(),
                 student.getLatitude(),
                 student.getLongitude(),
-                student.getInterestAreas() != null ? student.getInterestAreas() : List.of()
+                student.getInterestAreas() != null
+                        ? new ArrayList<>(student.getInterestAreas())
+                        : List.of()
         );
     }
 }
