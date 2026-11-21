@@ -17,11 +17,15 @@ public class ResendConfirmationEmailService {
 
     @Transactional
     public void resend(String email) {
-        User user = userRepository.findByEmail(email.toLowerCase())
+        User user = userRepository.findByEmail(email.trim().toLowerCase())
                 .orElseThrow(() -> new BusinessException("Usuário não encontrado."));
 
         if (user.isEmailConfirmed()) {
             throw new BusinessException("E-mail já confirmado.");
+        }
+
+        if (!user.canResendEmailConfirmation()) {
+            throw new BusinessException("Aguarde um minuto antes de solicitar um novo e-mail.");
         }
 
         user.generateEmailConfirmationToken();

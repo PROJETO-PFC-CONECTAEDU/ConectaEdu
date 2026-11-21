@@ -50,7 +50,7 @@ public class TwoFactorAuthService {
     }
 
     public LoginResponseDTO verify2FA(TwoFactorVerifyRequestDTO data) {
-        User userEntity = userRepository.findByEmail(data.email())
+        User userEntity = userRepository.findByEmail(data.email().trim().toLowerCase())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
 
         if (gAuth.authorize(userEntity.getSecret2fa(), data.code())) {
@@ -62,10 +62,12 @@ public class TwoFactorAuthService {
 
     @Transactional
     public void requestDisable2FA(User user) {
-        String code = String.valueOf((int)((Math.random() * 899999) + 100000));
-        user.setDisable2faCode(code);
+        if (!user.canRequest2faDisable()) {
+            throw new BusinessException("Aguarde um minuto antes de solicitar um novo código.");
+        }
+        user.generate2faDisableCode();
         userRepository.save(user);
-        emailService.sendDisable2FACode(user.getEmail(), code);
+        emailService.sendDisable2FACode(user.getEmail(), user.getDisable2faCode());
     }
 
     @Transactional

@@ -37,6 +37,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/confirm-email").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/resend-confirmation").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/forgot-password").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/reset-password").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/2fa/verify").permitAll()

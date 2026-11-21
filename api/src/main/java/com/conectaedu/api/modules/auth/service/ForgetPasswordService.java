@@ -24,9 +24,14 @@ public class ForgetPasswordService {
 
     @Transactional
     public void forgotPassword(ForgotPasswordRequest request, HttpServletRequest httpRequest) {
-        log.info("Solicitação de recuperação de senha para o e-mail: {}", request.email());
+        String email = request.email().trim().toLowerCase();
+        log.info("Solicitação de recuperação de senha para o e-mail: {}", email);
 
-        userRepository.findByEmail(request.email()).ifPresentOrElse(user -> {
+        userRepository.findByEmail(email).ifPresentOrElse(user -> {
+            if (!user.canRequestPasswordReset()) {
+                log.warn("Tentativa de spam de recuperação de senha para: {}", user.getEmail());
+                return;
+            }
             user.generatePasswordResetToken();
             userRepository.save(user);
 

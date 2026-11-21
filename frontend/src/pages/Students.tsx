@@ -161,7 +161,7 @@ export function Students() {
       address: student.address || '',
       latitude: student.latitude,
       longitude: student.longitude,
-      interestAreas: student.interestAreas.join(', '),
+      interestAreas: student.interestAreas?.join(', ') || '',
       password: '      ' // Dummy to pass validation
     });
     setIsModalOpen(true);
@@ -417,7 +417,7 @@ export function Students() {
                   </div>
                 )}
                 <div className="text-xs text-text-muted">
-                  <strong>Áreas:</strong> {student.interestAreas.join(', ')}
+                  <strong>Áreas:</strong> {student.interestAreas?.join(', ') || 'Nenhuma'}
                 </div>
                 <div className="text-xs text-text-muted">
                   <strong>Disponibilidade:</strong> {student.availability}

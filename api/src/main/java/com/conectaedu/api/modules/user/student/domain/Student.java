@@ -41,7 +41,10 @@ public class Student extends User {
 
     private Double longitude;
 
-    private List<String> interestAreas;
+    @ElementCollection
+    @CollectionTable(name = "student_interest_areas", joinColumns = @JoinColumn(name = "student_id"))
+    @Column(name = "interest_area")
+    private List<String> interestAreas = new ArrayList<>();
 
     @OneToMany(mappedBy = "student")
     private List<Demand> demands = new ArrayList<>();
