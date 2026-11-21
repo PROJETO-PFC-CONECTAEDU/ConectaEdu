@@ -32,7 +32,8 @@ public class LoginResponseMapper {
                 userEntity.getUserRole().name(),
                 universityId,
                 schoolId,
-                userEntity.is2faEnabled()
+                userEntity.is2faEnabled(),
+                userEntity.isEmailConfirmed()
         );
     }
 }

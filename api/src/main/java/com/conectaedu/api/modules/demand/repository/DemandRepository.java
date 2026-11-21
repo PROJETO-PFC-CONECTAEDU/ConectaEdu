@@ -25,15 +25,23 @@ public interface DemandRepository extends JpaRepository<Demand, UUID> {
     
     @org.springframework.data.jpa.repository.Query("SELECT COUNT(d) FROM Demand d WHERE d.status = :status " +
             "AND (:schoolId IS NULL OR d.school.id = :schoolId) " +
-            "AND (:demandId IS NULL OR d.id = :demandId)")
+            "AND (:demandId IS NULL OR d.id = :demandId) " +
+            "AND (:startDate IS NULL OR d.createdAt >= :startDate) " +
+            "AND (:endDate IS NULL OR d.createdAt <= :endDate)")
     long countByStatusAndFilters(@org.springframework.data.repository.query.Param("status") DemandStatus status,
                                 @org.springframework.data.repository.query.Param("schoolId") UUID schoolId,
-                                @org.springframework.data.repository.query.Param("demandId") UUID demandId);
+                                @org.springframework.data.repository.query.Param("demandId") UUID demandId,
+                                @org.springframework.data.repository.query.Param("startDate") LocalDateTime startDate,
+                                @org.springframework.data.repository.query.Param("endDate") LocalDateTime endDate);
 
     @org.springframework.data.jpa.repository.Query("SELECT COUNT(d) FROM Demand d WHERE (:schoolId IS NULL OR d.school.id = :schoolId) " +
-            "AND (:demandId IS NULL OR d.id = :demandId)")
+            "AND (:demandId IS NULL OR d.id = :demandId) " +
+            "AND (:startDate IS NULL OR d.createdAt >= :startDate) " +
+            "AND (:endDate IS NULL OR d.createdAt <= :endDate)")
     long countByFilters(@org.springframework.data.repository.query.Param("schoolId") UUID schoolId,
-                       @org.springframework.data.repository.query.Param("demandId") UUID demandId);
+                       @org.springframework.data.repository.query.Param("demandId") UUID demandId,
+                       @org.springframework.data.repository.query.Param("startDate") LocalDateTime startDate,
+                       @org.springframework.data.repository.query.Param("endDate") LocalDateTime endDate);
 
     @org.springframework.data.jpa.repository.Query("SELECT COUNT(d) FROM Demand d JOIN d.candidates c WHERE c.id = :studentId")
     long countByCandidateId(UUID studentId);

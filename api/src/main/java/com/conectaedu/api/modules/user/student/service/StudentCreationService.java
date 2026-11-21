@@ -8,6 +8,7 @@ import com.conectaedu.api.modules.user.student.dto.response.StudentResponseDTO;
 import com.conectaedu.api.modules.user.student.repository.StudentRepository;
 import com.conectaedu.api.modules.user.genericUser.repository.UserRepository;
 import com.conectaedu.api.shared.audit.service.AuditService;
+import com.conectaedu.api.shared.email.service.SendEmailConfirmationService;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.StudentStatus;
 import com.conectaedu.api.shared.enums.UserRole;
@@ -34,6 +35,7 @@ public class StudentCreationService {
     private final AuditService auditService;
     private final PasswordEncoder passwordEncoder;
     private final TenancyValidator tenancyValidator;
+    private final SendEmailConfirmationService emailConfirmationService;
 
     @Transactional
     public StudentResponseDTO createStudent(StudentCreationRequestDTO request) {
@@ -72,6 +74,7 @@ public class StudentCreationService {
         student.setUserRole(UserRole.STUDENT);
         student.setCreatedAt(LocalDateTime.now());
         student.setUniversity(university);
+        student.setActive(true);
         student.setStatus(StudentStatus.PENDING);
         student.setAvailability(request.availability());
         student.setCourse(request.course());
@@ -79,8 +82,11 @@ public class StudentCreationService {
         student.setLatitude(request.latitude());
         student.setLongitude(request.longitude());
         student.setInterestAreas(request.interestAreas());
+        student.setEmailConfirmed(false);
+        student.generateEmailConfirmationToken();
 
         studentRepository.save(student);
+        emailConfirmationService.sendConfirmationEmail(student.getEmail(), student.getEmailConfirmationToken());
 
         auditService.logCreate(AuditEntityType.STUDENT, student.getId(), student.getName());
 

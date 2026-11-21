@@ -17,7 +17,6 @@ public record UniversityCreationRequestDTO(
         @Pattern(regexp = "\\d{14}", message = "CNPJ deve ter 14 dígitos, sem máscara")
         String cnpj,
 
-        @NotBlank(message = "Coordenador é obrigatório")
         String coordinator,
 
         @NotNull(message = "Endereço é obrigatório")

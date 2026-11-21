@@ -8,6 +8,7 @@ import com.conectaedu.api.modules.user.university_admin.dto.request.UniversityAd
 import com.conectaedu.api.modules.user.university_admin.dto.response.UniversityAdminResponseDTO;
 import com.conectaedu.api.modules.user.university_admin.repository.UniversityAdminRepository;
 import com.conectaedu.api.shared.audit.service.AuditService;
+import com.conectaedu.api.shared.email.service.SendEmailConfirmationService;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.UserRole;
 import com.conectaedu.api.shared.enums.UserType;
@@ -29,6 +30,7 @@ public class UniversityAdminCreationService {
     private final UniversityRepository universityRepository;
     private final AuditService auditService;
     private final PasswordEncoder passwordEncoder;
+    private final SendEmailConfirmationService emailConfirmationService;
 
     @Transactional
     public UniversityAdminResponseDTO createUniversityAdmin(UniversityAdminCreationRequestDTO request) {
@@ -53,9 +55,14 @@ public class UniversityAdminCreationService {
                 .createdAt(LocalDateTime.now())
                 .university(university)
                 .universityCNPJ(request.universityCNPJ().trim())
+                .active(true)
+                .emailConfirmed(false)
                 .build();
 
+        admin.generateEmailConfirmationToken();
         universityAdminRepository.save(admin);
+
+        emailConfirmationService.sendConfirmationEmail(admin.getEmail(), admin.getEmailConfirmationToken());
 
         auditService.logCreate(AuditEntityType.UNIVERSITY_ADMIN, admin.getId(), admin.getName());
 

@@ -17,6 +17,7 @@ export function Dashboard() {
   const [studentId, setStudentId] = useState<string>('');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
+  const [period, setPeriod] = useState<string>('');
   const [schools, setSchools] = useState<any[]>([]);
   const [demands, setDemands] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
@@ -52,6 +53,25 @@ export function Dashboard() {
       setDemandId('');
     }
   }, [filteredDemands, demandId]);
+
+  const handlePeriodChange = (value: string) => {
+    setPeriod(value);
+    if (value === 'custom') return;
+    if (value === '') {
+      setStartDate('');
+      setEndDate('');
+      return;
+    }
+
+    const now = new Date();
+    const end = now.toISOString().split('T')[0];
+    const d = new Date();
+    d.setDate(d.getDate() - parseInt(value));
+    const start = d.toISOString().split('T')[0];
+
+    setStartDate(start);
+    setEndDate(end);
+  };
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ['dashboard-stats', schoolId, demandId, studentId, startDate, endDate],
@@ -114,7 +134,7 @@ export function Dashboard() {
       />
       
       <div className="p-8 space-y-8">
-        {(showSchoolFilter || showDemandFilter) && (
+        {(showSchoolFilter || showDemandFilter || showStudentFilter || showPeriodFilter) && (
           <Card className="p-4 bg-gray-50 border-none shadow-sm flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2 text-brand-primary font-semibold mr-2">
               <Filter size={20} />
@@ -173,28 +193,53 @@ export function Dashboard() {
 
             {showPeriodFilter && (
               <>
-                <div className="flex flex-col">
-                  <label className="text-xs text-text-body mb-1 font-medium">Data Inicial</label>
-                  <input 
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
+                <div className="flex flex-col min-w-[150px]">
+                  <label className="text-xs text-text-body mb-1 font-medium">Período</label>
+                  <select 
+                    value={period} 
+                    onChange={(e) => handlePeriodChange(e.target.value)}
                     className="px-3 py-2 border border-border-light rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
-                  />
+                  >
+                    <option value="">Todo o período</option>
+                    <option value="7">Últimos 7 dias</option>
+                    <option value="30">Últimos 30 dias</option>
+                    <option value="60">Últimos 60 dias</option>
+                    <option value="custom">Customizado</option>
+                  </select>
                 </div>
-                <div className="flex flex-col">
-                  <label className="text-xs text-text-body mb-1 font-medium">Data Final</label>
-                  <input 
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="px-3 py-2 border border-border-light rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
-                  />
-                </div>
+
+                {(period === 'custom' || startDate || endDate) && (
+                  <>
+                    <div className="flex flex-col">
+                      <label className="text-xs text-text-body mb-1 font-medium">Data Inicial</label>
+                      <input 
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => {
+                          setStartDate(e.target.value);
+                          setPeriod('custom');
+                        }}
+                        className="px-3 py-2 border border-border-light rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <label className="text-xs text-text-body mb-1 font-medium">Data Final</label>
+                      <input 
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => {
+                          setEndDate(e.target.value);
+                          setPeriod('custom');
+                        }}
+                        className="px-3 py-2 border border-border-light rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                      />
+                    </div>
+                  </>
+                )}
               </>
             )}
 
-            {(schoolId || demandId || studentId || startDate || endDate) && (
+            {(schoolId || demandId || studentId || startDate || endDate || period) && (
               <button 
                 onClick={() => { 
                   setSchoolId(''); 
@@ -202,6 +247,7 @@ export function Dashboard() {
                   setStudentId('');
                   setStartDate('');
                   setEndDate('');
+                  setPeriod('');
                 }}
                 className="mt-5 text-xs text-brand-primary hover:underline font-medium"
               >

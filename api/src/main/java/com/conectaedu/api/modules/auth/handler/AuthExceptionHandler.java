@@ -3,12 +3,15 @@ package com.conectaedu.api.modules.auth.handler;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.conectaedu.api.shared.exceptions.BusinessException;
 import com.conectaedu.api.shared.exceptions.EmailAlreadyExistsException;
+import com.conectaedu.api.shared.exceptions.InactiveInstitutionException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -24,6 +27,11 @@ public class AuthExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ProblemDetail handleBusiness(BusinessException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(InactiveInstitutionException.class)
+    public ProblemDetail handleInactiveInstitution(InactiveInstitutionException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
@@ -43,6 +51,16 @@ public class AuthExceptionHandler {
             detail = "E-mail ou senha inválidos";
         }
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, detail);
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    public ProblemDetail handleDisabled(DisabledException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Sua conta está desativada. Entre em contato com o suporte.");
+    }
+
+    @ExceptionHandler(LockedException.class)
+    public ProblemDetail handleLocked(LockedException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Sua conta está bloqueada.");
     }
 
     @ExceptionHandler(AccessDeniedException.class)

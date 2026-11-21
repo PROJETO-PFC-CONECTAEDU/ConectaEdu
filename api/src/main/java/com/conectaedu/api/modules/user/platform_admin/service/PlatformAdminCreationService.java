@@ -6,12 +6,12 @@ import com.conectaedu.api.modules.user.platform_admin.dto.request.PlatformAdminC
 import com.conectaedu.api.modules.user.platform_admin.dto.response.PlatformAdminResponseDTO;
 import com.conectaedu.api.modules.user.platform_admin.repository.PlatformAdminRepository;
 import com.conectaedu.api.shared.audit.service.AuditService;
+import com.conectaedu.api.shared.email.service.SendEmailConfirmationService;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.UserRole;
 import com.conectaedu.api.shared.enums.UserType;
 import com.conectaedu.api.shared.exceptions.EmailAlreadyExistsException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +26,7 @@ public class PlatformAdminCreationService {
     private final PlatformAdminRepository platformAdminRepository;
     private final AuditService auditService;
     private final PasswordEncoder passwordEncoder;
+    private final SendEmailConfirmationService emailConfirmationService;
 
     @Transactional
     public PlatformAdminResponseDTO createPlatformAdmin(PlatformAdminCreationRequestDTO request) {
@@ -41,9 +42,14 @@ public class PlatformAdminCreationService {
                 .userType(UserType.PERSON)
                 .userRole(UserRole.PLATFORM_ADMIN)
                 .createdAt(LocalDateTime.now())
+                .active(true)
+                .emailConfirmed(false)
                 .build();
 
+        admin.generateEmailConfirmationToken();
         platformAdminRepository.save(admin);
+
+        emailConfirmationService.sendConfirmationEmail(admin.getEmail(), admin.getEmailConfirmationToken());
 
         auditService.logCreate(AuditEntityType.USER, admin.getId(), admin.getName());
 

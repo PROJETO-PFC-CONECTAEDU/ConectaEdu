@@ -5,7 +5,11 @@ import com.conectaedu.api.modules.auth.dto.LoginResponseDTO;
 import com.conectaedu.api.modules.auth.mapper.LoginResponseMapper;
 import com.conectaedu.api.modules.user.genericUser.domain.User;
 import com.conectaedu.api.modules.user.genericUser.repository.UserRepository;
+import com.conectaedu.api.modules.user.school_director.domain.SchoolDirector;
+import com.conectaedu.api.modules.user.student.domain.Student;
+import com.conectaedu.api.modules.user.university_admin.domain.UniversityAdmin;
 import com.conectaedu.api.shared.exceptions.BusinessException;
+import com.conectaedu.api.shared.exceptions.InactiveInstitutionException;
 import com.conectaedu.api.shared.security.token.GenerateToken;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,9 +34,7 @@ public class AuthLoginService {
         User userEntity = userRepository.findByEmail(data.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
 
-        if (!userEntity.isEmailConfirmed()) {
-            throw new BusinessException("E-mail não confirmado. Verifique sua caixa de entrada.");
-        }
+        checkInstitutionStatus(userEntity);
 
         if (userEntity.is2faEnabled()) {
             return new LoginResponseDTO(userEntity.getEmail(), true);
@@ -41,5 +43,21 @@ public class AuthLoginService {
         String token = generateToken.generateToken(userEntity);
 
         return loginResponseMapper.toResponse(userEntity, token);
+    }
+
+    private void checkInstitutionStatus(User user) {
+        if (user instanceof SchoolDirector director) {
+            if (director.getSchool() != null && !director.getSchool().isActive()) {
+                throw new InactiveInstitutionException("Sua escola está desativada. Entre em contato com o suporte.");
+            }
+        } else if (user instanceof UniversityAdmin admin) {
+            if (admin.getUniversity() != null && !admin.getUniversity().isActive()) {
+                throw new InactiveInstitutionException("Sua universidade está desativada. Entre em contato com o suporte.");
+            }
+        } else if (user instanceof Student student) {
+            if (student.getUniversity() != null && !student.getUniversity().isActive()) {
+                throw new InactiveInstitutionException("Sua universidade está desativada. Entre em contato com o suporte.");
+            }
+        }
     }
 }
