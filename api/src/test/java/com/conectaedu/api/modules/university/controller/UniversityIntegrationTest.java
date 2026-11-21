@@ -56,7 +56,6 @@ class UniversityIntegrationTest {
                 {
                   "name": "Universidade ABCD",
                   "cnpj": "%s",
-                  "coordinator": "Joao P",
                   "address": "R. teste, 200"
                 }
                 """.formatted(cnpj);

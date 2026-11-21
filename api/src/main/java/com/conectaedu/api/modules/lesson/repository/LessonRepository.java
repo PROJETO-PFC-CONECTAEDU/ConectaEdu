@@ -105,8 +105,14 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
 
     @Query("SELECT COUNT(l) FROM Lesson l WHERE (:schoolId IS NULL OR l.school.id = :schoolId) " +
             "AND (:demandId IS NULL OR l.demand.id = :demandId) " +
+            "AND (:startDate IS NULL OR l.scheduledStart >= :startDate) " +
+            "AND (:endDate IS NULL OR l.scheduledStart <= :endDate) " +
             "AND l.status = 'VALIDATED'")
-    long countValidatedByFilters(@Param("schoolId") UUID schoolId, @Param("demandId") UUID demandId);
+    long countValidatedByFilters(
+            @Param("schoolId") UUID schoolId, 
+            @Param("demandId") UUID demandId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
 
 
     //O prazo de confirmação é o menor entre 3 dias do agendamento e 24h antes da aula.
@@ -128,4 +134,12 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
 
     List<Lesson> findByStatusAndRegisteredAtBeforeAndEscalatedAtIsNull(
             LessonStatus status, LocalDateTime deadline);
+
+    @Query("SELECT l FROM Lesson l WHERE l.student.id = :studentId AND l.status = 'VALIDATED' " +
+            "AND (:startDate IS NULL OR l.scheduledStart >= :startDate) " +
+            "AND (:endDate IS NULL OR l.scheduledStart <= :endDate)")
+    List<Lesson> findValidatedByStudentAndPeriod(
+            @Param("studentId") UUID studentId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
 }

@@ -10,7 +10,7 @@ import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { Building2, Users, MapPin, ShieldCheck, Trash2, Plus, XCircle, Edit2 } from 'lucide-react';
+import { Building2, MapPin, ShieldCheck, Trash2, Plus, XCircle, Edit2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { AddressAutocomplete } from '../components/map/AddressAutocomplete';
 
@@ -27,7 +27,6 @@ interface University {
 const universitySchema = z.object({
   name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
   cnpj: z.string().length(14, 'CNPJ deve ter exatamente 14 dígitos'),
-  coordinator: z.string().min(1, 'Coordenador é obrigatório'),
   address: z.string().min(1, 'Endereço é obrigatório'),
 });
 
@@ -105,7 +104,6 @@ export function Universities() {
     setEditingUni(uni);
     setValue('name', uni.name);
     setValue('cnpj', uni.cnpj);
-    setValue('coordinator', uni.coordinator || '');
     setValue('address', uni.address || '');
     setIsModalOpen(true);
   };
@@ -173,12 +171,6 @@ export function Universities() {
             placeholder="Apenas números (14 dígitos)"
             error={errors.cnpj?.message}
             {...register('cnpj')}
-          />
-          <Input
-            label="Coordenador"
-            placeholder="Nome do coordenador"
-            error={errors.coordinator?.message}
-            {...register('coordinator')}
           />
           <AddressAutocomplete
             key={editingUni?.id || 'new'}
@@ -261,10 +253,6 @@ export function Universities() {
                 </div>
 
                 <div className="space-y-3 pt-4 border-t border-border-default">
-                  <div className="flex items-center gap-2 text-sm text-text-body">
-                    <Users size={16} className="text-text-muted shrink-0" />
-                    <span>Coord: {uni.coordinator || 'Não informado'}</span>
-                  </div>
                   <div className="flex items-start gap-2 text-sm text-text-body">
                     <MapPin size={16} className="mt-0.5 text-text-muted shrink-0" />
                     <span>{uni.address || 'Endereço não informado'}</span>

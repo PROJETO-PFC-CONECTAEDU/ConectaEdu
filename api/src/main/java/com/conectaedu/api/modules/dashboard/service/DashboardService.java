@@ -23,7 +23,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.conectaedu.api.modules.internship.support.InternshipRules;
+import com.conectaedu.api.modules.lesson.domain.Lesson;
+
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -52,12 +57,15 @@ public class DashboardService {
         java.time.LocalDate startDate = filter != null ? filter.getStartDate() : null;
         java.time.LocalDate endDate = filter != null ? filter.getEndDate() : null;
 
+        LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : null;
+        LocalDateTime endDateTime = endDate != null ? endDate.atTime(LocalTime.MAX) : null;
+
         if (user.getUserRole() == UserRole.PLATFORM_ADMIN) {
             stats.put("schoolsCount", schoolRepository.count());
             stats.put("universitiesCount", universityRepository.count());
             stats.put("activeStudentsCount", studentRepository.countByStatusAndFilters(StudentStatus.VALIDATED, null, schoolId, demandId));
-            stats.put("waitingDemands", demandRepository.countByStatusAndFilters(DemandStatus.WAITING, schoolId, demandId));
-            stats.put("finishedDemands", demandRepository.countByStatusAndFilters(DemandStatus.FINISHED, schoolId, demandId));
+            stats.put("waitingDemands", demandRepository.countByStatusAndFilters(DemandStatus.WAITING, schoolId, demandId, startDateTime, endDateTime));
+            stats.put("finishedDemands", demandRepository.countByStatusAndFilters(DemandStatus.FINISHED, schoolId, demandId, startDateTime, endDateTime));
 
             // Indicadores extras de Feedback (Sempre globais para Admin, a menos que filtrado)
             stats.put("studentsAverageScore", studentEvaluationRepository.getAverageScoreByFilters(null, schoolId, demandId, studentId));
@@ -100,11 +108,11 @@ public class DashboardService {
             tenancyValidator.validateSchool(userSchoolId);
 
             // O diretor já está restrito à sua escola, mas pode filtrar por demanda e período
-            stats.put("myDemandsCount", demandRepository.countByFilters(userSchoolId, demandId));
-            stats.put("openVacanciesCount", demandRepository.countByStatusAndFilters(DemandStatus.WAITING, userSchoolId, demandId));
-            stats.put("ongoingClassesCount", demandRepository.countByStatusAndFilters(DemandStatus.ONGOING, userSchoolId, demandId));
-            stats.put("successfulDemandsCount", demandRepository.countByStatusAndFilters(DemandStatus.FINISHED, userSchoolId, demandId));
-            stats.put("validatedLessonsCount", lessonRepository.countValidatedByFilters(userSchoolId, demandId));
+            stats.put("myDemandsCount", demandRepository.countByFilters(userSchoolId, demandId, startDateTime, endDateTime));
+            stats.put("openVacanciesCount", demandRepository.countByStatusAndFilters(DemandStatus.WAITING, userSchoolId, demandId, startDateTime, endDateTime));
+            stats.put("ongoingClassesCount", demandRepository.countByStatusAndFilters(DemandStatus.ONGOING, userSchoolId, demandId, startDateTime, endDateTime));
+            stats.put("successfulDemandsCount", demandRepository.countByStatusAndFilters(DemandStatus.FINISHED, userSchoolId, demandId, startDateTime, endDateTime));
+            stats.put("validatedLessonsCount", lessonRepository.countValidatedByFilters(userSchoolId, demandId, startDateTime, endDateTime));
 
             // Indicadores de Feedback
             stats.put("schoolAverageScore", classEvaluationRepository.getAverageScoreByFilters(null, userSchoolId, demandId, studentId));
@@ -118,7 +126,16 @@ public class DashboardService {
         } else if (user instanceof Student student) {
             tenancyValidator.validateUserAccess(student.getId());
 
-            BigDecimal myHours = internshipFacade.getHoursByStudent(student.getId()).totalHours();
+            BigDecimal myHours;
+            if (startDate != null || endDate != null) {
+                long totalMinutes = lessonRepository.findValidatedByStudentAndPeriod(student.getId(), startDateTime, endDateTime)
+                        .stream()
+                        .mapToLong(l -> l.getDuration().toMinutes())
+                        .sum();
+                myHours = InternshipRules.toHours(totalMinutes);
+            } else {
+                myHours = internshipFacade.getHoursByStudent(student.getId()).totalHours();
+            }
             stats.put("myHours", myHours);
             
             stats.put("applicationsCount", demandRepository.countByCandidateId(student.getId()));
