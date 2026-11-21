@@ -19,7 +19,7 @@ public class ConfirmEmailService {
 
     @Transactional
     public void confirmEmail(String email, String code) {
-        User user = userRepository.findByEmailAndEmailConfirmationToken(email, code).orElse(null);
+        User user = userRepository.findByEmailAndEmailConfirmationToken(email.trim().toLowerCase(), code).orElse(null);
 
         if (user == null) {
             log.error("Falha na confirmação de e-mail: Código inválido para o e-mail {}", email);

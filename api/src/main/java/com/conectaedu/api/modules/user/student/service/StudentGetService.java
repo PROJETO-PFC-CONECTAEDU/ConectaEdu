@@ -71,7 +71,7 @@ public class StudentGetService {
                 student.getAddress(),
                 student.getLatitude(),
                 student.getLongitude(),
-                student.getInterestAreas()
+                student.getInterestAreas() != null ? student.getInterestAreas() : List.of()
         );
     }
 }

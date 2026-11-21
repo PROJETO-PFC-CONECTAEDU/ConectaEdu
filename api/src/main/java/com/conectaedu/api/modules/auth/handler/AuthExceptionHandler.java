@@ -1,6 +1,7 @@
 package com.conectaedu.api.modules.auth.handler;
 
 import com.auth0.jwt.exceptions.JWTCreationException;
+import com.conectaedu.api.shared.exceptions.BlockedIpException;
 import com.conectaedu.api.shared.exceptions.BusinessException;
 import com.conectaedu.api.shared.exceptions.EmailAlreadyExistsException;
 import com.conectaedu.api.shared.exceptions.InactiveInstitutionException;
@@ -37,6 +38,11 @@ public class AuthExceptionHandler {
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ProblemDetail handleEmailConflict(EmailAlreadyExistsException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(BlockedIpException.class)
+    public ProblemDetail handleBlockedIp(BlockedIpException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage());
     }
 
     @ExceptionHandler(UsernameNotFoundException.class)

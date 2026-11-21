@@ -8,9 +8,12 @@ import com.conectaedu.api.modules.user.genericUser.repository.UserRepository;
 import com.conectaedu.api.modules.user.school_director.domain.SchoolDirector;
 import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.university_admin.domain.UniversityAdmin;
+import com.conectaedu.api.shared.exceptions.BlockedIpException;
 import com.conectaedu.api.shared.exceptions.BusinessException;
 import com.conectaedu.api.shared.exceptions.InactiveInstitutionException;
+import com.conectaedu.api.shared.security.service.LoginAttemptService;
 import com.conectaedu.api.shared.security.token.GenerateToken;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,8 +29,15 @@ public class AuthLoginService {
     private final UserRepository userRepository;
     private final GenerateToken generateToken;
     private final LoginResponseMapper loginResponseMapper;
+    private final LoginAttemptService loginAttemptService;
+    private final HttpServletRequest request;
 
     public LoginResponseDTO login(LoginRequestDTO data) {
+        String ip = loginAttemptService.getClientIP(request);
+        if (loginAttemptService.isBlocked(ip)) {
+            throw new BlockedIpException("Muitas tentativas de login. Tente novamente mais tarde.");
+        }
+
         var usernamePassword = new UsernamePasswordAuthenticationToken(data.getEmail(), data.getPassword());
         Authentication auth = this.authenticationManager.authenticate(usernamePassword);
 
