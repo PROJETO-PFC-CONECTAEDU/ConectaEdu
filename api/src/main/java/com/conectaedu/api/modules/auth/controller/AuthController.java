@@ -17,6 +17,7 @@ public class AuthController {
 
     private final AuthLoginService authService;
     private final ConfirmEmailService confirmEmailService;
+    private final ResendConfirmationEmailService resendConfirmationEmailService;
     private final ForgetPasswordService forgetPasswordService;
     private final ResetPasswordService resetPasswordService;
     private final RegisterDirectorService registerDirectorService;
@@ -64,6 +65,12 @@ public class AuthController {
     @PostMapping("/confirm-email")
     public ResponseEntity<Void> confirmEmail(@RequestBody @Valid ConfirmEmailRequestDTO request) {
         confirmEmailService.confirmEmail(request.email(), request.code());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/resend-confirmation")
+    public ResponseEntity<Void> resendConfirmation(@RequestBody @Valid ResendConfirmationRequestDTO request) {
+        resendConfirmationEmailService.resend(request.email());
         return ResponseEntity.ok().build();
     }
 

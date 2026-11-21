@@ -43,7 +43,7 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
     List<Lesson> findBySchool_IdOrderByScheduledStartAsc(UUID schoolId);
 
     @Query(value = """
-            SELECT FORMATDATETIME(l.scheduled_start, 'MM/yyyy') as period, COUNT(l.id) as count
+            SELECT TO_CHAR(l.scheduled_start, 'MM/YYYY') as period, COUNT(l.id) as count
             FROM lesson l
             INNER JOIN users s ON l.student_id = s.id
             WHERE (:universityId IS NULL OR s.university_id = :universityId)
@@ -65,7 +65,7 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
             @Param("endDate") java.time.LocalDate endDate);
 
     @Query(value = """
-            SELECT FORMATDATETIME(l.scheduled_start, 'MM/yyyy') as period, d.title as demand, COUNT(l.id) as count
+            SELECT TO_CHAR(l.scheduled_start, 'MM/YYYY') as period, d.title as demand, COUNT(l.id) as count
             FROM lesson l
             INNER JOIN demand d ON l.demand_id = d.id
             WHERE (:schoolId IS NULL OR l.school_id = :schoolId)
@@ -105,8 +105,14 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
 
     @Query("SELECT COUNT(l) FROM Lesson l WHERE (:schoolId IS NULL OR l.school.id = :schoolId) " +
             "AND (:demandId IS NULL OR l.demand.id = :demandId) " +
+            "AND (:startDate IS NULL OR l.scheduledStart >= :startDate) " +
+            "AND (:endDate IS NULL OR l.scheduledStart <= :endDate) " +
             "AND l.status = 'VALIDATED'")
-    long countValidatedByFilters(@Param("schoolId") UUID schoolId, @Param("demandId") UUID demandId);
+    long countValidatedByFilters(
+            @Param("schoolId") UUID schoolId, 
+            @Param("demandId") UUID demandId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
 
 
     //O prazo de confirmação é o menor entre 3 dias do agendamento e 24h antes da aula.
@@ -128,4 +134,12 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
 
     List<Lesson> findByStatusAndRegisteredAtBeforeAndEscalatedAtIsNull(
             LessonStatus status, LocalDateTime deadline);
+
+    @Query("SELECT l FROM Lesson l WHERE l.student.id = :studentId AND l.status = 'VALIDATED' " +
+            "AND (:startDate IS NULL OR l.scheduledStart >= :startDate) " +
+            "AND (:endDate IS NULL OR l.scheduledStart <= :endDate)")
+    List<Lesson> findValidatedByStudentAndPeriod(
+            @Param("studentId") UUID studentId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
 }

@@ -28,7 +28,11 @@ public class UniversityValidationService {
     @Transactional
     public UniversityResponseDTO validateUniversity(UUID id, String notes) {
         tenancyValidator.validateUniversity(id);
-        University university = findPending(id);
+        University university = findById(id);
+
+        if (university.getStatus() == UniversityStatus.APPROVED) {
+            throw new InvalidUniversityStatusException("Universidade já aprovada/ativa!");
+        }
 
         UniversityStatus beforeStatus = university.getStatus();
         boolean beforeActive = university.isActive();
@@ -58,7 +62,11 @@ public class UniversityValidationService {
             throw new IllegalArgumentException("Recusa exige um parecer justificado");
         }
 
-        University university = findPending(id);
+        University university = findById(id);
+
+        if (university.getStatus() == UniversityStatus.REJECTED) {
+            throw new InvalidUniversityStatusException("Universidade já está recusada!");
+        }
 
         UniversityStatus beforeStatus = university.getStatus();
         boolean beforeActive = university.isActive();
@@ -79,15 +87,35 @@ public class UniversityValidationService {
         return new UniversityResponseDTO(university);
     }
 
-    //Só universidade pendente entra em validação. APPROVED e REJECTED são finais.
-    private University findPending(UUID id) {
-        University university = universityRepository.findById(id)
-                .orElseThrow(() -> new UniversityNotFoundException("Universidade não encontrada!"));
+    @Transactional
+    public UniversityResponseDTO deactivateUniversity(UUID id) {
+        tenancyValidator.validateUniversity(id);
+        University university = findById(id);
 
-        if (university.getStatus() != UniversityStatus.PENDING) {
-            throw new InvalidUniversityStatusException(
-                    "Universidade já avaliada. Situação atual: " + university.getStatus());
+        if (university.getStatus() == UniversityStatus.INACTIVE) {
+            throw new InvalidUniversityStatusException("Universidade já está inativa!");
         }
-        return university;
+
+        UniversityStatus beforeStatus = university.getStatus();
+        boolean beforeActive = university.isActive();
+
+        university.setStatus(UniversityStatus.INACTIVE);
+        university.setActive(false);
+        university.setValidatedAt(LocalDateTime.now());
+        university.setUpdatedAt(LocalDateTime.now());
+
+        universityRepository.save(university);
+
+        AuditDiff diff = AuditDiff.create()
+                .field("status", beforeStatus, university.getStatus())
+                .field("active", beforeActive, university.isActive());
+        auditService.logUpdate(AuditEntityType.UNIVERSITY, university.getId(), university.getName(), diff);
+
+        return new UniversityResponseDTO(university);
+    }
+
+    private University findById(UUID id) {
+        return universityRepository.findById(id)
+                .orElseThrow(() -> new UniversityNotFoundException("Universidade não encontrada!"));
     }
 }

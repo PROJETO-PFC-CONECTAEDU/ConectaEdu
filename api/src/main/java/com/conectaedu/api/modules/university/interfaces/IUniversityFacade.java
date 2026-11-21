@@ -24,6 +24,7 @@ public interface IUniversityFacade {
     List<UniversityResponseDTO> getAllUniversities();
 
     UniversityResponseDTO validateUniversity(UUID id, UniversityValidationRequestDTO request);
-
+    UniversityResponseDTO activateUniversity(UUID id, UniversityValidationRequestDTO request);
+    UniversityResponseDTO deactivateUniversity(UUID id, UniversityValidationRequestDTO request);
     UniversityResponseDTO rejectUniversity(UUID id, UniversityValidationRequestDTO request);
 }

@@ -8,6 +8,7 @@ import com.conectaedu.api.modules.user.school_director.dto.request.SchoolDirecto
 import com.conectaedu.api.modules.user.school_director.dto.response.SchoolDirectorResponseDTO;
 import com.conectaedu.api.modules.user.school_director.repository.SchoolDirectorRepository;
 import com.conectaedu.api.shared.audit.service.AuditService;
+import com.conectaedu.api.shared.email.service.SendEmailConfirmationService;
 import com.conectaedu.api.shared.enums.AuditEntityType;
 import com.conectaedu.api.shared.enums.UserRole;
 import com.conectaedu.api.shared.enums.UserType;
@@ -31,6 +32,7 @@ public class SchoolDirectorCreationService {
     private final SchoolRepository schoolRepository;
     private final AuditService auditService;
     private final PasswordEncoder passwordEncoder;
+    private final SendEmailConfirmationService emailConfirmationService;
 
     @Transactional
     public SchoolDirectorResponseDTO createSchoolDirector(SchoolDirectorCreationRequestDTO request) {
@@ -55,9 +57,14 @@ public class SchoolDirectorCreationService {
                 .createdAt(LocalDateTime.now())
                 .school(school)
                 .schoolCIE(request.schoolCIE().trim())
+                .active(true)
+                .emailConfirmed(false)
                 .build();
 
+        director.generateEmailConfirmationToken();
         schoolDirectorRepository.save(director);
+
+        emailConfirmationService.sendConfirmationEmail(director.getEmail(), director.getEmailConfirmationToken());
 
         auditService.logCreate(AuditEntityType.SCHOOL_DIRECTOR, director.getId(), director.getName());
 

@@ -75,4 +75,18 @@ public class UniversityController {
             @PathVariable UUID id, @RequestBody @Valid UniversityValidationRequestDTO request) {
         return ResponseEntity.ok(universityFacade.rejectUniversity(id, request));
     }
+
+    @PatchMapping("/{id}/activate")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    public ResponseEntity<UniversityResponseDTO> activateUniversity(
+            @PathVariable UUID id, @RequestBody @Valid UniversityValidationRequestDTO request) {
+        return ResponseEntity.ok(universityFacade.activateUniversity(id, request));
+    }
+
+    @PatchMapping("/{id}/deactivate")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    public ResponseEntity<UniversityResponseDTO> deactivateUniversity(
+            @PathVariable UUID id, @RequestBody @Valid UniversityValidationRequestDTO request) {
+        return ResponseEntity.ok(universityFacade.deactivateUniversity(id, request));
+    }
 }

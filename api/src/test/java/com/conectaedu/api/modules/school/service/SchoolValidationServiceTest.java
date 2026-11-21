@@ -109,6 +109,20 @@ class SchoolValidationServiceTest {
     }
 
     @Test
+    void deveInativarEscolaAtiva() {
+        School escola = escolaPendente();
+        escola.setStatus(SchoolStatus.ACTIVE);
+        escola.setActive(true);
+        when(schoolRepository.findById(escola.getId())).thenReturn(Optional.of(escola));
+
+        SchoolResponseDTO resposta = schoolValidationService.deactivateSchool(escola.getId());
+
+        assertEquals(SchoolStatus.INACTIVE.name(), resposta.status());
+        assertFalse(resposta.active());
+        verify(schoolRepository).save(escola);
+    }
+
+    @Test
     void deveLancarExcecaoQuandoEscolaNaoExiste() {
         UUID id = UUID.randomUUID();
         when(schoolRepository.findById(id)).thenReturn(Optional.empty());

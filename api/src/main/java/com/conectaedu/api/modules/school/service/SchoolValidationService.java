@@ -25,11 +25,14 @@ public class SchoolValidationService {
     private final AuditService auditService;
     private final TenancyValidator tenancyValidator;
 
-    //Aprova a escola.
     @Transactional
     public SchoolResponseDTO validateSchool(UUID id, String notes) {
         tenancyValidator.validateSchool(id);
-        School school = findPending(id);
+        School school = findById(id);
+
+        if (school.getStatus() == SchoolStatus.ACTIVE) {
+            throw new InvalidSchoolStatusException("Escola já ativa!");
+        }
 
         SchoolStatus beforeStatus = school.getStatus();
         boolean beforeActive = school.isActive();
@@ -37,6 +40,7 @@ public class SchoolValidationService {
         school.setStatus(SchoolStatus.ACTIVE);
         school.setActive(true);
         school.setValidationNotes(notes);
+        school.setValidatedAt(LocalDateTime.now());
         school.setUpdatedAt(LocalDateTime.now());
 
         schoolRepository.save(school);
@@ -53,7 +57,11 @@ public class SchoolValidationService {
     @Transactional
     public SchoolResponseDTO deactivateSchool(UUID id) {
         tenancyValidator.validateSchool(id);
-        School school = findPending(id);
+        School school = findById(id);
+
+        if (school.getStatus() == SchoolStatus.INACTIVE) {
+            throw new InvalidSchoolStatusException("Escola já está inativa!");
+        }
 
         SchoolStatus beforeStatus = school.getStatus();
         boolean beforeActive = school.isActive();
@@ -61,7 +69,6 @@ public class SchoolValidationService {
         school.setStatus(SchoolStatus.INACTIVE);
         school.setActive(false);
         school.setValidatedAt(LocalDateTime.now());
-        school.setValidationNotes(school.getValidationNotes());
         school.setUpdatedAt(LocalDateTime.now());
 
         schoolRepository.save(school);
@@ -72,17 +79,10 @@ public class SchoolValidationService {
         auditService.logUpdate(AuditEntityType.SCHOOL, school.getId(), school.getName(), diff);
 
         return new SchoolResponseDTO(school);
-
     }
 
-    private School findPending(UUID id) {
-        School school = schoolRepository.findById(id)
+    private School findById(UUID id) {
+        return schoolRepository.findById(id)
                 .orElseThrow(() -> new SchoolNotFoundException("Escola não encontrada!"));
-
-        if (school.getStatus() != SchoolStatus.PENDING_ACTIVATION) {
-            throw new InvalidSchoolStatusException(
-                    "Escola já ativa!");
-        }
-        return school;
     }
 }

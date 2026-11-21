@@ -7,6 +7,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { ForgotPasswordModal } from '../components/auth/ForgotPasswordModal';
 import { RequestAccessModal } from '../components/auth/RequestAccessModal';
+import { EmailConfirmationModal } from '../components/auth/EmailConfirmationModal';
 import { useNavigate, Link } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import api from '../lib/api';
@@ -26,7 +27,9 @@ export function Login() {
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [is2FAModalOpen, setIs2FAModalOpen] = useState(false);
+  const [isEmailConfirmationModalOpen, setIsEmailConfirmationModalOpen] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
+  const [loginData, setLoginData] = useState<any>(null);
   const navigate = useNavigate();
   const { signIn } = useAuth();
 
@@ -49,6 +52,13 @@ export function Login() {
         setIs2FAModalOpen(true);
         return;
       }
+
+      if (!data.emailConfirmed) {
+        setLoginData(data);
+        setIsEmailConfirmationModalOpen(true);
+        return;
+      }
+
       signIn({
         token: data.token,
         user: {
@@ -58,7 +68,7 @@ export function Login() {
           role: data.role,
           universityId: data.universityId,
           schoolId: data.schoolId,
-          emailConfirmed: true, // Se logou, o email está confirmado
+          emailConfirmed: data.emailConfirmed,
           twoFactorEnabled: data.twoFactorEnabled
         }
       });
@@ -195,6 +205,11 @@ export function Login() {
         onClose={() => setIs2FAModalOpen(false)}
         email={pendingEmail}
         onSuccess={(data) => {
+          if (!data.emailConfirmed) {
+            setLoginData(data);
+            setIsEmailConfirmationModalOpen(true);
+            return;
+          }
           signIn({
             token: data.token,
             user: {
@@ -204,7 +219,7 @@ export function Login() {
               role: data.role,
               universityId: data.universityId,
               schoolId: data.schoolId,
-              emailConfirmed: true,
+              emailConfirmed: data.emailConfirmed,
               twoFactorEnabled: data.twoFactorEnabled
             }
           });
@@ -212,6 +227,31 @@ export function Login() {
           navigate('/dashboard');
         }}
       />
+
+      {loginData && (
+        <EmailConfirmationModal
+          isOpen={isEmailConfirmationModalOpen}
+          onClose={() => setIsEmailConfirmationModalOpen(false)}
+          email={loginData.email}
+          onSuccess={() => {
+            signIn({
+              token: loginData.token,
+              user: {
+                id: loginData.id,
+                name: loginData.name,
+                email: loginData.email,
+                role: loginData.role,
+                universityId: loginData.universityId,
+                schoolId: loginData.schoolId,
+                emailConfirmed: true,
+                twoFactorEnabled: loginData.twoFactorEnabled
+              }
+            });
+            toast.success('E-mail confirmado! Bem-vindo ao ConectaEdu!');
+            navigate('/dashboard');
+          }}
+        />
+      )}
     </div>
   );
 }

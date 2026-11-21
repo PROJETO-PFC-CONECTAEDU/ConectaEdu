@@ -10,7 +10,7 @@ import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { Building2, Users, MapPin, ShieldCheck, Trash2, Plus, XCircle, Edit2 } from 'lucide-react';
+import { Building2, MapPin, ShieldCheck, Trash2, Plus, XCircle, Edit2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { AddressAutocomplete } from '../components/map/AddressAutocomplete';
 
@@ -21,12 +21,12 @@ interface University {
   coordinator?: string;
   address?: string;
   active: boolean;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'INACTIVE';
 }
 
 const universitySchema = z.object({
   name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
   cnpj: z.string().length(14, 'CNPJ deve ter exatamente 14 dígitos'),
-  coordinator: z.string().min(1, 'Coordenador é obrigatório'),
   address: z.string().min(1, 'Endereço é obrigatório'),
 });
 
@@ -104,7 +104,6 @@ export function Universities() {
     setEditingUni(uni);
     setValue('name', uni.name);
     setValue('cnpj', uni.cnpj);
-    setValue('coordinator', uni.coordinator || '');
     setValue('address', uni.address || '');
     setIsModalOpen(true);
   };
@@ -124,6 +123,19 @@ export function Universities() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['universities'] });
       toast.success(variables.action === 'validate' ? 'Universidade validada!' : 'Universidade recusada!');
+    }
+  });
+
+  const toggleStatusMutation = useMutation({
+    mutationFn: async ({ id, active }: { id: string, active: boolean }) => {
+      const endpoint = active ? 'deactivate' : 'activate';
+      await api.patch(`/universities/${id}/${endpoint}`, { 
+        validationNotes: active ? 'Inativada pelo administrador' : 'Ativada pelo administrador' 
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['universities'] });
+      toast.success('Status da universidade atualizado!');
     }
   });
 
@@ -159,12 +171,6 @@ export function Universities() {
             placeholder="Apenas números (14 dígitos)"
             error={errors.cnpj?.message}
             {...register('cnpj')}
-          />
-          <Input
-            label="Coordenador"
-            placeholder="Nome do coordenador"
-            error={errors.coordinator?.message}
-            {...register('coordinator')}
           />
           <AddressAutocomplete
             key={editingUni?.id || 'new'}
@@ -247,10 +253,6 @@ export function Universities() {
                 </div>
 
                 <div className="space-y-3 pt-4 border-t border-border-default">
-                  <div className="flex items-center gap-2 text-sm text-text-body">
-                    <Users size={16} className="text-text-muted shrink-0" />
-                    <span>Coord: {uni.coordinator || 'Não informado'}</span>
-                  </div>
                   <div className="flex items-start gap-2 text-sm text-text-body">
                     <MapPin size={16} className="mt-0.5 text-text-muted shrink-0" />
                     <span>{uni.address || 'Endereço não informado'}</span>
@@ -259,12 +261,18 @@ export function Universities() {
 
                 <div className="mt-6 flex items-center justify-between">
                   <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${
-                    uni.active ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                    uni.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700' : 
+                    uni.status === 'INACTIVE' ? 'bg-red-100 text-red-700' :
+                    uni.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                    'bg-amber-100 text-amber-700'
                   }`}>
-                    {uni.active ? 'Validada' : 'Pendente'}
+                    {uni.status === 'APPROVED' ? 'Validada' : 
+                     uni.status === 'INACTIVE' ? 'Inativa' : 
+                     uni.status === 'REJECTED' ? 'Recusada' :
+                     'Pendente'}
                   </span>
                   
-                  {!uni.active && (
+                  {uni.status === 'PENDING' && (
                     <div className="flex gap-2">
                       <button 
                         onClick={() => validateMutation.mutate({ id: uni.id, action: 'validate' })}
@@ -283,10 +291,31 @@ export function Universities() {
                     </div>
                   )}
 
-                  {uni.active && (
-                    <div className="flex items-center gap-1 text-emerald-600 text-xs font-medium">
-                      <ShieldCheck size={14} />
-                      Verificada
+                  {uni.status !== 'PENDING' && (
+                    <div className="flex items-center gap-2">
+                      {uni.status === 'APPROVED' ? (
+                        <div className="flex items-center gap-2">
+                           <div className="flex items-center gap-1 text-emerald-600 text-xs font-medium">
+                            <ShieldCheck size={14} />
+                            Verificada
+                          </div>
+                          <button 
+                            onClick={() => toggleStatusMutation.mutate({ id: uni.id, active: true })}
+                            className="text-text-muted hover:text-red-500 transition-colors"
+                            title="Desativar"
+                          >
+                            <XCircle size={20} />
+                          </button>
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={() => toggleStatusMutation.mutate({ id: uni.id, active: false })}
+                          className="text-emerald-500 hover:text-emerald-600 transition-colors"
+                          title="Ativar"
+                        >
+                          <ShieldCheck size={20} />
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>

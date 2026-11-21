@@ -21,6 +21,7 @@ public class LoginResponseDTO {
     private UUID universityId;
     private UUID schoolId;
     private boolean twoFactorEnabled;
+    private boolean emailConfirmed;
 
     public LoginResponseDTO(String email, boolean twoFactorEnabled) {
         this.email = email;
