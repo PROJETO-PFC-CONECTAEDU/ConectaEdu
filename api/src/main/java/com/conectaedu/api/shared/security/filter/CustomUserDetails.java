@@ -49,7 +49,7 @@ public class CustomUserDetails implements UserDetailsService {
                 user.getId(),
                 user.getEmail(),
                 user.getPassword(),
-                user.isActive(),
+                user.isActive() || !user.isEmailConfirmed(),
                 universityId,
                 schoolId,
                 authorities);

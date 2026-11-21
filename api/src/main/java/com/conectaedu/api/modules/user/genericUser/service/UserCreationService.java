@@ -41,7 +41,8 @@ public class UserCreationService {
         user.setPassword(passwordEncoder.encode(request.password()));
 
         user.setCreatedAt(LocalDateTime.now());
-        
+        user.setActive(true);
+        user.setEmailConfirmed(false);
         user.generateEmailConfirmationToken();
 
         userRepository.save(user);

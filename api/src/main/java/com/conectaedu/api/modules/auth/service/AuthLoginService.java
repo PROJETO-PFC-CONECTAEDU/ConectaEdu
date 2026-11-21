@@ -30,10 +30,6 @@ public class AuthLoginService {
         User userEntity = userRepository.findByEmail(data.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
 
-        if (!userEntity.isEmailConfirmed()) {
-            throw new BusinessException("E-mail não confirmado. Verifique sua caixa de entrada.");
-        }
-
         if (userEntity.is2faEnabled()) {
             return new LoginResponseDTO(userEntity.getEmail(), true);
         }
