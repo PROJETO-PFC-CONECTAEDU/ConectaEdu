@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import api from '../lib/api';
@@ -10,6 +10,7 @@ import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
+import { Combobox } from '../components/ui/Combobox';
 import { Users, Mail, GraduationCap, Trash2, ShieldCheck, XCircle, Plus, MapPin, UserX, Pencil, FileText, Link as LinkIcon } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { AddressAutocomplete } from '../components/map/AddressAutocomplete';
@@ -38,6 +39,14 @@ interface University {
   name: string;
 }
 
+const SUBJECTS = [
+  'Linguagens',
+  'Matemática',
+  'Ciências da Natureza',
+  'Ciências Humanas e Sociais Aplicadas',
+  'Educação Infantil (0 a 5 anos)'
+];
+
 const studentSchema = z.object({
   name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
   email: z.string().email('Email inválido'),
@@ -48,7 +57,7 @@ const studentSchema = z.object({
   address: z.string().min(1, 'Endereço é obrigatório'),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
-  interestAreas: z.string().min(1, 'Áreas de interesse são obrigatórias'),
+  interestAreas: z.array(z.string()).min(1, 'Selecione pelo menos uma área de interesse'),
 });
 
 type StudentFormData = z.infer<typeof studentSchema>;
@@ -67,7 +76,7 @@ export function Students() {
   const isUniAdmin = user?.role === 'UNIVERSITY_ADMIN';
   const isPlatformAdmin = user?.role === 'PLATFORM_ADMIN';
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<StudentFormData>({
+  const { register, handleSubmit, reset, setValue, control, formState: { errors } } = useForm<StudentFormData>({
     resolver: zodResolver(studentSchema),
     defaultValues: isUniAdmin ? { universityId: user.universityId } : undefined
   });
@@ -145,8 +154,7 @@ export function Students() {
 
   const onSubmit = (data: StudentFormData) => {
     const formattedData = {
-      ...data,
-      interestAreas: data.interestAreas.split(',').map(s => s.trim()).filter(s => s !== '')
+      ...data
     };
     
     if (editingStudent) {
@@ -168,7 +176,7 @@ export function Students() {
       address: student.address || '',
       latitude: student.latitude,
       longitude: student.longitude,
-      interestAreas: student.interestAreas?.join(', ') || '',
+      interestAreas: Array.isArray(student.interestAreas) ? student.interestAreas : [],
       password: '      ' // Dummy to pass validation
     });
     setIsModalOpen(true);
@@ -240,7 +248,7 @@ export function Students() {
                 availability: '',
                 course: '',
                 address: '',
-                interestAreas: ''
+                interestAreas: []
               });
               setIsModalOpen(true);
             }}
@@ -326,11 +334,20 @@ export function Students() {
             placeholder="Busque o endereço do estudante..."
           />
           
-          <Input
-            label="Áreas de Interesse (separadas por vírgula)"
-            placeholder="Ex: Educação, Tecnologia, Saúde"
-            error={errors.interestAreas?.message}
-            {...register('interestAreas')}
+          <Controller
+            name="interestAreas"
+            control={control}
+            render={({ field }) => (
+              <Combobox
+                label="Áreas de Interesse"
+                placeholder="Selecione as áreas de interesse..."
+                options={SUBJECTS}
+                multiple
+                value={field.value}
+                onChange={field.onChange}
+                error={errors.interestAreas?.message}
+              />
+            )}
           />
           
           <div className="flex gap-3 pt-2">
@@ -439,7 +456,7 @@ export function Students() {
                     </div>
                   )}
                   <div className="text-xs text-text-muted">
-                    <strong>Áreas:</strong> {student.interestAreas?.join(', ') || 'Nenhuma'}
+                    <strong>Áreas:</strong> {Array.isArray(student.interestAreas) ? student.interestAreas.join(', ') : (student.interestAreas || 'Nenhuma')}
                   </div>
                   <div className="text-xs text-text-muted">
                     <strong>Disponibilidade:</strong> {student.availability}

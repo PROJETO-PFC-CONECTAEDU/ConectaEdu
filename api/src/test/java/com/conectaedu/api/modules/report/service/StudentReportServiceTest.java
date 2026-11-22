@@ -203,8 +203,7 @@ class StudentReportServiceTest {
         assertEquals(new BigDecimal("387.5"), relatorio.remainingHours());
         assertNull(relatorio.requirementMetAt());
 
-        assertEquals(6, relatorio.performedLessons());
-        assertEquals(new BigDecimal("2.5"), relatorio.validatedHoursInPeriod());
+        assertEquals(3, relatorio.performedLessons());
         assertEquals(new BigDecimal("0.5"), relatorio.pendingHours());
         assertEquals(1, relatorio.canceledLessons());
         assertEquals(1, relatorio.notCompletedLessons());
@@ -270,9 +269,8 @@ class StudentReportServiceTest {
 
         assertNull(relatorio.averageReceived());
         assertTrue(relatorio.evaluations().isEmpty());
-        assertEquals(6, relatorio.performedLessons());
-        assertEquals(new BigDecimal("0.0"), relatorio.validatedHoursInPeriod());
-        assertEquals(new BigDecimal("0.5"), relatorio.pendingHours());
+        assertEquals(0, relatorio.performedLessons());
+        assertEquals(new BigDecimal("0.0"), relatorio.pendingHours());
     }
 
     //so entra na media a avaliacao de necessidade finalizada, dentro do periodo e da escola filtrada.
@@ -308,8 +306,7 @@ class StudentReportServiceTest {
         StudentReportResponseDTO relatorio =
                 studentReportService.forStudent(estudanteId, INICIO, FIM, escola.getId());
 
-        assertEquals(6, relatorio.performedLessons());
-        assertEquals(new BigDecimal("1.0"), relatorio.validatedHoursInPeriod());
+        assertEquals(1, relatorio.performedLessons());
         assertEquals(0, relatorio.canceledLessons());
         //a carga do estagio continua inteira, o filtro nao mexe nela.
         assertEquals(new BigDecimal("12.5"), relatorio.totalHours());

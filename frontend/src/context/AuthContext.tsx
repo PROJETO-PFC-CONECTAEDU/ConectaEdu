@@ -22,6 +22,7 @@ interface AuthContextData {
   updateUser: (user: User) => void;
   signOut: () => Promise<void>;
   isAuthenticated: boolean;
+  isLoggingOut: boolean;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -34,6 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(() => {
     return localStorage.getItem('@ConectaEdu:token');
   });
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const signIn = ({ token, user }: { token: string; user: User }) => {
     localStorage.setItem('@ConectaEdu:token', token);
@@ -49,6 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    setIsLoggingOut(true);
     try {
       await api.post('/auth/logout');
     } catch (error) {
@@ -58,11 +61,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem('@ConectaEdu:user');
       setToken(null);
       setUser(null);
+      setIsLoggingOut(false);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, signIn, updateUser, signOut, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ user, token, signIn, updateUser, signOut, isAuthenticated: !!token, isLoggingOut }}>
       {children}
     </AuthContext.Provider>
   );

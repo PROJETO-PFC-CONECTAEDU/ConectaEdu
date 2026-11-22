@@ -32,7 +32,7 @@ interface ConsentRecord {
 }
 
 export function Profile() {
-  const { user, updateUser, signOut } = useAuth();
+  const { user, updateUser, signOut, isLoggingOut } = useAuth();
   const [consents, setConsents] = useState<ConsentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedConsent, setSelectedConsent] = useState<ConsentRecord | null>(null);
@@ -428,6 +428,7 @@ export function Profile() {
         description="Ao revogar seu consentimento, seu acesso à plataforma será suspenso até que você aceite os termos novamente. Deseja continuar?"
         confirmText="Revogar"
         cancelText="Cancelar"
+        isLoading={isLoggingOut}
       />
 
       <ConfirmModal
@@ -438,6 +439,7 @@ export function Profile() {
         description="Esta ação é irreversível. Seus dados pessoais serão removidos ou anonimizados e você perderá o acesso à plataforma. Deseja realmente excluir sua conta?"
         confirmText="Sim, excluir conta"
         cancelText="Cancelar"
+        isLoading={isLoggingOut}
       />
 
       <Modal
