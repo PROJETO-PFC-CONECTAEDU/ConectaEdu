@@ -1,13 +1,13 @@
 import { Header } from '../components/layout/Header';
 import { Card } from '../components/ui/Card';
-import { MetricCard } from '../components/ui/MetricCard';
-import { Filter, Calendar, BookOpen, CheckCircle, XCircle, Star } from 'lucide-react';
 import { Button } from '../components/ui/Button';
+import { MetricCard } from '../components/ui/MetricCard';
+import { Filter, Calendar, BookOpen, CheckCircle, XCircle, Star, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import api from '../lib/api';
-import { useState, useMemo } from 'react';
-import { subMonths, startOfYear, format } from 'date-fns';
+import { useState, useMemo, useEffect } from 'react';
+import { format } from 'date-fns';
 import { useParams } from 'react-router-dom';
 
 interface StudentEvaluation {
@@ -60,31 +60,49 @@ export function Reports() {
   const { studentId: urlStudentId } = useParams();
   const studentId = urlStudentId || user?.id;
   
-  const [selectedPeriod, setSelectedPeriod] = useState('3m');
-  const [selectedSchoolId, setSelectedSchoolId] = useState('');
+  const [tempSchoolId, setTempSchoolId] = useState<string>('');
+  const [tempStartDate, setTempStartDate] = useState<string>('');
+  const [tempEndDate, setTempEndDate] = useState<string>('');
+  const [tempPeriod, setTempPeriod] = useState<string>('');
 
-  const dateRange = useMemo(() => {
-    const to = new Date();
-    let from: Date;
+  const [appliedSchoolId, setAppliedSchoolId] = useState<string>('');
+  const [appliedStartDate, setAppliedStartDate] = useState<string>('');
+  const [appliedEndDate, setAppliedEndDate] = useState<string>('');
 
-    switch (selectedPeriod) {
-      case '6m':
-        from = subMonths(to, 6);
-        break;
-      case 'year':
-        from = startOfYear(to);
-        break;
-      case '3m':
-      default:
-        from = subMonths(to, 3);
-        break;
+  const handlePeriodChange = (value: string) => {
+    setTempPeriod(value);
+    if (value === 'custom') return;
+    if (value === '') {
+      setTempStartDate('');
+      setTempEndDate('');
+      return;
     }
 
-    return {
-      from: format(from, 'yyyy-MM-dd'),
-      to: format(to, 'yyyy-MM-dd'),
-    };
-  }, [selectedPeriod]);
+    const now = new Date();
+    const end = now.toISOString().split('T')[0];
+    const d = new Date();
+    d.setDate(d.getDate() - parseInt(value));
+    const start = d.toISOString().split('T')[0];
+
+    setTempStartDate(start);
+    setTempEndDate(end);
+  };
+
+  const handleApplyFilters = () => {
+    setAppliedSchoolId(tempSchoolId);
+    setAppliedStartDate(tempStartDate);
+    setAppliedEndDate(tempEndDate);
+  };
+
+  const handleClearFilters = () => {
+    setTempSchoolId('');
+    setTempStartDate('');
+    setTempEndDate('');
+    setTempPeriod('');
+    setAppliedSchoolId('');
+    setAppliedStartDate('');
+    setAppliedEndDate('');
+  };
 
   const { data: schools } = useQuery<School[]>({
     queryKey: ['schools', 'active'],
@@ -99,15 +117,13 @@ export function Reports() {
   });
 
   const { data: report, isLoading } = useQuery<StudentReport>({
-    queryKey: ['report', studentId, dateRange, selectedSchoolId],
+    queryKey: ['report', studentId, appliedSchoolId, appliedStartDate, appliedEndDate],
     queryFn: async () => {
-      const params: any = {
-        from: dateRange.from,
-        to: dateRange.to,
-      };
-      if (selectedSchoolId) {
-        params.schoolId = selectedSchoolId;
-      }
+      const params: any = {};
+      if (appliedStartDate) params.from = appliedStartDate;
+      if (appliedEndDate) params.to = appliedEndDate;
+      if (appliedSchoolId) params.schoolId = appliedSchoolId;
+      
       const response = await api.get(`/reports/students/${studentId}`, { params });
       return response.data;
     },
@@ -117,6 +133,9 @@ export function Reports() {
       return failureCount < 3;
     }
   });
+
+  const showSchoolFilter = user?.role === 'PLATFORM_ADMIN' || user?.role === 'UNIVERSITY_ADMIN';
+  const showPeriodFilter = true;
 
   if (isLoading) {
     return (
@@ -135,40 +154,99 @@ export function Reports() {
       
       <div className="p-8 space-y-8">
         {/* Filtros */}
-        <div className="flex flex-col md:flex-row gap-4 items-end justify-between bg-white p-6 rounded-2xl shadow-sm border border-border-default">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1 w-full">
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-text-muted uppercase">Período</label>
-              <select 
-                value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
-                className="w-full h-10 px-3 rounded-lg border border-border-default bg-slate-50 text-sm"
-              >
-                <option value="3m">Últimos 3 meses</option>
-                <option value="6m">Últimos 6 meses</option>
-                <option value="year">Este ano</option>
-              </select>
+        {(showSchoolFilter || showPeriodFilter) && (
+          <Card className="p-4 bg-gray-50 border-none shadow-sm flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2 text-brand-primary font-semibold mr-2">
+              <Filter size={20} />
+              <span>Filtros:</span>
             </div>
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-text-muted uppercase">Escola</label>
-              <select 
-                value={selectedSchoolId}
-                onChange={(e) => setSelectedSchoolId(e.target.value)}
-                className="w-full h-10 px-3 rounded-lg border border-border-default bg-slate-50 text-sm"
+
+            {showSchoolFilter && (
+              <div className="flex flex-col min-w-[200px]">
+                <label className="text-xs text-text-body mb-1 font-medium">Escola</label>
+                <select 
+                  value={tempSchoolId} 
+                  onChange={(e) => setTempSchoolId(e.target.value)}
+                  className="px-3 py-2 border border-border-light rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                >
+                  <option value="">Todas as Escolas</option>
+                  {schools?.map(school => (
+                    <option key={school.id} value={school.id}>{school.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {showPeriodFilter && (
+              <>
+                <div className="flex flex-col min-w-[150px]">
+                  <label className="text-xs text-text-body mb-1 font-medium">Período</label>
+                  <select 
+                    value={tempPeriod} 
+                    onChange={(e) => handlePeriodChange(e.target.value)}
+                    className="px-3 py-2 border border-border-light rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                  >
+                    <option value="">Todo o período</option>
+                    <option value="7">Últimos 7 dias</option>
+                    <option value="30">Últimos 30 dias</option>
+                    <option value="60">Últimos 60 dias</option>
+                    <option value="90">Últimos 90 dias</option>
+                    <option value="custom">Customizado</option>
+                  </select>
+                </div>
+
+                {(tempPeriod === 'custom' || tempStartDate || tempEndDate) && (
+                  <>
+                    <div className="flex flex-col">
+                      <label className="text-xs text-text-body mb-1 font-medium">Data Inicial</label>
+                      <input 
+                        type="date"
+                        value={tempStartDate}
+                        onChange={(e) => {
+                          setTempStartDate(e.target.value);
+                          setTempPeriod('custom');
+                        }}
+                        className="px-3 py-2 border border-border-light rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <label className="text-xs text-text-body mb-1 font-medium">Data Final</label>
+                      <input 
+                        type="date"
+                        value={tempEndDate}
+                        onChange={(e) => {
+                          setTempEndDate(e.target.value);
+                          setTempPeriod('custom');
+                        }}
+                        className="px-3 py-2 border border-border-light rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                      />
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+
+            <div className="flex items-center gap-4 ml-auto">
+              <Button 
+                onClick={handleApplyFilters}
+                className="flex items-center gap-2"
+                size="sm"
               >
-                <option value="">Todas as escolas</option>
-                {schools?.map(school => (
-                  <option key={school.id} value={school.id}>{school.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex items-end">
-              <Button variant="outline" className="w-full flex items-center justify-center gap-2">
-                <Filter size={18} /> Filtrar
+                <Search size={16} />
+                Filtrar
               </Button>
+
+              {(tempSchoolId || tempStartDate || tempEndDate || tempPeriod || appliedSchoolId || appliedStartDate || appliedEndDate) && (
+                <button 
+                  onClick={handleClearFilters}
+                  className="text-xs text-brand-primary hover:underline font-medium"
+                >
+                  Limpar filtros
+                </button>
+              )}
             </div>
-          </div>
-        </div>
+          </Card>
+        )}
 
         {/* Métricas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
