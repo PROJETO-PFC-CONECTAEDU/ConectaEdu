@@ -100,8 +100,13 @@ public class InternshipHoursService {
             }
         }
 
-        int pendingLessons = (int) internshipLessonRepository
-                .countByStudent_IdAndStatus(studentId, LessonStatus.COMPLETED);
+        List<Lesson> pending = internshipLessonRepository
+                .findByStudent_IdAndStatusOrderBySignedAtAsc(studentId, LessonStatus.COMPLETED);
+
+        long pendingMinutes = pending.stream()
+                .mapToLong(l -> l.getDuration().toMinutes())
+                .sum();
+
         int canceledLessons = (int) internshipLessonRepository
                 .countByStudent_IdAndStatus(studentId, LessonStatus.CANCELED);
 
@@ -109,8 +114,9 @@ public class InternshipHoursService {
                 studentId,
                 student.getName(),
                 InternshipRules.toHours(totalMinutes),
+                InternshipRules.toHours(pendingMinutes),
                 validated.size(),
-                pendingLessons,
+                pending.size(),
                 canceledLessons,
                 requiredHours,
                 InternshipRules.toHours(Math.max(0, requiredMinutes - totalMinutes)),

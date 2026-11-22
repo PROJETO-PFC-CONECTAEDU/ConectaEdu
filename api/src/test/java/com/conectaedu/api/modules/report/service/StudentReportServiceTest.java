@@ -129,7 +129,7 @@ class StudentReportServiceTest {
 
     private InternshipHoursResponseDTO horas() {
         return new InternshipHoursResponseDTO(
-                estudanteId, NOME, new BigDecimal("12.5"), 5, 1, 1,
+                estudanteId, NOME, new BigDecimal("12.5"), new BigDecimal("0.5"), 5, 1, 1,
                 400, new BigDecimal("387.5"), null);
     }
 
@@ -186,9 +186,9 @@ class StudentReportServiceTest {
         assertEquals(new BigDecimal("387.5"), relatorio.remainingHours());
         assertNull(relatorio.requirementMetAt());
 
-        assertEquals(3, relatorio.performedLessons());
+        assertEquals(6, relatorio.performedLessons());
         assertEquals(new BigDecimal("2.5"), relatorio.validatedHoursInPeriod());
-        assertEquals(new BigDecimal("0.5"), relatorio.pendingHoursInPeriod());
+        assertEquals(new BigDecimal("0.5"), relatorio.pendingHours());
         assertEquals(1, relatorio.canceledLessons());
         assertEquals(1, relatorio.notCompletedLessons());
 
@@ -253,9 +253,9 @@ class StudentReportServiceTest {
 
         assertNull(relatorio.averageReceived());
         assertTrue(relatorio.evaluations().isEmpty());
-        assertEquals(0, relatorio.performedLessons());
+        assertEquals(6, relatorio.performedLessons());
         assertEquals(new BigDecimal("0.0"), relatorio.validatedHoursInPeriod());
-        assertEquals(new BigDecimal("0.0"), relatorio.pendingHoursInPeriod());
+        assertEquals(new BigDecimal("0.5"), relatorio.pendingHours());
     }
 
     //so entra na media a avaliacao de necessidade finalizada, dentro do periodo e da escola filtrada.
@@ -291,7 +291,7 @@ class StudentReportServiceTest {
         StudentReportResponseDTO relatorio =
                 studentReportService.forStudent(estudanteId, INICIO, FIM, escola.getId());
 
-        assertEquals(1, relatorio.performedLessons());
+        assertEquals(6, relatorio.performedLessons());
         assertEquals(new BigDecimal("1.0"), relatorio.validatedHoursInPeriod());
         assertEquals(0, relatorio.canceledLessons());
         //a carga do estagio continua inteira, o filtro nao mexe nela.

@@ -41,7 +41,7 @@ interface StudentReport {
   requirementMetAt: string | null;
   performedLessons: number;
   validatedHoursInPeriod: number;
-  pendingHoursInPeriod: number;
+  pendingHours: number;
   canceledLessons: number;
   notCompletedLessons: number;
   averageReceived: number | null;
@@ -192,7 +192,7 @@ export function Reports() {
           <MetricCard 
             icon={<CheckCircle className="text-green-600" size={20} />}
             label="Horas Pendentes"
-            value={`${report?.pendingHoursInPeriod || 0}h`}
+            value={`${report?.pendingHours || 0}h`}
             note="Aguardando validação"
           />
           <MetricCard 

@@ -23,7 +23,7 @@ public record StudentReportResponseDTO(
         //atividades no período.
         int performedLessons,
         BigDecimal validatedHoursInPeriod,
-        BigDecimal pendingHoursInPeriod,
+        BigDecimal pendingHours,
         int canceledLessons,
         int notCompletedLessons,
 

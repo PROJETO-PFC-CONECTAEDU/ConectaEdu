@@ -418,7 +418,7 @@ export function Profile() {
         onClose={() => setIsModalOpen(false)}
         onConfirm={handleConfirmRevoke}
         title="Revogar Consentimento"
-        description="Ao revogar seu consentimento, você poderá perderá o acesso a plataforma até que aceite os termos novamente. Deseja continuar?"
+        description="Ao revogar seu consentimento, seu acesso à plataforma será suspenso até que você aceite os termos novamente. Deseja continuar?"
         confirmText="Revogar"
         cancelText="Cancelar"
       />

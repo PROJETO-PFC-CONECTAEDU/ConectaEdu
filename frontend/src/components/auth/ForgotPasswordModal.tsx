@@ -15,7 +15,7 @@ const emailSchema = z.object({
 });
 
 const resetSchema = z.object({
-  token: z.string().min(1, 'O código é obrigatório'),
+  code: z.string().length(6, 'O código deve ter 6 dígitos'),
   newPassword: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
   confirmPassword: z.string().min(6, 'A confirmação de senha deve ter pelo menos 6 caracteres'),
 }).refine((data) => data.newPassword === data.confirmPassword, {
@@ -50,7 +50,7 @@ export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProp
     onSuccess: (_, variables) => {
       setEmail(variables.email);
       setStep('reset');
-      resetForm.setValue('token', '');
+      resetForm.setValue('code', '');
       toast.success('Código enviado para o seu e-mail!');
     },
     onError: () => {
@@ -61,7 +61,8 @@ export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProp
   const resetPasswordMutation = useMutation({
     mutationFn: async (data: ResetForm) => {
       await api.post('/auth/reset-password', {
-        token: data.token,
+        email,
+        code: data.code,
         newPassword: data.newPassword,
       });
     },
@@ -126,11 +127,12 @@ export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProp
           
           <div className="relative">
             <Input
-              {...resetForm.register('token')}
+              {...resetForm.register('code')}
               label="Código de verificação"
-              placeholder="Insira o código"
-              error={resetForm.formState.errors.token?.message}
+              placeholder="000000"
+              error={resetForm.formState.errors.code?.message}
               className="pl-10"
+              maxLength={6}
             />
             <Key className="absolute left-3 top-[38px] h-5 w-5 text-text-muted" />
           </div>

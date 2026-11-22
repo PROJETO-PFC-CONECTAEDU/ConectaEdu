@@ -75,7 +75,7 @@ public class StudentCreationService {
         student.setUserRole(UserRole.STUDENT);
         student.setCreatedAt(LocalDateTime.now());
         student.setUniversity(university);
-        student.setActive(true);
+        student.setActive(false);
         student.setStatus(StudentStatus.PENDING);
         student.setAvailability(request.availability());
         student.setCourse(request.course());

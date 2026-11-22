@@ -26,12 +26,12 @@ public class ResetPasswordService {
 
     @Transactional
     public void resetPassword(ResetPasswordRequest request, HttpServletRequest httpRequest) {
-        User user = userRepository.findByPasswordResetToken(request.token()).orElse(null);
+        User user = userRepository.findByEmailAndPasswordResetToken(request.email().trim().toLowerCase(), request.code()).orElse(null);
 
         if (user == null) {
-            log.error("Falha no reset de senha: Token inválido");
-            auditService.logPasswordResetFail(null, null, "invalid_token");
-            throw new BusinessException("Token de recuperação inválido.");
+            log.error("Falha no reset de senha: Código inválido para o e-mail {}", request.email());
+            auditService.logPasswordResetFail(null, request.email(), "invalid_code");
+            throw new BusinessException("Código de recuperação inválido.");
         }
 
         if (user.isPasswordResetTokenExpired()) {

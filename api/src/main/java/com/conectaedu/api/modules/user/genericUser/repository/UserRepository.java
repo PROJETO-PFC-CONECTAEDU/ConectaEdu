@@ -17,6 +17,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     Optional<User> findByPasswordResetToken(String token);
 
+    Optional<User> findByEmailAndPasswordResetToken(String email, String token);
+
     Optional<User> findByEmailAndEmailConfirmationToken(String email, String token);
 
     @Query("SELECT u FROM User u WHERE " +
