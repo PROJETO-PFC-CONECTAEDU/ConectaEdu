@@ -200,7 +200,7 @@ export function Reports() {
             icon={<XCircle className="text-red-500" size={20} />}
             label="Cancelamentos"
             value={report?.canceledLessons?.toString() || '0'}
-            note={report?.canceledByStudent ? `${report.canceledByStudent} pelo estudante` : "No período selecionado"}
+            note={report?.canceledByStudent ? `${report.canceledByStudent} pelo estudante` : "Total no período"}
           />
         </div>
 

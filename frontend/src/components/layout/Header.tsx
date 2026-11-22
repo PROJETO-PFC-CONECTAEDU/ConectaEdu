@@ -1,4 +1,4 @@
-import { User as UserIcon, LogOut, UserCircle } from 'lucide-react';
+import { User as UserIcon, LogOut, UserCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -11,7 +11,7 @@ interface HeaderProps {
 }
 
 export function Header({ title, subtitle, action }: HeaderProps) {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isLoggingOut } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   return (
@@ -63,10 +63,15 @@ export function Header({ title, subtitle, action }: HeaderProps) {
                     await signOut();
                     window.location.href = '/login';
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  disabled={isLoggingOut}
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <LogOut size={18} />
-                  Sair da Conta
+                  {isLoggingOut ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (
+                    <LogOut size={18} />
+                  )}
+                  {isLoggingOut ? 'Saindo...' : 'Sair da Conta'}
                 </button>
               </div>
             )}

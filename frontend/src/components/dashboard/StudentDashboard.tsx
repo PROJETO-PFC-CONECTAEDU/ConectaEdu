@@ -40,7 +40,7 @@ export function StudentDashboard({ stats }: Props) {
         <MetricCard 
           icon={<Star className="text-yellow-500" size={24} />}
           label="Áreas de Interesse"
-          value={stats.interestAreas?.length || 0}
+          value={Array.isArray(stats.interestAreas) ? stats.interestAreas.length : 0}
           note="Competências no seu perfil"
         />
       </div>
@@ -75,7 +75,7 @@ export function StudentDashboard({ stats }: Props) {
             Minhas Áreas de Interesse
           </h3>
           <div className="flex flex-wrap gap-2">
-            {stats.interestAreas && stats.interestAreas.length > 0 ? (
+            {Array.isArray(stats.interestAreas) && stats.interestAreas.length > 0 ? (
               stats.interestAreas.map((area: string) => (
                 <span key={area} className="px-3 py-1 bg-brand-light text-brand-primary rounded-full text-xs font-medium">
                   {area}

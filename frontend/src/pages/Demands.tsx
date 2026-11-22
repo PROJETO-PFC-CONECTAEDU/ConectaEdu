@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -12,6 +12,7 @@ import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
+import { Combobox } from '../components/ui/Combobox';
 import { Tooltip } from '../components/ui/Tooltip';
 import { ClipboardList, Trash2, Plus, Users, Clock, Building2, User as UserIcon, Check, MapPin, AlertTriangle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -44,6 +45,14 @@ interface Demand {
   hasConflict?: boolean;
 }
 
+const SUBJECTS = [
+  'Linguagens',
+  'Matemática',
+  'Ciências da Natureza',
+  'Ciências Humanas e Sociais Aplicadas',
+  'Educação Infantil (0 a 5 anos)'
+];
+
 const demandSchema = z.object({
   title: z.string().min(3, 'Título deve ter pelo menos 3 caracteres'),
   description: z.string().min(10, 'Descrição deve ter pelo menos 10 caracteres'),
@@ -67,7 +76,7 @@ export function Demands() {
   const isDirector = user?.role === 'SCHOOL_DIRECTOR';
   const isStudent = user?.role === 'STUDENT';
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<DemandFormData>({
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<DemandFormData>({
     resolver: zodResolver(demandSchema)
   });
 
@@ -202,12 +211,20 @@ export function Demands() {
             {errors.description && <p className="text-xs text-red-500">{errors.description.message}</p>}
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Disciplina"
-              placeholder="Ex: Matemática"
-              error={errors.subject?.message}
-              {...register('subject')}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Controller
+              name="subject"
+              control={control}
+              render={({ field }) => (
+                <Combobox
+                  label="Disciplina"
+                  placeholder="Selecione a disciplina..."
+                  options={SUBJECTS}
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={errors.subject?.message}
+                />
+              )}
             />
             <Input
               label="Nível de Escolaridade"
@@ -217,7 +234,7 @@ export function Demands() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="Qtd. Alunos"
               type="number"
@@ -238,7 +255,7 @@ export function Demands() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="Sala"
               placeholder="Ex: Sala 102"
