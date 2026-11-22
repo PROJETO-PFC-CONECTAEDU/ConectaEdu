@@ -10,8 +10,6 @@ public record UniversityUpdateRequestDTO(
         @NotBlank(message = "Nome é obrigatório")
         String name,
 
-        String coordinator,
-
         @NotNull(message = "Endereço é obrigatório")
         String address,
 

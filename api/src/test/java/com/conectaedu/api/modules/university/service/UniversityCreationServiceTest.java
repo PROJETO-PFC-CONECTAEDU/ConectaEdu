@@ -47,7 +47,7 @@ class UniversityCreationServiceTest {
 
     private UniversityCreationRequestDTO request() {
         return new UniversityCreationRequestDTO(
-                NOME, CNPJ, "Joao P", "R. teste, 200");
+                NOME, CNPJ, "R. teste, 200");
     }
 
     //Caminho feliz, CNPJ inedito, universidade criada e registrada na auditoria.

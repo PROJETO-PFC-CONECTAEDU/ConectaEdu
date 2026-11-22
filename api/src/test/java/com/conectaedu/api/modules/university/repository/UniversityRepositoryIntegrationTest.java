@@ -28,7 +28,6 @@ class UniversityRepositoryIntegrationTest {
         University universidade = new University();
         universidade.setName(nome);
         universidade.setCnpj(cnpj);
-        universidade.setCoordinator("Joao P");
         universidade.setAddress("R. teste, 200");
         universidade.setStatus(situacao);
         universidade.setActive(ativa);

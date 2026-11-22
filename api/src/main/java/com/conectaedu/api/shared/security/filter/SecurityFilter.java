@@ -1,6 +1,7 @@
 package com.conectaedu.api.shared.security.filter;
 
 import com.conectaedu.api.modules.auth.repository.TokenRepository;
+import com.conectaedu.api.modules.user.genericUser.repository.UserRepository;
 import com.conectaedu.api.shared.security.domain.AuthenticatedUser;
 import com.conectaedu.api.shared.security.token.ValidateToken;
 import jakarta.servlet.FilterChain;
@@ -24,6 +25,7 @@ public class SecurityFilter extends OncePerRequestFilter {
 
     private final ValidateToken validateToken;
     private final TokenRepository tokenRepository;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -51,12 +53,19 @@ public class SecurityFilter extends OncePerRequestFilter {
                 String schoolIdClaim = decodedJWT.getClaim("schoolId").asString();
 
                 if (id != null) {
+                    var userOptional = userRepository.findById(UUID.fromString(id));
+                    if (userOptional.isEmpty() || !userOptional.get().isActive()) {
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        return;
+                    }
+
+                    var user = userOptional.get();
                     var authorities = Collections.singletonList(new SimpleGrantedAuthority(role.startsWith("ROLE_") ? role : "ROLE_" + role));
 
                     UUID universityId = universityIdClaim != null ? UUID.fromString(universityIdClaim) : null;
                     UUID schoolId = schoolIdClaim != null ? UUID.fromString(schoolIdClaim) : null;
 
-                    var userDetails = new AuthenticatedUser(UUID.fromString(id), email, "", true, universityId, schoolId, authorities);
+                    var userDetails = new AuthenticatedUser(user.getId(), email, "", user.isActive(), universityId, schoolId, authorities);
 
                     var authentication = new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authentication);

@@ -8,8 +8,10 @@ import com.conectaedu.api.modules.user.genericUser.repository.UserRepository;
 import com.conectaedu.api.modules.user.school_director.domain.SchoolDirector;
 import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.university_admin.domain.UniversityAdmin;
+import com.conectaedu.api.shared.enums.StudentStatus;
 import com.conectaedu.api.shared.exceptions.BlockedIpException;
 import com.conectaedu.api.shared.exceptions.BusinessException;
+import com.conectaedu.api.shared.exceptions.InactiveAccountException;
 import com.conectaedu.api.shared.exceptions.InactiveInstitutionException;
 import com.conectaedu.api.shared.security.service.LoginAttemptService;
 import com.conectaedu.api.shared.security.token.GenerateToken;
@@ -44,6 +46,10 @@ public class AuthLoginService {
         User userEntity = userRepository.findByEmail(data.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
 
+        if (!userEntity.isActive()) {
+            throw new InactiveAccountException("Sua conta está inativa. Entre em contato com o suporte.");
+        }
+
         checkInstitutionStatus(userEntity);
 
         if (userEntity.is2faEnabled()) {
@@ -67,6 +73,10 @@ public class AuthLoginService {
         } else if (user instanceof Student student) {
             if (student.getUniversity() != null && !student.getUniversity().isActive()) {
                 throw new InactiveInstitutionException("Sua universidade está desativada. Entre em contato com o suporte.");
+            }
+            if (student.getStatus() != null && (student.getStatus() == StudentStatus.INACTIVE || 
+                student.getStatus() == StudentStatus.REJECTED)) {
+                throw new InactiveAccountException("Sua conta está inativa. Entre em contato com o suporte.");
             }
         }
     }

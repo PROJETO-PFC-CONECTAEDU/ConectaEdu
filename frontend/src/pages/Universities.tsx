@@ -21,7 +21,6 @@ interface University {
   id: string;
   name: string;
   cnpj: string;
-  coordinator?: string;
   address?: string;
   active: boolean;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'INACTIVE';

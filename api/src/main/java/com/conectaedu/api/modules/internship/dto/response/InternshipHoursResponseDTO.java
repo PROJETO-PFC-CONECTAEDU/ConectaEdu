@@ -10,6 +10,7 @@ public record InternshipHoursResponseDTO(
         UUID studentId,
         String studentName,
         BigDecimal totalHours,
+        BigDecimal pendingHours,
         int validatedLessons,
         int pendingLessons,
         int canceledLessons,

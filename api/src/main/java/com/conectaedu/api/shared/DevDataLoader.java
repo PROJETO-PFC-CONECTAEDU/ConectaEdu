@@ -83,7 +83,6 @@ public class DevDataLoader implements CommandLineRunner {
             university.setName("Universidade Federal de Tecnologia");
             university.setCnpj(cnpj);
             university.setAddress("Av. das Universidades, 1000");
-            university.setCoordinator("Dr. Carlos Silva");
             university.setStatus(UniversityStatus.APPROVED);
             university.setActive(true);
             university.setDeleted(false);
