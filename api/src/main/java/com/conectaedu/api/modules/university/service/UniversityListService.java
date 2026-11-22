@@ -18,9 +18,9 @@ public class UniversityListService {
     private final UniversityRepository universityRepository;
 
     @Transactional(readOnly = true)
-    public List<UniversityResponseDTO> listAll() {
+    public List<UniversityResponseDTO> listAll(String search) {
         if (SecurityContextHolder.hasRole("PLATFORM_ADMIN")) {
-            return universityRepository.findAll()
+            return universityRepository.findBySearch(search)
                     .stream()
                     .map(UniversityResponseDTO::new)
                     .toList();

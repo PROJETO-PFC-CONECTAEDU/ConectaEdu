@@ -11,7 +11,7 @@ public interface IStudentFacade {
     StudentResponseDTO createStudent(StudentCreationRequestDTO request);
     StudentResponseDTO updateStudent(UUID id, StudentUpdateRequestDTO request);
     StudentResponseDTO getStudent(UUID id);
-    List<StudentResponseDTO> getAllStudents();
+    List<StudentResponseDTO> getAllStudents(String search);
     void deleteStudent(UUID id);
     void validateStudent(UUID id);
     void rejectStudent(UUID id);

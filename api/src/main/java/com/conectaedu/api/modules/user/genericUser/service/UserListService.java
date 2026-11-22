@@ -16,8 +16,8 @@ public class UserListService {
 
     private final UserRepository userRepository;
 
-    public List<UserResponseDTO> listAll() {
-        return userRepository.findAll()
+    public List<UserResponseDTO> listAll(String search) {
+        return userRepository.findBySearch(search)
                 .stream()
                 .map(UserResponseDTO::new)
                 .collect(Collectors.toList());

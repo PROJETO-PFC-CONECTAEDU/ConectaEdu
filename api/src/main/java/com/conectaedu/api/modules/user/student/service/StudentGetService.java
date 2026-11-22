@@ -23,30 +23,26 @@ public class StudentGetService {
     private final TenancyValidator tenancyValidator;
 
     @Transactional(readOnly = true)
-    public List<StudentResponseDTO> getAllStudents() {
+    public List<StudentResponseDTO> getAllStudents(String search) {
+        List<Student> students;
         if (SecurityContextHolder.hasRole("PLATFORM_ADMIN")) {
-            return studentRepository.findAll().stream()
-                    .map(this::mapToResponseDTO)
-                    .toList();
-        }
-
-        UUID universityId = SecurityContextHolder.getAuthenticatedUniversityId();
-        if (universityId != null) {
-            return studentRepository.findByUniversityId(universityId).stream()
-                    .map(this::mapToResponseDTO)
-                    .toList();
-        }
-
-        if (SecurityContextHolder.hasRole("SCHOOL_DIRECTOR")) {
+            students = studentRepository.findAll();
+        } else if (SecurityContextHolder.hasRole("UNIVERSITY_ADMIN") || SecurityContextHolder.getAuthenticatedUniversityId() != null) {
+            UUID universityId = SecurityContextHolder.getAuthenticatedUniversityId();
+            students = studentRepository.findByUniversityId(universityId);
+        } else if (SecurityContextHolder.hasRole("SCHOOL_DIRECTOR")) {
             UUID schoolId = SecurityContextHolder.getAuthenticatedSchoolId();
-            if (schoolId != null) {
-                return studentRepository.findAllBySchoolId(schoolId).stream()
-                        .map(this::mapToResponseDTO)
-                        .toList();
-            }
+            students = schoolId != null ? studentRepository.findAllBySchoolId(schoolId) : List.of();
+        } else {
+            return List.of();
         }
 
-        return List.of();
+        return students.stream()
+                .filter(s -> search == null || search.isBlank() ||
+                        (s.getName() != null && s.getName().toLowerCase().contains(search.toLowerCase())) ||
+                        (s.getEmail() != null && s.getEmail().toLowerCase().contains(search.toLowerCase())))
+                .map(this::mapToResponseDTO)
+                .toList();
     }
 
     @Transactional(readOnly = true)

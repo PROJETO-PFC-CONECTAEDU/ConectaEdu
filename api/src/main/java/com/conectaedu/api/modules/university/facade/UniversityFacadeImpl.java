@@ -44,8 +44,9 @@ public class UniversityFacadeImpl implements IUniversityFacade {
         return universityListByService.listByCnpj(cnpj);
     }
 
-    public List<UniversityResponseDTO> getAllUniversities() {
-        return universityListService.listAll();
+    @Override
+    public List<UniversityResponseDTO> getAllUniversities(String search) {
+        return universityListService.listAll(search);
     }
 
     public UniversityResponseDTO validateUniversity(UUID id, UniversityValidationRequestDTO request) {

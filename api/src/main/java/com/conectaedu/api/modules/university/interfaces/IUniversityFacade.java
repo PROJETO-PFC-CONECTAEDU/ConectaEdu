@@ -21,7 +21,7 @@ public interface IUniversityFacade {
 
     UniversityResponseDTO getUniversityByCnpj(String cnpj);
 
-    List<UniversityResponseDTO> getAllUniversities();
+    List<UniversityResponseDTO> getAllUniversities(String search);
 
     UniversityResponseDTO validateUniversity(UUID id, UniversityValidationRequestDTO request);
     UniversityResponseDTO activateUniversity(UUID id, UniversityValidationRequestDTO request);

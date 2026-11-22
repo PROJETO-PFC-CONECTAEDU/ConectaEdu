@@ -12,6 +12,7 @@ import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Users, Mail, ShieldCheck, UserX, CheckCircle, XCircle, Pencil, Trash2, Link as LinkIcon } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useDebounce } from '../hooks/useDebounce';
 
 interface User {
   id: string;
@@ -44,15 +45,21 @@ export function PlatformUsers() {
   const [bindingUser, setBindingUser] = useState<User | null>(null);
   const [selectedInstitutionId, setSelectedInstitutionId] = useState<string>('');
   const [filter, setFilter] = useState<'ALL' | 'UNIVERSITY_ADMIN' | 'SCHOOL_DIRECTOR'>('ALL');
+  const [searchFilter, setSearchFilter] = useState('');
+  const debouncedSearch = useDebounce(searchFilter, 500);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
   });
 
-  const { data: users, isLoading, error } = useQuery<User[]>({
-    queryKey: ['platform-users'],
+  const { data: users, isLoading, isFetching, error } = useQuery<User[]>({
+    queryKey: ['platform-users', debouncedSearch],
     queryFn: async () => {
-      const response = await api.get('/users');
+      const response = await api.get('/users', {
+        params: {
+          search: debouncedSearch || undefined,
+        }
+      });
       return response.data;
     },
   });
@@ -158,9 +165,6 @@ export function PlatformUsers() {
     });
   };
 
-  if (isLoading) return <div className="p-8">Carregando usuários...</div>;
-  if (error) return <div className="p-8 text-red-500">Erro ao carregar usuários.</div>;
-
   const filteredUsers = users?.filter(user => {
     if (filter === 'ALL') return user.userRole === 'UNIVERSITY_ADMIN' || user.userRole === 'SCHOOL_DIRECTOR';
     return user.userRole === filter;
@@ -174,143 +178,162 @@ export function PlatformUsers() {
       />
       
       <div className="p-8">
-        <div className="flex gap-4 mb-8">
-          <Button 
-            variant={filter === 'ALL' ? 'primary' : 'outline'}
-            onClick={() => setFilter('ALL')}
-          >
-            Todos
-          </Button>
-          <Button 
-            variant={filter === 'UNIVERSITY_ADMIN' ? 'primary' : 'outline'}
-            onClick={() => setFilter('UNIVERSITY_ADMIN')}
-          >
-            Adm. Universidade
-          </Button>
-          <Button 
-            variant={filter === 'SCHOOL_DIRECTOR' ? 'primary' : 'outline'}
-            onClick={() => setFilter('SCHOOL_DIRECTOR')}
-          >
-            Diretores
-          </Button>
+        <div className="flex flex-col md:flex-row gap-4 mb-8 items-end">
+          <div className="flex gap-4">
+            <Button 
+              variant={filter === 'ALL' ? 'primary' : 'outline'}
+              onClick={() => setFilter('ALL')}
+            >
+              Todos
+            </Button>
+            <Button 
+              variant={filter === 'UNIVERSITY_ADMIN' ? 'primary' : 'outline'}
+              onClick={() => setFilter('UNIVERSITY_ADMIN')}
+            >
+              Adm. Universidade
+            </Button>
+            <Button 
+              variant={filter === 'SCHOOL_DIRECTOR' ? 'primary' : 'outline'}
+              onClick={() => setFilter('SCHOOL_DIRECTOR')}
+            >
+              Diretores
+            </Button>
+          </div>
+          <div className="flex-1 w-full">
+            <Input
+              placeholder="Pesquisar por nome ou email..."
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+            />
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredUsers?.map((user) => (
-            <Card key={user.id} className="group hover:border-brand-primary transition-all">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                    user.userRole === 'UNIVERSITY_ADMIN' ? 'bg-blue-50 text-blue-500' : 'bg-purple-50 text-purple-500'
-                  }`}>
-                    <Users size={24} />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-text-heading group-hover:text-brand-primary transition-colors">
-                      {user.name}
-                    </h4>
-                    <div className="flex flex-col">
-                      <p className="text-xs text-text-muted">
-                        {user.institutionName || 'Plataforma ConectaEdu'}
-                      </p>
-                      {user.userRole === 'UNIVERSITY_ADMIN' && user.universityCNPJ && (
-                        <p className="text-[10px] text-blue-600 font-bold mt-0.5">
-                          CNPJ: {user.universityCNPJ}
+        {(isLoading || isFetching) && (
+          <div className="flex justify-center py-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary"></div>
+          </div>
+        )}
+
+        {error && <div className="p-8 text-red-500">Erro ao carregar usuários.</div>}
+
+        {!isLoading && !error && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredUsers?.map((user) => (
+              <Card key={user.id} className="group hover:border-brand-primary transition-all">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                      user.userRole === 'UNIVERSITY_ADMIN' ? 'bg-blue-50 text-blue-500' : 'bg-purple-50 text-purple-500'
+                    }`}>
+                      <Users size={24} />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-text-heading group-hover:text-brand-primary transition-colors">
+                        {user.name}
+                      </h4>
+                      <div className="flex flex-col">
+                        <p className="text-xs text-text-muted">
+                          {user.institutionName || 'Plataforma ConectaEdu'}
                         </p>
-                      )}
-                      {user.userRole === 'SCHOOL_DIRECTOR' && user.schoolCIE && (
-                        <p className="text-[10px] text-purple-600 font-bold mt-0.5">
-                          CIE: {user.schoolCIE}
-                        </p>
-                      )}
+                        {user.userRole === 'UNIVERSITY_ADMIN' && user.universityCNPJ && (
+                          <p className="text-[10px] text-blue-600 font-bold mt-0.5">
+                            CNPJ: {user.universityCNPJ}
+                          </p>
+                        )}
+                        {user.userRole === 'SCHOOL_DIRECTOR' && user.schoolCIE && (
+                          <p className="text-[10px] text-purple-600 font-bold mt-0.5">
+                            CIE: {user.schoolCIE}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => {
+                        setBindingUser(user);
+                        setSelectedInstitutionId('');
+                      }}
+                      className="text-text-muted hover:text-brand-primary p-1"
+                      title="Vincular Instituição"
+                    >
+                      <LinkIcon size={18} />
+                    </button>
+                    <button 
+                      onClick={() => handleEdit(user)}
+                      className="text-text-muted hover:text-brand-primary p-1"
+                      title="Editar"
+                    >
+                      <Pencil size={18} />
+                    </button>
+                    <button 
+                      onClick={() => setDeletingId(user.id)}
+                      className="text-text-muted hover:text-red-500 p-1"
+                      title="Excluir"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => {
-                      setBindingUser(user);
-                      setSelectedInstitutionId('');
-                    }}
-                    className="text-text-muted hover:text-brand-primary p-1"
-                    title="Vincular Instituição"
-                  >
-                    <LinkIcon size={18} />
-                  </button>
-                  <button 
-                    onClick={() => handleEdit(user)}
-                    className="text-text-muted hover:text-brand-primary p-1"
-                    title="Editar"
-                  >
-                    <Pencil size={18} />
-                  </button>
-                  <button 
-                    onClick={() => setDeletingId(user.id)}
-                    className="text-text-muted hover:text-red-500 p-1"
-                    title="Excluir"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </div>
 
-              <div className="space-y-3 pt-4 border-t border-border-default">
-                <div className="flex items-center gap-2 text-sm text-text-body">
-                  <Mail size={16} className="text-text-muted shrink-0" />
-                  <span className="truncate">{user.email}</span>
+                <div className="space-y-3 pt-4 border-t border-border-default">
+                  <div className="flex items-center gap-2 text-sm text-text-body">
+                    <Mail size={16} className="text-text-muted shrink-0" />
+                    <span className="truncate">{user.email}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                      <span className="font-semibold text-text-muted">Email Confirmado:</span>
+                      {user.emailConfirmed ? (
+                          <span className="flex items-center gap-1 text-emerald-600">
+                              <CheckCircle size={14} /> Sim
+                          </span>
+                      ) : (
+                          <span className="flex items-center gap-1 text-amber-600">
+                              <XCircle size={14} /> Não
+                          </span>
+                      )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-xs">
-                    <span className="font-semibold text-text-muted">Email Confirmado:</span>
-                    {user.emailConfirmed ? (
-                        <span className="flex items-center gap-1 text-emerald-600">
-                            <CheckCircle size={14} /> Sim
-                        </span>
+
+                <div className="mt-6 flex items-center justify-between">
+                  <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${
+                    user.active ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                  }`}>
+                    {user.active ? 'Ativo' : 'Inativo'}
+                  </span>
+                  
+                  <div className="flex gap-2">
+                    {!user.active ? (
+                      <Button 
+                        size="sm"
+                        className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                        onClick={() => setActivatingId(user.id)}
+                      >
+                        <ShieldCheck size={16} className="mr-1" /> Ativar
+                      </Button>
                     ) : (
-                        <span className="flex items-center gap-1 text-amber-600">
-                            <XCircle size={14} /> Não
-                        </span>
+                      <Button 
+                        size="sm"
+                        variant="outline"
+                        className="text-amber-600 border-amber-600 hover:bg-amber-50"
+                        onClick={() => setDeactivatingId(user.id)}
+                      >
+                        <UserX size={16} className="mr-1" /> Desativar
+                      </Button>
                     )}
+                  </div>
                 </div>
-              </div>
+              </Card>
+            ))}
 
-              <div className="mt-6 flex items-center justify-between">
-                <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${
-                  user.active ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                }`}>
-                  {user.active ? 'Ativo' : 'Inativo'}
-                </span>
-                
-                <div className="flex gap-2">
-                  {!user.active ? (
-                    <Button 
-                      size="sm"
-                      className="bg-emerald-500 hover:bg-emerald-600 text-white"
-                      onClick={() => setActivatingId(user.id)}
-                    >
-                      <ShieldCheck size={16} className="mr-1" /> Ativar
-                    </Button>
-                  ) : (
-                    <Button 
-                      size="sm"
-                      variant="outline"
-                      className="text-amber-600 border-amber-600 hover:bg-amber-50"
-                      onClick={() => setDeactivatingId(user.id)}
-                    >
-                      <UserX size={16} className="mr-1" /> Desativar
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-
-        {filteredUsers?.length === 0 && (
-          <Card className="p-12 text-center">
-            <Users className="mx-auto text-text-muted mb-4" size={48} />
-            <h3 className="text-lg font-bold text-text-heading">Nenhum usuário encontrado</h3>
-            <p className="text-text-body mt-2">Os diretores e administradores aparecerão aqui.</p>
-          </Card>
+            {!isFetching && filteredUsers?.length === 0 && (
+              <Card className="col-span-full p-12 text-center">
+                <Users className="mx-auto text-text-muted mb-4" size={48} />
+                <h3 className="text-lg font-bold text-text-heading">Nenhum usuário encontrado</h3>
+                <p className="text-text-body mt-2">Os diretores e administradores aparecerão aqui.</p>
+              </Card>
+            )}
+          </div>
         )}
       </div>
 
