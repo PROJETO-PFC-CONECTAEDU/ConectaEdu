@@ -43,6 +43,7 @@ interface StudentReport {
   validatedHoursInPeriod: number;
   pendingHours: number;
   canceledLessons: number;
+  canceledByStudent: number;
   notCompletedLessons: number;
   averageReceived: number | null;
   evaluations: StudentEvaluation[];
@@ -199,7 +200,7 @@ export function Reports() {
             icon={<XCircle className="text-red-500" size={20} />}
             label="Cancelamentos"
             value={report?.canceledLessons?.toString() || '0'}
-            note="No período selecionado"
+            note={report?.canceledByStudent ? `${report.canceledByStudent} pelo estudante` : "No período selecionado"}
           />
         </div>
 

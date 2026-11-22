@@ -4,6 +4,8 @@ import com.conectaedu.api.modules.demand.domain.Demand;
 import com.conectaedu.api.modules.demand.dto.response.DemandStudentDTO;
 import com.conectaedu.api.modules.demand.mapper.DemandMapper;
 import com.conectaedu.api.modules.demand.repository.DemandRepository;
+import com.conectaedu.api.modules.lesson.repository.LessonRepository;
+import com.conectaedu.api.modules.lesson.support.LessonRules;
 import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.student.repository.StudentRepository;
 import com.conectaedu.api.shared.enums.DemandStatus;
@@ -25,6 +27,7 @@ public class DemandRecommendationService {
 
     private final DemandRepository demandRepository;
     private final StudentRepository studentRepository;
+    private final LessonRepository lessonRepository;
     private final DemandMapper demandMapper;
     private final TenancyValidator tenancyValidator;
 
@@ -48,28 +51,33 @@ public class DemandRecommendationService {
                         );
                     }
                     double score = calculateScore(student, demand, distance);
-                    return new ScoredDemand(demand, score, distance);
+                    
+                    boolean hasConflict = lessonRepository.existsOverlapBetweenDemandAndStudent(
+                            demand.getId(), studentId, LessonRules.BUSY_STATUSES
+                    );
+                    
+                    return new ScoredDemand(demand, score, distance, hasConflict);
                 })
                 .sorted(Comparator.comparingDouble(ScoredDemand::score).reversed())
-                .map(sd -> demandMapper.mapToStudentDTO(sd.demand(), sd.score(), sd.distance()))
+                .map(sd -> demandMapper.mapToStudentDTO(sd.demand(), sd.score(), sd.distance(), false, false, sd.hasConflict()))
                 .collect(Collectors.toList());
     }
 
     private double calculateScore(Student student, Demand demand, double distance) {
         double score = 0;
 
-        // 1. Afinidade de Interesse (Peso Alto: 100)
+        // 1. Afinidade de Interesse (Peso Médio: 70)
         if (student.getInterestAreas() != null && demand.getSubject() != null) {
             if (student.getInterestAreas().stream().anyMatch(area ->
                     area.equalsIgnoreCase(demand.getSubject()))) {
-                score += 100;
+                score += 70;
             }
         }
 
-        // 2. Proximidade Geográfica (Peso Médio: até 80)
+        // 2. Proximidade Geográfica (Peso Alto: até 100)
         if (distance > 0) {
             // Ex: 80 pontos se < 2km, diminui conforme a distância aumenta
-            score += Math.max(0, 80 - (distance * 5));
+            score += Math.max(0, 100 - (distance * 5));
         }
 
         // 3. Correspondência com o Curso (Peso Médio: 50)
@@ -97,6 +105,6 @@ public class DemandRecommendationService {
         return earthRadius * c;
     }
 
-    private record ScoredDemand(Demand demand, double score, double distance) {
+    private record ScoredDemand(Demand demand, double score, double distance, boolean hasConflict) {
     }
 }

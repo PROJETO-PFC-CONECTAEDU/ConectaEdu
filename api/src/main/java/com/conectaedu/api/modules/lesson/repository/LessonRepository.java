@@ -16,13 +16,21 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
 
     //Na ordem natural compila igual e deixa marcar aula em cima de aula.
 
-    boolean existsByStudent_IdAndStatusInAndScheduledStartLessThanAndScheduledEndGreaterThan(
-            UUID studentId, Collection<LessonStatus> status,
-            LocalDateTime newEnd, LocalDateTime newStart);
+    @Query("SELECT COUNT(l) > 0 FROM Lesson l WHERE l.student.id = :studentId " +
+            "AND l.status IN :status " +
+            "AND CAST(l.scheduledStart AS date) = CAST(:date AS date)")
+    boolean existsByStudentIdAndDate(
+            @Param("studentId") UUID studentId,
+            @Param("status") Collection<LessonStatus> status,
+            @Param("date") LocalDateTime date);
 
-    boolean existsByDemand_IdAndStatusInAndScheduledStartLessThanAndScheduledEndGreaterThan(
-            UUID demandId, Collection<LessonStatus> status,
-            LocalDateTime newEnd, LocalDateTime newStart);
+    @Query("SELECT COUNT(l) > 0 FROM Lesson l WHERE l.demand.id = :demandId " +
+            "AND l.status IN :status " +
+            "AND CAST(l.scheduledStart AS date) = CAST(:date AS date)")
+    boolean existsByDemandIdAndDate(
+            @Param("demandId") UUID demandId,
+            @Param("status") Collection<LessonStatus> status,
+            @Param("date") LocalDateTime date);
 
     //Confirma que a demanda teve algum cancelamento, sem precisar saber qual aula foi.
 
@@ -30,6 +38,16 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
 
     boolean existsByDemand_IdAndStudent_IdAndStatusIn(UUID demandId, UUID studentId, Collection<LessonStatus> statuses);
     
+    @Query("SELECT COUNT(l1) > 0 FROM Lesson l1, Lesson l2 " +
+           "WHERE l1.demand.id = :demandId AND l2.student.id = :studentId " +
+           "AND l1.status IN :busyStatuses AND l2.status IN :busyStatuses " +
+           "AND l1.demand.id <> l2.demand.id " +
+           "AND CAST(l1.scheduledStart AS date) = CAST(l2.scheduledStart AS date)")
+    boolean existsOverlapBetweenDemandAndStudent(
+            @Param("demandId") UUID demandId,
+            @Param("studentId") UUID studentId,
+            @Param("busyStatuses") Collection<LessonStatus> busyStatuses);
+
     List<Lesson> findByDemand_Id(UUID demandId);
 
     List<Lesson> findByStudent_IdAndScheduledStartBetweenOrderByScheduledStartAsc(
@@ -41,6 +59,12 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
     List<Lesson> findByStudent_IdAndStatus(UUID studentId, LessonStatus status);
 
     List<Lesson> findBySchool_IdOrderByScheduledStartAsc(UUID schoolId);
+
+    boolean existsByDemand_IdAndStatusInAndScheduledStartLessThanAndScheduledEndGreaterThan(
+            UUID demandId, Collection<LessonStatus> statuses, LocalDateTime end, LocalDateTime start);
+
+    boolean existsByStudent_IdAndStatusInAndScheduledStartLessThanAndScheduledEndGreaterThan(
+            UUID studentId, Collection<LessonStatus> statuses, LocalDateTime end, LocalDateTime start);
 
     @Query(value = """
             SELECT TO_CHAR(l.scheduled_start, 'MM/YYYY') as period, COUNT(l.id) as count

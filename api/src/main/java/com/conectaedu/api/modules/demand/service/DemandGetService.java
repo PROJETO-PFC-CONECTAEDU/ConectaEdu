@@ -7,9 +7,12 @@ import com.conectaedu.api.modules.demand.mapper.DemandMapper;
 import com.conectaedu.api.modules.demand.repository.DemandRepository;
 import com.conectaedu.api.modules.feedback.repository.ClassEvaluationRepository;
 import com.conectaedu.api.modules.feedback.repository.StudentEvaluationRepository;
+import com.conectaedu.api.modules.lesson.repository.LessonRepository;
+import com.conectaedu.api.modules.lesson.support.LessonRules;
 import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.student.repository.StudentRepository;
 import com.conectaedu.api.shared.enums.DemandStatus;
+import com.conectaedu.api.shared.enums.LessonStatus;
 import com.conectaedu.api.shared.exceptions.DemandNotFoundException;
 import com.conectaedu.api.shared.security.context.SecurityContextHolder;
 import com.conectaedu.api.shared.security.util.TenancyValidator;
@@ -27,6 +30,7 @@ public class DemandGetService {
     private final StudentRepository studentRepository;
     private final ClassEvaluationRepository classEvaluationRepository;
     private final StudentEvaluationRepository studentEvaluationRepository;
+    private final LessonRepository lessonRepository;
     private final DemandMapper demandMapper;
     private final TenancyValidator tenancyValidator;
 
@@ -38,18 +42,33 @@ public class DemandGetService {
         tenancyValidator.validateDemandAccess(demand);
         
         Double distance = null;
+        boolean hasConflict = false;
+        boolean canBeEvaluated = false;
         try {
             UUID userId = SecurityContextHolder.getAuthenticatedUserId();
             Student student = studentRepository.findById(userId).orElse(null);
-            if (student != null && student.getLatitude() != null && demand.getSchool() != null && demand.getSchool().getLatitude() != 0) {
-                distance = calculateDistance(
-                        student.getLatitude(), student.getLongitude(),
-                        demand.getSchool().getLatitude(), demand.getSchool().getLongitude()
+            
+            UUID demandStudentId = demand.getStudent() != null ? demand.getStudent().getId() : null;
+            if (demandStudentId != null) {
+                canBeEvaluated = lessonRepository.existsByDemand_IdAndStudent_IdAndStatusIn(
+                        demand.getId(), demandStudentId, List.of(LessonStatus.COMPLETED, LessonStatus.VALIDATED));
+            }
+
+            if (student != null) {
+                if (student.getLatitude() != null && demand.getSchool() != null && demand.getSchool().getLatitude() != 0) {
+                    distance = calculateDistance(
+                            student.getLatitude(), student.getLongitude(),
+                            demand.getSchool().getLatitude(), demand.getSchool().getLongitude()
+                    );
+                }
+                
+                hasConflict = lessonRepository.existsOverlapBetweenDemandAndStudent(
+                        demand.getId(), student.getId(), LessonRules.BUSY_STATUSES
                 );
             }
         } catch (Exception ignored) {}
 
-        return demandMapper.mapToResponseDTO(demand, distance);
+        return demandMapper.mapToResponseDTO(demand, distance, hasConflict, canBeEvaluated);
     }
 
     private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
@@ -103,12 +122,19 @@ public class DemandGetService {
     public List<DemandStudentDTO> getDemandsByStatusAndStudentId(DemandStatus status, UUID studentId) {
         tenancyValidator.validateUserAccess(studentId);
         return demandRepository.findByStatusAndStudentId(status, studentId).stream()
+                .filter(demand -> status != DemandStatus.FINISHED ||
+                        lessonRepository.existsByDemand_IdAndStudent_IdAndStatusIn(
+                                demand.getId(), studentId, List.of(LessonStatus.COMPLETED, LessonStatus.VALIDATED)))
                 .map(demand -> {
                     boolean hasStudentFeedback = classEvaluationRepository.existsByDemand_IdAndStudent_Id(demand.getId(), studentId);
                     boolean hasDirectorFeedback = studentEvaluationRepository.existsByDemand_IdAndStudent_IdAndEvaluatedBy(
                             demand.getId(), studentId, demand.getDirector().getId());
                     
-                    return demandMapper.mapToStudentDTO(demand, null, null, hasStudentFeedback, hasDirectorFeedback);
+                    boolean hasConflict = lessonRepository.existsOverlapBetweenDemandAndStudent(
+                            demand.getId(), studentId, LessonRules.BUSY_STATUSES
+                    );
+                    
+                    return demandMapper.mapToStudentDTO(demand, null, null, hasStudentFeedback, hasDirectorFeedback, hasConflict);
                 })
                 .toList();
     }
@@ -117,6 +143,13 @@ public class DemandGetService {
     public List<DemandStudentDTO> getDemandsByStatusAndDirectorId(DemandStatus status, UUID directorId) {
         tenancyValidator.validateUserAccess(directorId);
         return demandRepository.findByStatusAndDirectorId(status, directorId).stream()
+                .filter(demand -> {
+                    if (status != DemandStatus.FINISHED) return true;
+                    UUID sId = demand.getStudent() != null ? demand.getStudent().getId() : null;
+                    if (sId == null) return false;
+                    return lessonRepository.existsByDemand_IdAndStudent_IdAndStatusIn(
+                            demand.getId(), sId, List.of(LessonStatus.COMPLETED, LessonStatus.VALIDATED));
+                })
                 .map(demand -> {
                     UUID studentId = demand.getStudent() != null ? demand.getStudent().getId() : null;
                     boolean hasStudentFeedback = studentId != null && classEvaluationRepository.existsByDemand_IdAndStudent_Id(demand.getId(), studentId);

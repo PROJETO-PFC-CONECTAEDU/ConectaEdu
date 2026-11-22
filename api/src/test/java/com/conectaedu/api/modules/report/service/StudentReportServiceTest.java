@@ -13,6 +13,7 @@ import com.conectaedu.api.modules.school.repository.SchoolRepository;
 import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.student.repository.StudentRepository;
 import com.conectaedu.api.modules.user.university_admin.repository.UniversityAdminRepository;
+import com.conectaedu.api.shared.enums.CancellationReason;
 import com.conectaedu.api.shared.enums.LessonStatus;
 import com.conectaedu.api.shared.exceptions.SchoolNotFoundException;
 import com.conectaedu.api.shared.exceptions.UserNotFoundException;
@@ -101,6 +102,22 @@ class StudentReportServiceTest {
         outraEscola = escola();
     }
 
+    @Test
+    void deveContarAulasCanceladasPeloEstudante() {
+        Lesson canceladaEstudante = aula(LessonStatus.CANCELED, dia(12), 60, escola);
+        canceladaEstudante.setCancellationReason(CancellationReason.STUDENT_UNAVAILABLE);
+
+        Lesson canceladaEscola = aula(LessonStatus.CANCELED, dia(13), 60, escola);
+        canceladaEscola.setCancellationReason(CancellationReason.SCHOOL_UNAVAILABLE);
+
+        relatorioCom(List.of(canceladaEstudante, canceladaEscola), List.of());
+
+        StudentReportResponseDTO relatorio = studentReportService.forStudent(estudanteId, INICIO, FIM, null);
+
+        assertEquals(2, relatorio.canceledLessons());
+        assertEquals(1, relatorio.canceledByStudent());
+    }
+
     private School escola() {
         School escola = new School();
         escola.setId(UUID.randomUUID());
@@ -129,7 +146,7 @@ class StudentReportServiceTest {
 
     private InternshipHoursResponseDTO horas() {
         return new InternshipHoursResponseDTO(
-                estudanteId, NOME, new BigDecimal("12.5"), new BigDecimal("0.5"), 5, 1, 1,
+                estudanteId, NOME, new BigDecimal("12.5"), new BigDecimal("0.5"), 5, 1, 1, 0,
                 400, new BigDecimal("387.5"), null);
     }
 

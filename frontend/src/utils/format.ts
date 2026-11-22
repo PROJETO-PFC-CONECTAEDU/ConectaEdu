@@ -52,6 +52,14 @@ export const legalDocumentTypeTranslations: Record<string, string> = {
   'PRIVACY_POLICY': 'Política de Privacidade',
 };
 
+export const cancellationReasonTranslations: Record<string, string> = {
+  'STUDENT_UNAVAILABLE': 'Estudante indisponível',
+  'SCHOOL_UNAVAILABLE': 'Escola indisponível',
+  'PUPILS_ABSENT': 'Alunos ausentes',
+  'INSTITUTIONAL_ISSUE': 'Questão institucional',
+  'OTHER': 'Outro',
+};
+
 export const formatRole = (role?: string) => {
   if (!role) return '';
   const normalized = role.toUpperCase();
@@ -92,6 +100,12 @@ export const formatLegalDocumentType = (type: string) => {
   if (!type) return '';
   const normalized = type.toUpperCase();
   return legalDocumentTypeTranslations[normalized] || type;
+};
+
+export const formatCancellationReason = (reason?: string) => {
+  if (!reason) return 'Não informado';
+  const normalized = reason.toUpperCase();
+  return cancellationReasonTranslations[normalized] || reason;
 };
 
 export const formatDate = (dateString?: string | number[] | Date | null) => {

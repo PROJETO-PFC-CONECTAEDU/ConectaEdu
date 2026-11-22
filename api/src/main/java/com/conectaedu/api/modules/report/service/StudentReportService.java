@@ -14,6 +14,7 @@ import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.student.repository.StudentRepository;
 import com.conectaedu.api.modules.user.university_admin.domain.UniversityAdmin;
 import com.conectaedu.api.modules.user.university_admin.repository.UniversityAdminRepository;
+import com.conectaedu.api.shared.enums.CancellationReason;
 import com.conectaedu.api.shared.enums.LessonStatus;
 import com.conectaedu.api.shared.enums.UserRole;
 import com.conectaedu.api.shared.exceptions.SchoolNotFoundException;
@@ -69,6 +70,9 @@ public class StudentReportService {
         long pendingMinutes = minutesOf(lessons, LessonStatus.COMPLETED);
         int performed = (int) lessons.stream().filter(this::isPerformed).count();
         int canceled = (int) countOf(lessons, LessonStatus.CANCELED);
+        int canceledByStudent = (int) lessons.stream()
+                .filter(l -> l.getStatus() == LessonStatus.CANCELED && l.getCancellationReason() == CancellationReason.STUDENT_UNAVAILABLE)
+                .count();
         int notCompleted = (int) countOf(lessons, LessonStatus.NOT_COMPLETED);
 
         //soma em minutos e converte uma vez por número.
@@ -102,6 +106,7 @@ public class StudentReportService {
                 validatedHours,
                 hours.pendingHours(),
                 canceled,
+                canceledByStudent,
                 notCompleted,
                 averageReceived,
                 evaluations);

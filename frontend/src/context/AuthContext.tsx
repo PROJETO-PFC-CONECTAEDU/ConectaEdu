@@ -9,10 +9,10 @@ interface User {
   role: string;
   universityId?: string;
   schoolId?: string;
-  emailConfirmed: boolean;
-  twoFactorEnabled: boolean;
   universityCNPJ?: string;
   schoolCIE?: string;
+  emailConfirmed: boolean;
+  twoFactorEnabled: boolean;
 }
 
 interface AuthContextData {
