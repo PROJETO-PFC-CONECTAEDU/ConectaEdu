@@ -29,12 +29,10 @@ public class UniversityUpdateService {
                 .orElseThrow(() -> new UniversityNotFoundException("Universidade não encontrada!"));
 
         String beforeName = university.getName();
-        String beforeCoordinator = university.getCoordinator();
         String beforeAddress = university.getAddress();
         Integer beforeRequiredHours = university.getRequiredInternshipHours();
 
         university.setName(request.name());
-        university.setCoordinator(request.coordinator());
         university.setAddress(request.address());
 
         //Os três acima são obrigatórios e chegam sempre, a carga é opcional.
@@ -47,7 +45,6 @@ public class UniversityUpdateService {
 
         AuditDiff diff = AuditDiff.create()
                 .field("name", beforeName, university.getName())
-                .field("coordinator", beforeCoordinator, university.getCoordinator())
                 .field("address", beforeAddress, university.getAddress())
                 .field("requiredInternshipHours", beforeRequiredHours,
                         university.getRequiredInternshipHours());

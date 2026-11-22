@@ -15,7 +15,7 @@ public interface IUserFacade {
     void deleteUser(UUID id);
     UserResponseDTO getUserById(UUID id);
     UserResponseDTO getUserByEmail(String email);
-    List<UserResponseDTO> getAllUsers();
+    List<UserResponseDTO> getAllUsers(String search);
     UserResponseDTO activateUser(UUID id);
     UserResponseDTO deactivateUser(UUID id);
     UserResponseDTO bindInstitution(UUID userId, UserInstitutionBindingRequestDTO request);

@@ -101,7 +101,7 @@ class AuditServiceTest {
         UUID id = UUID.randomUUID();
         repositorioDevolveORegistroSalvo();
         AuditDiff alteracoes = AuditDiff.create()
-                .field("coordinator", "Joao Paulo", "Maria Sousa")
+                .field("address", "Rua A", "Rua B")
                 .field("requiredInternshipHours", 100, 200);
 
         auditService.logUpdate(AuditEntityType.UNIVERSITY, id, NOME, alteracoes);
@@ -111,7 +111,7 @@ class AuditServiceTest {
         assertEquals(AuditAction.UPDATE, registro.getAction());
         assertEquals(
                 "Registro de Universidade \"Universidade ABCD\" foi alterado: "
-                        + "coordinator: de \"Joao Paulo\" para \"Maria Sousa\"; "
+                        + "address: de \"Rua A\" para \"Rua B\"; "
                         + "requiredInternshipHours: de \"100\" para \"200\"",
                 registro.getDescription());
     }
@@ -119,7 +119,7 @@ class AuditServiceTest {
     @Test
     void naoDeveRegistrarAlteracaoQuandoNadaMudou() {
         AuditDiff alteracoes = AuditDiff.create()
-                .field("coordinator", "Joao Paulo", "Joao Paulo");
+                .field("address", "Rua A", "Rua A");
 
         auditService.logUpdate(AuditEntityType.UNIVERSITY, UUID.randomUUID(), NOME, alteracoes);
 

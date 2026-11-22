@@ -16,6 +16,7 @@ import { AddressAutocomplete } from '../components/map/AddressAutocomplete';
 import { useAuth } from '../context/AuthContext';
 import { formatStudentStatus } from '../utils/format';
 import { Link } from 'react-router-dom';
+import { useDebounce } from '../hooks/useDebounce';
 
 interface Student {
   id: string;
@@ -60,6 +61,8 @@ export function Students() {
   const [bindingStudent, setBindingStudent] = useState<Student | null>(null);
   const [selectedUniversityId, setSelectedUniversityId] = useState<string>('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [searchFilter, setSearchFilter] = useState('');
+  const debouncedSearch = useDebounce(searchFilter, 500);
 
   const isUniAdmin = user?.role === 'UNIVERSITY_ADMIN';
   const isPlatformAdmin = user?.role === 'PLATFORM_ADMIN';
@@ -75,10 +78,14 @@ export function Students() {
     register('longitude');
   });
 
-  const { data: students, isLoading, error } = useQuery<Student[]>({
-    queryKey: ['students'],
+  const { data: students, isLoading, isFetching, error } = useQuery<Student[]>({
+    queryKey: ['students', debouncedSearch],
     queryFn: async () => {
-      const response = await api.get('/students');
+      const response = await api.get('/students', {
+        params: {
+          search: debouncedSearch || undefined,
+        }
+      });
       return response.data;
     },
   });
@@ -215,8 +222,6 @@ export function Students() {
     }
   });
 
-  if (isLoading) return <div className="p-8">Carregando estudantes...</div>;
-  if (error) return <div className="p-8 text-red-500">Erro ao carregar estudantes.</div>;
 
   return (
     <div className="flex-1">
@@ -351,139 +356,157 @@ export function Students() {
       </Modal>
 
       <div className="p-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {students?.map((student) => (
-            <Card key={student.id} className="group hover:border-brand-primary transition-all">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-orange-50 flex items-center justify-center text-orange-500">
-                    <Users size={24} />
+        <div className="mb-8">
+          <Input
+            placeholder="Pesquisar estudantes por nome ou email..."
+            value={searchFilter}
+            onChange={(e) => setSearchFilter(e.target.value)}
+          />
+        </div>
+
+        {(isLoading || isFetching) && (
+          <div className="flex justify-center py-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary"></div>
+          </div>
+        )}
+
+        {error && <div className="p-8 text-red-500">Erro ao carregar estudantes.</div>}
+
+        {!isLoading && !error && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {students?.map((student) => (
+              <Card key={student.id} className="group hover:border-brand-primary transition-all">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-lg bg-orange-50 flex items-center justify-center text-orange-500">
+                      <Users size={24} />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-text-heading group-hover:text-brand-primary transition-colors">
+                        {student.name}
+                      </h4>
+                      <p className="text-xs text-text-muted flex items-center gap-1">
+                        <GraduationCap size={14} /> {student.universityName} • {student.course}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-text-heading group-hover:text-brand-primary transition-colors">
-                      {student.name}
-                    </h4>
-                    <p className="text-xs text-text-muted flex items-center gap-1">
-                      <GraduationCap size={14} /> {student.universityName} • {student.course}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Link 
-                    to={`/relatorios/${student.id}`}
-                    className="text-text-muted hover:text-brand-primary p-1"
-                    title="Ver Relatório"
-                  >
-                    <FileText size={18} />
-                  </Link>
-                  {isPlatformAdmin && (
-                    <button 
-                      onClick={() => {
-                        setBindingStudent(student);
-                        setSelectedUniversityId(student.universityId || '');
-                      }}
+                  <div className="flex gap-2">
+                    <Link 
+                      to={`/relatorios/${student.id}`}
                       className="text-text-muted hover:text-brand-primary p-1"
-                      title="Vincular Universidade"
+                      title="Ver Relatório"
                     >
-                      <LinkIcon size={18} />
+                      <FileText size={18} />
+                    </Link>
+                    {isPlatformAdmin && (
+                      <button 
+                        onClick={() => {
+                          setBindingStudent(student);
+                          setSelectedUniversityId(student.universityId || '');
+                        }}
+                        className="text-text-muted hover:text-brand-primary p-1"
+                        title="Vincular Universidade"
+                      >
+                        <LinkIcon size={18} />
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => handleEdit(student)}
+                      className="text-text-muted hover:text-brand-primary p-1"
+                      title="Editar"
+                    >
+                      <Pencil size={18} />
                     </button>
-                  )}
-                  <button 
-                    onClick={() => handleEdit(student)}
-                    className="text-text-muted hover:text-brand-primary p-1"
-                    title="Editar"
-                  >
-                    <Pencil size={18} />
-                  </button>
-                  <button 
-                    onClick={() => setDeletingId(student.id)}
-                    className="text-text-muted hover:text-red-500 p-1"
-                    title="Excluir"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-3 pt-4 border-t border-border-default">
-                <div className="flex items-center gap-2 text-sm text-text-body">
-                  <Mail size={16} className="text-text-muted shrink-0" />
-                  <span className="truncate">{student.email}</span>
-                </div>
-                {student.address && (
-                  <div className="flex items-start gap-2 text-sm text-text-body">
-                    <MapPin size={16} className="mt-0.5 text-text-muted shrink-0" />
-                    <span className="line-clamp-2">{student.address}</span>
+                    <button 
+                      onClick={() => setDeletingId(student.id)}
+                      className="text-text-muted hover:text-red-500 p-1"
+                      title="Excluir"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </div>
-                )}
-                <div className="text-xs text-text-muted">
-                  <strong>Áreas:</strong> {student.interestAreas?.join(', ') || 'Nenhuma'}
                 </div>
-                <div className="text-xs text-text-muted">
-                  <strong>Disponibilidade:</strong> {student.availability}
-                </div>
-              </div>
 
-              <div className="mt-6 flex items-center justify-between">
-                <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${
-                  student.status === 'VALIDATED' ? 'bg-emerald-100 text-emerald-700' :
-                  student.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
-                  student.status === 'INACTIVE' ? 'bg-gray-100 text-gray-700' :
-                  'bg-amber-100 text-amber-700'
-                }`}>
-                  {formatStudentStatus(student.status)}
-                </span>
-                
-                <div className="flex gap-2">
-                  {student.status === 'PENDING' && (
-                    <>
+                <div className="space-y-3 pt-4 border-t border-border-default">
+                  <div className="flex items-center gap-2 text-sm text-text-body">
+                    <Mail size={16} className="text-text-muted shrink-0" />
+                    <span className="truncate">{student.email}</span>
+                  </div>
+                  {student.address && (
+                    <div className="flex items-start gap-2 text-sm text-text-body">
+                      <MapPin size={16} className="mt-0.5 text-text-muted shrink-0" />
+                      <span className="line-clamp-2">{student.address}</span>
+                    </div>
+                  )}
+                  <div className="text-xs text-text-muted">
+                    <strong>Áreas:</strong> {student.interestAreas?.join(', ') || 'Nenhuma'}
+                  </div>
+                  <div className="text-xs text-text-muted">
+                    <strong>Disponibilidade:</strong> {student.availability}
+                  </div>
+                </div>
+
+                <div className="mt-6 flex items-center justify-between">
+                  <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${
+                    student.status === 'VALIDATED' ? 'bg-emerald-100 text-emerald-700' :
+                    student.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                    student.status === 'INACTIVE' ? 'bg-gray-100 text-gray-700' :
+                    'bg-amber-100 text-amber-700'
+                  }`}>
+                    {formatStudentStatus(student.status)}
+                  </span>
+                  
+                  <div className="flex gap-2">
+                    {student.status === 'PENDING' && (
+                      <>
+                        <button 
+                          onClick={() => validateMutation.mutate(student.id)}
+                          className="text-emerald-500 hover:text-emerald-600 transition-colors"
+                          title="Validar"
+                        >
+                          <ShieldCheck size={20} />
+                        </button>
+                        <button 
+                          onClick={() => rejectMutation.mutate(student.id)}
+                          className="text-red-500 hover:text-red-600 transition-colors"
+                          title="Rejeitar"
+                        >
+                          <XCircle size={20} />
+                        </button>
+                      </>
+                    )}
+
+                    {student.status === 'VALIDATED' && (
+                      <>
+                        <div className="flex items-center gap-1 text-emerald-600 text-xs font-medium mr-2">
+                          <ShieldCheck size={14} />
+                          Verificado
+                        </div>
+                        <button 
+                          onClick={() => inactivateMutation.mutate(student.id)}
+                          className="text-gray-400 hover:text-gray-600 transition-colors"
+                          title="Inativar"
+                        >
+                          <UserX size={20} />
+                        </button>
+                      </>
+                    )}
+                    
+                    {student.status === 'INACTIVE' && (
                       <button 
                         onClick={() => validateMutation.mutate(student.id)}
                         className="text-emerald-500 hover:text-emerald-600 transition-colors"
-                        title="Validar"
+                        title="Reativar (Validar)"
                       >
                         <ShieldCheck size={20} />
                       </button>
-                      <button 
-                        onClick={() => rejectMutation.mutate(student.id)}
-                        className="text-red-500 hover:text-red-600 transition-colors"
-                        title="Rejeitar"
-                      >
-                        <XCircle size={20} />
-                      </button>
-                    </>
-                  )}
-
-                  {student.status === 'VALIDATED' && (
-                    <>
-                      <div className="flex items-center gap-1 text-emerald-600 text-xs font-medium mr-2">
-                        <ShieldCheck size={14} />
-                        Verificado
-                      </div>
-                      <button 
-                        onClick={() => inactivateMutation.mutate(student.id)}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
-                        title="Inativar"
-                      >
-                        <UserX size={20} />
-                      </button>
-                    </>
-                  )}
-                  
-                  {student.status === 'INACTIVE' && (
-                    <button 
-                      onClick={() => validateMutation.mutate(student.id)}
-                      className="text-emerald-500 hover:text-emerald-600 transition-colors"
-                      title="Reativar (Validar)"
-                    >
-                      <ShieldCheck size={20} />
-                    </button>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+              </Card>
+            ))}
+          </div>
+        )}
 
         <ConfirmModal
           isOpen={!!deletingId}

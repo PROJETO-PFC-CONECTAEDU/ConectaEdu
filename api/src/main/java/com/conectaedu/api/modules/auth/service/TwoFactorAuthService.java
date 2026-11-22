@@ -6,6 +6,7 @@ import com.conectaedu.api.modules.user.genericUser.domain.User;
 import com.conectaedu.api.modules.user.genericUser.repository.UserRepository;
 import com.conectaedu.api.shared.email.service.TwoFactorEmailService;
 import com.conectaedu.api.shared.exceptions.BusinessException;
+import com.conectaedu.api.shared.exceptions.InactiveAccountException;
 import com.conectaedu.api.shared.security.token.GenerateToken;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
@@ -52,6 +53,10 @@ public class TwoFactorAuthService {
     public LoginResponseDTO verify2FA(TwoFactorVerifyRequestDTO data) {
         User userEntity = userRepository.findByEmail(data.email().trim().toLowerCase())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
+
+        if (!userEntity.isActive()) {
+            throw new InactiveAccountException("Sua conta está inativa. Entre em contato com o suporte.");
+        }
 
         if (gAuth.authorize(userEntity.getSecret2fa(), data.code())) {
             String token = generateToken.generateToken(userEntity);

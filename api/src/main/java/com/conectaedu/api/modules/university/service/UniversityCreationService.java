@@ -29,7 +29,6 @@ public class UniversityCreationService {
         university.setName(request.name());
         university.setCnpj(request.cnpj());
         university.setAddress(request.address());
-        university.setCoordinator(request.coordinator());
 
         universityRepository.save(university);
 

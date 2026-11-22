@@ -51,8 +51,8 @@ public class UserFacadeImpl implements IUserFacade {
     }
 
     @Override
-    public List<UserResponseDTO> getAllUsers() {
-        return userListService.listAll();
+    public List<UserResponseDTO> getAllUsers(String search) {
+        return userListService.listAll(search);
     }
 
     @Override

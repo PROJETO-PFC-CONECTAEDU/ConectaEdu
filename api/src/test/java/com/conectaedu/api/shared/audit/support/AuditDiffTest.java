@@ -44,7 +44,7 @@ class AuditDiffTest {
     void deveDescreverVariasMudancasNaOrdemEmQueForamInformadas() {
         AuditDiff alteracoes = AuditDiff.create()
                 .field("name", "Universidade ABCD", "Universidade ABCDE")
-                .field("coordinator", "Joao Paulo", "Joao Paulo")
+                .field("address", "Rua Antiga", "Rua Antiga")
                 .field("requiredInternshipHours", 100, 200);
 
         assertEquals(
@@ -57,11 +57,11 @@ class AuditDiffTest {
     void deveDescreverValorNuloSemAspas() {
         AuditDiff alteracoes = AuditDiff.create()
                 .field("address", null, "R. teste, 200")
-                .field("coordinator", "Joao Paulo", null);
+                .field("name", "Nome Antigo", null);
 
         assertFalse(alteracoes.isEmpty());
         assertEquals(
-                "address: de null para \"R. teste, 200\"; coordinator: de \"Joao Paulo\" para null",
+                "address: de null para \"R. teste, 200\"; name: de \"Nome Antigo\" para null",
                 alteracoes.describe());
     }
 }

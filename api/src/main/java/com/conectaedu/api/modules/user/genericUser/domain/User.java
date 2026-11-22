@@ -75,7 +75,7 @@ public class User {
     private LocalDateTime last2faCodeSentAt;
     
     public void generatePasswordResetToken() {
-        this.passwordResetToken = java.util.UUID.randomUUID().toString();
+        this.passwordResetToken = String.format("%06d", new java.util.Random().nextInt(1000000));
         this.passwordResetExpiresAt = LocalDateTime.now().plusHours(1);
         this.lastPasswordResetSentAt = LocalDateTime.now();
     }

@@ -14,11 +14,13 @@ import { Building2, MapPin, ShieldCheck, Trash2, Plus, XCircle, Edit2 } from 'lu
 import { toast } from 'react-hot-toast';
 import { AddressAutocomplete } from '../components/map/AddressAutocomplete';
 
+import { useAuth } from '../context/AuthContext';
+import { useDebounce } from '../hooks/useDebounce';
+
 interface University {
   id: string;
   name: string;
   cnpj: string;
-  coordinator?: string;
   address?: string;
   active: boolean;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'INACTIVE';
@@ -34,17 +36,24 @@ type UniversityFormData = z.infer<typeof universitySchema>;
 
 export function Universities() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUni, setEditingUni] = useState<University | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [searchFilter, setSearchFilter] = useState('');
+  const debouncedSearch = useDebounce(searchFilter, 500);
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<UniversityFormData>({
     resolver: zodResolver(universitySchema)
   });
-  const { data: universities, isLoading, error } = useQuery<University[]>({
-    queryKey: ['universities'],
+  const { data: universities, isLoading, isFetching, error } = useQuery<University[]>({
+    queryKey: ['universities', debouncedSearch],
     queryFn: async () => {
-      const response = await api.get('/universities');
+      const response = await api.get('/universities', {
+        params: {
+          search: debouncedSearch || undefined,
+        }
+      });
       return response.data;
     },
   });
@@ -206,8 +215,18 @@ export function Universities() {
       </Modal>
       
       <div className="p-8">
-        {isLoading && (
-          <div className="flex justify-center py-12">
+        {user?.role === 'PLATFORM_ADMIN' && (
+          <div className="mb-8">
+            <Input
+              placeholder="Pesquisar por nome ou CNPJ..."
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+            />
+          </div>
+        )}
+
+        {(isLoading || isFetching) && (
+          <div className="flex justify-center py-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary"></div>
           </div>
         )}

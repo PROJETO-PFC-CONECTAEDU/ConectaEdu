@@ -37,11 +37,8 @@ public class University {
     private String name;
 
     //Identifica a intituição com base no CNPJ.
-    @Column(name = "cnpj", nullable = false, length = 14, unique = true, updatable = false)
+    @Column(name = "cnpj", nullable = false, length = 14, unique = true)
     private String cnpj;
-
-    @Column(name = "coordinator", length = 200)
-    private String coordinator;
 
     private String address;
 
@@ -78,7 +75,9 @@ public class University {
     public void deactivate() {
         this.active = false;
         this.deleted = true;
-        this.coordinator = "Coordenador Removido";
+        this.name = "Universidade Anonimizada (" + this.id.toString().substring(0, 8) + ")";
+        this.cnpj = "DEL_" + this.id.toString().replace("-", "").substring(0, 10);
+        this.address = "Endereço Removido";
         this.updatedAt = LocalDateTime.now();
     }
 }

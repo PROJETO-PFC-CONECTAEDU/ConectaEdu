@@ -17,9 +17,9 @@ public class SchoolListService {
 
     private final SchoolRepository schoolRepository;
 
-    public List<SchoolResponseDTO> ListAll() {
+    public List<SchoolResponseDTO> ListAll(String search) {
         if (SecurityContextHolder.hasRole("PLATFORM_ADMIN")) {
-            return schoolRepository.findAll()
+            return schoolRepository.findBySearch(search)
                     .stream()
                     .map(SchoolResponseDTO::new)
                     .collect(Collectors.toList());

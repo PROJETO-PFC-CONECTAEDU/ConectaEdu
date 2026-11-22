@@ -47,7 +47,7 @@ public class SchoolFacadeImpl implements ISchoolFacade {
     public SchoolResponseDTO getSchoolByCie(String cie) {return schoolListByService.listByCie(cie); }
 
     @Override
-    public List<SchoolResponseDTO> getAllSchools() { return schoolListService.ListAll(); }
+    public List<SchoolResponseDTO> getAllSchools(String search) { return schoolListService.ListAll(search); }
 
     @Override
     public List<SchoolResponseDTO> listActiveSchools() { return schoolListService.listActive(); }

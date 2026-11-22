@@ -47,8 +47,8 @@ public class StudentController {
     }
 
     @GetMapping
-    public ResponseEntity<List<StudentResponseDTO>> getAll() {
-        return ResponseEntity.ok(studentFacade.getAllStudents());
+    public ResponseEntity<List<StudentResponseDTO>> getAll(@RequestParam(required = false) String search) {
+        return ResponseEntity.ok(studentFacade.getAllStudents(search));
     }
 
     @PatchMapping("/{id}/validate")

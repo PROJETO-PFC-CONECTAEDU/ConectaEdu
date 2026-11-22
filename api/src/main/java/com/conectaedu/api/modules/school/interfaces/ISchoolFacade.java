@@ -16,7 +16,7 @@ public interface ISchoolFacade {
     void deleteSchool(UUID id);
     SchoolResponseDTO getSchoolById(UUID id);
     SchoolResponseDTO getSchoolByCie(String cie);
-    List<SchoolResponseDTO> getAllSchools();
+    List<SchoolResponseDTO> getAllSchools(String search);
     List<SchoolResponseDTO> listActiveSchools();
     SchoolResponseDTO activateSchool(UUID id, SchoolValidationRequestDTO request);
     SchoolResponseDTO deactivateSchool(UUID id, SchoolValidationRequestDTO request);

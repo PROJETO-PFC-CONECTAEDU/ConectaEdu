@@ -54,7 +54,7 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
               AND (:endDate IS NULL OR l.scheduled_start <= :endDate)
               AND l.status = 'VALIDATED'
             GROUP BY period
-            ORDER BY period DESC
+            ORDER BY MIN(l.scheduled_start) ASC
             """, nativeQuery = true)
     List<Map<String, Object>> countByFiltersAndPeriod(
             @Param("universityId") UUID universityId,
@@ -74,7 +74,7 @@ public interface LessonRepository extends JpaRepository<Lesson, UUID> {
               AND (:endDate IS NULL OR l.scheduled_start <= :endDate)
               AND l.status = 'VALIDATED'
             GROUP BY period, demand
-            ORDER BY period DESC
+            ORDER BY MIN(l.scheduled_start) ASC
             """, nativeQuery = true)
     List<Map<String, Object>> countBySchoolAndPeriodAndDemandFiltered(
             @Param("schoolId") UUID schoolId,

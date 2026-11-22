@@ -46,4 +46,10 @@ public interface StudentRepository extends JpaRepository<Student, UUID> {
 
     @EntityGraph(attributePaths = "interestAreas")
     Optional<Student> findWithInterestAreasById(UUID id);
+
+    @EntityGraph(attributePaths = "interestAreas")
+    @Query("SELECT s FROM Student s WHERE " +
+           "(:search IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(s.email) LIKE LOWER(CONCAT('%', :search, '%')))")
+    List<Student> findBySearch(@Param("search") String search);
 }

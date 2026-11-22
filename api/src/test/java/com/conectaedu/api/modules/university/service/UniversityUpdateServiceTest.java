@@ -36,7 +36,6 @@ import static org.mockito.Mockito.when;
 class UniversityUpdateServiceTest {
 
     private static final String NOME_ORIGINAL = "Universidade ABCD";
-    private static final String COORDENADOR_ORIGINAL = "Joao P";
     private static final String ENDERECO_ORIGINAL = "R. teste, 200";
     private static final Integer CARGA_HORARIA_ORIGINAL = 100;
 
@@ -57,7 +56,6 @@ class UniversityUpdateServiceTest {
         universidade.setId(UUID.randomUUID());
         universidade.setName(NOME_ORIGINAL);
         universidade.setCnpj("12345671000112");
-        universidade.setCoordinator(COORDENADOR_ORIGINAL);
         universidade.setAddress(ENDERECO_ORIGINAL);
         universidade.setRequiredInternshipHours(CARGA_HORARIA_ORIGINAL);
         return universidade;
@@ -74,11 +72,10 @@ class UniversityUpdateServiceTest {
         // execucao
         UniversityResponseDTO resposta = universityUpdateService.updateUniversity(
                 universidade.getId(),
-                new UniversityUpdateRequestDTO("Universidade ABCDE", "Maria S", "Av. nova, 500", 200));
+                new UniversityUpdateRequestDTO("Universidade ABCDE", "Av. nova, 500", 200));
 
         // verificacao
         assertEquals("Universidade ABCDE", resposta.name());
-        assertEquals("Maria S", resposta.coordinator());
         assertEquals("Av. nova, 500", resposta.address());
         assertEquals("12345671000112", resposta.cnpj());
         verify(universityRepository).save(universidade);
@@ -88,7 +85,6 @@ class UniversityUpdateServiceTest {
         AuditDiff alteracoes = capturado.getValue();
         assertFalse(alteracoes.isEmpty());
         assertTrue(alteracoes.describe().contains("name"));
-        assertTrue(alteracoes.describe().contains("coordinator"));
         assertTrue(alteracoes.describe().contains("address"));
         assertTrue(alteracoes.describe().contains("requiredInternshipHours"));
     }
@@ -103,7 +99,7 @@ class UniversityUpdateServiceTest {
         // execucao
         UniversityNotFoundException erro = assertThrows(UniversityNotFoundException.class,
                 () -> universityUpdateService.updateUniversity(
-                        id, new UniversityUpdateRequestDTO("Universidade XYZ", "Maria S", "Av. nova, 500", 200)));
+                        id, new UniversityUpdateRequestDTO("Universidade XYZ", "Av. nova, 500", 200)));
 
         // verificacao
         assertEquals("Universidade não encontrada!", erro.getMessage());
@@ -122,7 +118,7 @@ class UniversityUpdateServiceTest {
         // execucao
         universityUpdateService.updateUniversity(
                 universidade.getId(),
-                new UniversityUpdateRequestDTO(NOME_ORIGINAL, COORDENADOR_ORIGINAL, ENDERECO_ORIGINAL, CARGA_HORARIA_ORIGINAL));
+                new UniversityUpdateRequestDTO(NOME_ORIGINAL, ENDERECO_ORIGINAL, CARGA_HORARIA_ORIGINAL));
 
         // verificacao
         verify(auditService).logUpdate(any(), any(), any(), capturado.capture());

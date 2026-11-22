@@ -35,6 +35,7 @@ public class StudentValidationService {
 
         student.setValidatedAt(LocalDateTime.now());
         student.setStatus(StudentStatus.VALIDATED);
+        student.setActive(true);
         studentRepository.save(student);
 
         AuditDiff diff = AuditDiff.create().field("status", beforeStatus, student.getStatus());
@@ -51,6 +52,7 @@ public class StudentValidationService {
         StudentStatus beforeStatus = student.getStatus();
 
         student.setStatus(StudentStatus.REJECTED);
+        student.setActive(false);
         studentRepository.save(student);
 
         AuditDiff diff = AuditDiff.create().field("status", beforeStatus, student.getStatus());
@@ -67,6 +69,7 @@ public class StudentValidationService {
         StudentStatus beforeStatus = student.getStatus();
 
         student.setStatus(StudentStatus.INACTIVE);
+        student.setActive(false);
         studentRepository.save(student);
 
         AuditDiff diff = AuditDiff.create().field("status", beforeStatus, student.getStatus());

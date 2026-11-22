@@ -56,8 +56,9 @@ public class UniversityController {
     }
 
     @GetMapping
-    public ResponseEntity<List<UniversityResponseDTO>> getAllUniversities() {
-        return ResponseEntity.ok(universityFacade.getAllUniversities());
+    public ResponseEntity<List<UniversityResponseDTO>> getAllUniversities(
+            @RequestParam(required = false) String search) {
+        return ResponseEntity.ok(universityFacade.getAllUniversities(search));
     }
 
     //Aprova a universidade e a torna ativa.

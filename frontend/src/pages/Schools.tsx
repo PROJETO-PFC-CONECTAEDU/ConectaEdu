@@ -15,6 +15,7 @@ import { toast } from 'react-hot-toast';
 import { AddressAutocomplete } from '../components/map/AddressAutocomplete';
 import { useAuth } from '../context/AuthContext';
 import { Edit2 } from 'lucide-react';
+import { useDebounce } from '../hooks/useDebounce';
 
 interface School {
   id: string;
@@ -43,14 +44,20 @@ export function Schools() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSchool, setEditingSchool] = useState<School | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [searchFilter, setSearchFilter] = useState('');
+  const debouncedSearch = useDebounce(searchFilter, 500);
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<SchoolFormData>({
     resolver: zodResolver(schoolSchema)
   });
-  const { data: schools, isLoading, error } = useQuery<School[]>({
-    queryKey: ['schools'],
+  const { data: schools, isLoading, isFetching, error } = useQuery<School[]>({
+    queryKey: ['schools', debouncedSearch],
     queryFn: async () => {
-      const response = await api.get('/schools');
+      const response = await api.get('/schools', {
+        params: {
+          search: debouncedSearch || undefined,
+        }
+      });
       return response.data;
     },
   });
@@ -209,8 +216,18 @@ export function Schools() {
       </Modal>
       
       <div className="p-8">
-        {isLoading && (
-          <div className="flex justify-center py-12">
+        {isAdmin && (
+          <div className="mb-8">
+            <Input
+              placeholder="Pesquisar por nome ou CIE..."
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+            />
+          </div>
+        )}
+
+        {(isLoading || isFetching) && (
+          <div className="flex justify-center py-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary"></div>
           </div>
         )}
