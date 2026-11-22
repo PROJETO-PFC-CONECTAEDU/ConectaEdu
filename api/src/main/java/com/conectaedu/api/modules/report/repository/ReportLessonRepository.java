@@ -12,6 +12,6 @@ import java.util.UUID;
 public interface ReportLessonRepository extends Repository<Lesson, UUID> {
 
     //uma passada traz tudo que os indicadores de aula precisam.
-    List<Lesson> findByStudent_IdAndStatusInAndScheduledEndBetweenOrderByScheduledEndAsc(
+    List<Lesson> findByStudent_IdAndStatusInAndScheduledStartBetweenOrderByScheduledStartAsc(
             UUID studentId, Collection<LessonStatus> statuses, LocalDateTime from, LocalDateTime to);
 }
