@@ -162,7 +162,7 @@ class StudentReportServiceTest {
     }
 
     private void aulasEncontradas(List<Lesson> aulas) {
-        when(reportLessonRepository.findByStudent_IdAndStatusInAndScheduledEndBetweenOrderByScheduledEndAsc(
+        when(reportLessonRepository.findByStudent_IdAndStatusInAndScheduledStartBetweenOrderByScheduledStartAsc(
                 eq(estudanteId), any(), any(), any())).thenReturn(aulas);
     }
 
@@ -184,7 +184,7 @@ class StudentReportServiceTest {
         StudentEvaluationResponseDTO avaliacao = avaliacao(escola.getId(), 4.0, dia(20));
 
         estudanteEncontrado();
-        when(reportLessonRepository.findByStudent_IdAndStatusInAndScheduledEndBetweenOrderByScheduledEndAsc(
+        when(reportLessonRepository.findByStudent_IdAndStatusInAndScheduledStartBetweenOrderByScheduledStartAsc(
                 eq(estudanteId), any(), eq(INICIO.atStartOfDay()), eq(FIM.atTime(LocalTime.MAX))))
                 .thenReturn(List.of(validadaLonga, validadaCurta, pendente, cancelada, naoRealizada));
         when(internshipFacade.getHoursByStudent(estudanteId)).thenReturn(horas());
@@ -320,13 +320,13 @@ class StudentReportServiceTest {
 
         StudentReportResponseDTO relatorio = studentReportService.forStudent(estudanteId, null, null, null);
 
-        verify(reportLessonRepository).findByStudent_IdAndStatusInAndScheduledEndBetweenOrderByScheduledEndAsc(
+        verify(reportLessonRepository).findByStudent_IdAndStatusInAndScheduledStartBetweenOrderByScheduledStartAsc(
                 eq(estudanteId), situacoesConsultadas.capture(), inicio.capture(), fim.capture());
         assertEquals(LocalDateTime.of(2000, 1, 1, 0, 0), inicio.getValue());
         assertEquals(LocalDateTime.of(2100, 1, 1, 0, 0), fim.getValue());
-        assertEquals(4, situacoesConsultadas.getValue().size());
+        assertEquals(5, situacoesConsultadas.getValue().size());
         assertTrue(situacoesConsultadas.getValue().containsAll(List.of(
-                LessonStatus.COMPLETED, LessonStatus.VALIDATED,
+                LessonStatus.CONFIRMED, LessonStatus.COMPLETED, LessonStatus.VALIDATED,
                 LessonStatus.CANCELED, LessonStatus.NOT_COMPLETED)));
         assertNull(relatorio.from());
         assertNull(relatorio.to());
@@ -382,5 +382,15 @@ class StudentReportServiceTest {
 
         assertEquals("Estudante não encontrado!", erro.getMessage());
         verifyNoInteractions(reportLessonRepository);
+    }
+    @Test
+    void deveContarAulasConfirmadasComoHorasPendentes() {
+        Lesson confirmada = aula(LessonStatus.CONFIRMED, dia(2), 60, escola);
+
+        relatorioCom(List.of(confirmada), List.of());
+
+        StudentReportResponseDTO relatorio = studentReportService.forStudent(estudanteId, INICIO, FIM, null);
+
+        assertEquals(new BigDecimal("1.0"), relatorio.pendingHours());
     }
 }

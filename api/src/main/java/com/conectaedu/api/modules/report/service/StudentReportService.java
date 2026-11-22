@@ -41,6 +41,7 @@ public class StudentReportService {
     private static final LocalDateTime MIN_DATE = LocalDateTime.of(2000, 1, 1, 0, 0);
     private static final LocalDateTime MAX_DATE = LocalDateTime.of(2100, 1, 1, 0, 0);
     private static final Set<LessonStatus> REPORT_STATUSES = EnumSet.of(
+            LessonStatus.CONFIRMED,
             LessonStatus.COMPLETED,
             LessonStatus.VALIDATED,
             LessonStatus.CANCELED,
@@ -67,7 +68,7 @@ public class StudentReportService {
         InternshipHoursResponseDTO hours = internshipFacade.getHoursByStudent(studentId);
 
         long validatedMinutes = minutesOf(lessons, LessonStatus.VALIDATED);
-        long pendingMinutes = minutesOf(lessons, LessonStatus.COMPLETED);
+        long pendingMinutes = minutesOf(lessons, LessonStatus.COMPLETED) + minutesOf(lessons, LessonStatus.CONFIRMED);
         int performed = (int) lessons.stream().filter(this::isPerformed).count();
         int canceled = (int) countOf(lessons, LessonStatus.CANCELED);
         int canceledByStudent = (int) lessons.stream()
@@ -147,7 +148,7 @@ public class StudentReportService {
 
     private List<Lesson> lessonsOf(UUID studentId, LocalDateTime start, LocalDateTime end, UUID schoolId) {
         return reportLessonRepository
-                .findByStudent_IdAndStatusInAndScheduledEndBetweenOrderByScheduledEndAsc(
+                .findByStudent_IdAndStatusInAndScheduledStartBetweenOrderByScheduledStartAsc(
                         studentId, REPORT_STATUSES, start, end)
                 .stream()
                 .filter(l -> schoolId == null || schoolId.equals(l.getSchool().getId()))

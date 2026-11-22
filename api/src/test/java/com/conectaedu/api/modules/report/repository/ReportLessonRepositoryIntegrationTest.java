@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ReportLessonRepositoryIntegrationTest {
 
     private static final List<LessonStatus> SITUACOES_DO_RELATORIO = List.of(
+            LessonStatus.CONFIRMED,
             LessonStatus.COMPLETED, LessonStatus.VALIDATED,
             LessonStatus.CANCELED, LessonStatus.NOT_COMPLETED);
 
@@ -127,10 +128,10 @@ class ReportLessonRepositoryIntegrationTest {
         aula(outroEstudante, LessonStatus.VALIDATED, dia(8));
 
         List<Lesson> aulas = reportLessonRepository
-                .findByStudent_IdAndStatusInAndScheduledEndBetweenOrderByScheduledEndAsc(
+                .findByStudent_IdAndStatusInAndScheduledStartBetweenOrderByScheduledStartAsc(
                         estudante.getId(), SITUACOES_DO_RELATORIO, INICIO, FIM);
 
-        assertEquals(4, aulas.size());
+        assertEquals(5, aulas.size());
         assertTrue(aulas.stream().allMatch(a -> a.getStudent().getId().equals(estudante.getId())));
         assertTrue(aulas.stream().allMatch(a -> SITUACOES_DO_RELATORIO.contains(a.getStatus())));
         assertEquals(7, lessonRepository.count());
@@ -145,7 +146,7 @@ class ReportLessonRepositoryIntegrationTest {
         aula(estudante, LessonStatus.VALIDATED, FIM.plusDays(1));
 
         List<Lesson> aulas = reportLessonRepository
-                .findByStudent_IdAndStatusInAndScheduledEndBetweenOrderByScheduledEndAsc(
+                .findByStudent_IdAndStatusInAndScheduledStartBetweenOrderByScheduledStartAsc(
                         estudante.getId(), SITUACOES_DO_RELATORIO, INICIO, FIM);
 
         assertEquals(3, aulas.size());
@@ -159,7 +160,7 @@ class ReportLessonRepositoryIntegrationTest {
         aula(estudante, LessonStatus.VALIDATED, INICIO.minusMonths(2));
 
         List<Lesson> aulas = reportLessonRepository
-                .findByStudent_IdAndStatusInAndScheduledEndBetweenOrderByScheduledEndAsc(
+                .findByStudent_IdAndStatusInAndScheduledStartBetweenOrderByScheduledStartAsc(
                         estudante.getId(), SITUACOES_DO_RELATORIO, INICIO, FIM);
 
         assertTrue(aulas.isEmpty());
