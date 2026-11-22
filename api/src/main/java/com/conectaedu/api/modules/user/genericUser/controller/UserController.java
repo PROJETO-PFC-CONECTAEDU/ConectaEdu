@@ -51,8 +51,8 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
-        return ResponseEntity.ok(userFacade.getAllUsers());
+    public ResponseEntity<List<UserResponseDTO>> getAllUsers(@RequestParam(required = false) String search) {
+        return ResponseEntity.ok(userFacade.getAllUsers(search));
     }
 
     @PatchMapping("/{id}/activate")

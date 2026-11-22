@@ -34,8 +34,8 @@ public class StudentFacadeImpl implements IStudentFacade {
     }
 
     @Override
-    public List<StudentResponseDTO> getAllStudents() {
-        return studentGetService.getAllStudents();
+    public List<StudentResponseDTO> getAllStudents(String search) {
+        return studentGetService.getAllStudents(search);
     }
 
     @Override

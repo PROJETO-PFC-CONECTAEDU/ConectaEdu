@@ -54,7 +54,10 @@ public class SchoolController {
 
     @GetMapping
     @PreAuthorize("hasRole('PLATFORM_ADMIN')")
-    public ResponseEntity<List<SchoolResponseDTO>> getAllSchools() {return ResponseEntity.ok(schoolFacade.getAllSchools()); }
+    public ResponseEntity<List<SchoolResponseDTO>> getAllSchools(
+            @RequestParam(required = false) String search) {
+        return ResponseEntity.ok(schoolFacade.getAllSchools(search));
+    }
 
     @GetMapping("/active")
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'SCHOOL_DIRECTOR', 'STUDENT', 'UNIVERSITY_ADMIN')")
