@@ -12,7 +12,8 @@ import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { ClipboardList, Trash2, Plus, Users, Clock, Building2, User as UserIcon, Check, MapPin } from 'lucide-react';
+import { Tooltip } from '../components/ui/Tooltip';
+import { ClipboardList, Trash2, Plus, Users, Clock, Building2, User as UserIcon, Check, MapPin, AlertTriangle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { formatDemandStatus } from '../utils/format';
 
@@ -40,6 +41,7 @@ interface Demand {
   recommendationScore?: number;
   distance?: number;
   isRecommended?: boolean;
+  hasConflict?: boolean;
 }
 
 const demandSchema = z.object({
@@ -60,6 +62,7 @@ export function Demands() {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [conflictDemandId, setConflictDemandId] = useState<string | null>(null);
 
   const isDirector = user?.role === 'SCHOOL_DIRECTOR';
   const isStudent = user?.role === 'STUDENT';
@@ -359,9 +362,21 @@ export function Demands() {
                       )
                     )}
                   </div>
+                  {isStudent && demand.hasConflict && (
+                    <div className="flex items-center gap-2 mt-3">
+                      <Tooltip content="Você já possui uma demanda ou aula agendada para este mesmo horário">
+                        <div className="flex items-center gap-1.5 px-2 py-1 bg-red-50 text-red-700 rounded-md border border-red-100 cursor-help">
+                          <AlertTriangle size={14} className="shrink-0" />
+                          <span className="text-[10px] font-bold uppercase">Conflito</span>
+                        </div>
+                      </Tooltip>
+                    </div>
+                  )}
                   {isStudent && demand.status === 'WAITING' && !demand.isArchived && (
                     <button 
-                      onClick={() => applyMutation.mutate(demand.id)}
+                      onClick={() => demand.hasConflict && !demand.candidates.some(c => c.id === user?.id) 
+                        ? setConflictDemandId(demand.id) 
+                        : applyMutation.mutate(demand.id)}
                       disabled={applyMutation.isPending || demand.candidates.some(c => c.id === user?.id)}
                       className="text-xs bg-brand-primary text-white px-3 py-1.5 rounded-md font-bold hover:bg-brand-primary/90 transition-colors disabled:opacity-50 flex items-center gap-1 whitespace-nowrap"
                     >
@@ -401,6 +416,22 @@ export function Demands() {
           title="Remover Demanda"
           description="Tem certeza que deseja remover esta demanda? Esta ação não pode ser desfeita."
           isLoading={deleteMutation.isPending}
+        />
+
+        <ConfirmModal
+          isOpen={!!conflictDemandId}
+          onClose={() => setConflictDemandId(null)}
+          onConfirm={() => {
+            if (conflictDemandId) {
+              applyMutation.mutate(conflictDemandId);
+              setConflictDemandId(null);
+            }
+          }}
+          title="Conflito de Horário Detectado"
+          description="Você já possui uma demanda ou aula agendada para este mesmo horário. Tem certeza que deseja se candidatar a esta vaga mesmo assim?"
+          confirmText="Sim, tenho certeza"
+          cancelText="Cancelar"
+          variant="info"
         />
       </div>
     </div>

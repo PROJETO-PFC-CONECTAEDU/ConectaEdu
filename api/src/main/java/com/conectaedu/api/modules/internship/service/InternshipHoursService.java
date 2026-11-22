@@ -11,6 +11,7 @@ import com.conectaedu.api.modules.university.repository.UniversityRepository;
 import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.university_admin.domain.UniversityAdmin;
 import com.conectaedu.api.modules.user.university_admin.repository.UniversityAdminRepository;
+import com.conectaedu.api.shared.enums.CancellationReason;
 import com.conectaedu.api.shared.enums.LessonStatus;
 import com.conectaedu.api.shared.enums.UserRole;
 import com.conectaedu.api.shared.exceptions.UniversityNotFoundException;
@@ -110,6 +111,9 @@ public class InternshipHoursService {
         int canceledLessons = (int) internshipLessonRepository
                 .countByStudent_IdAndStatus(studentId, LessonStatus.CANCELED);
 
+        int canceledByStudent = (int) internshipLessonRepository
+                .countByStudent_IdAndStatusAndCancellationReason(studentId, LessonStatus.CANCELED, CancellationReason.STUDENT_UNAVAILABLE);
+
         return new InternshipHoursResponseDTO(
                 studentId,
                 student.getName(),
@@ -118,6 +122,7 @@ public class InternshipHoursService {
                 validated.size(),
                 pending.size(),
                 canceledLessons,
+                canceledByStudent,
                 requiredHours,
                 InternshipRules.toHours(Math.max(0, requiredMinutes - totalMinutes)),
                 requirementMetAt);

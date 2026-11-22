@@ -25,6 +25,7 @@ public record StudentReportResponseDTO(
         BigDecimal validatedHoursInPeriod,
         BigDecimal pendingHours,
         int canceledLessons,
+        int canceledByStudent,
         int notCompletedLessons,
 
         //avaliações no período.

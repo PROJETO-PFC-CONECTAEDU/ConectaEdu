@@ -68,6 +68,8 @@ export function Login() {
           role: data.role,
           universityId: data.universityId,
           schoolId: data.schoolId,
+          universityCNPJ: data.universityCNPJ,
+          schoolCIE: data.schoolCIE,
           emailConfirmed: data.emailConfirmed,
           twoFactorEnabled: data.twoFactorEnabled
         }
@@ -219,6 +221,8 @@ export function Login() {
               role: data.role,
               universityId: data.universityId,
               schoolId: data.schoolId,
+              universityCNPJ: data.universityCNPJ,
+              schoolCIE: data.schoolCIE,
               emailConfirmed: data.emailConfirmed,
               twoFactorEnabled: data.twoFactorEnabled
             }
@@ -243,6 +247,8 @@ export function Login() {
                 role: loginData.role,
                 universityId: loginData.universityId,
                 schoolId: loginData.schoolId,
+                universityCNPJ: loginData.universityCNPJ,
+                schoolCIE: loginData.schoolCIE,
                 emailConfirmed: true,
                 twoFactorEnabled: loginData.twoFactorEnabled
               }

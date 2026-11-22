@@ -3,10 +3,14 @@ package com.conectaedu.api.modules.demand.repository;
 import com.conectaedu.api.modules.demand.domain.Demand;
 import com.conectaedu.api.shared.enums.DemandStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import jakarta.persistence.LockModeType;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface DemandRepository extends JpaRepository<Demand, UUID> {
@@ -59,6 +63,10 @@ public interface DemandRepository extends JpaRepository<Demand, UUID> {
     long countActiveStudentsByUniversityId(UUID universityId);
     
     java.util.Optional<Demand> findFirstByStudentIdAndStatus(UUID studentId, DemandStatus status);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT d FROM Demand d WHERE d.id = :id")
+    Optional<Demand> findByIdWithLock(UUID id);
 
     List<Demand> findByStatusAndFinishedAtBetween(DemandStatus status, LocalDateTime start, LocalDateTime end);
 }

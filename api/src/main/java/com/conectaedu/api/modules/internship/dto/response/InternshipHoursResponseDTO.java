@@ -14,6 +14,7 @@ public record InternshipHoursResponseDTO(
         int validatedLessons,
         int pendingLessons,
         int canceledLessons,
+        int canceledByStudent,
         int requiredHours,
         BigDecimal remainingHours,
         LocalDate requirementMetAt) {}

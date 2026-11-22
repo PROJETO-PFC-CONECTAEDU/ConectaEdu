@@ -11,6 +11,7 @@ public record ConsentRecordResponseDTO(
         UUID legalDocumentId,
         String documentType,
         String documentVersion,
+        String documentStatus,
         String action,
         LocalDateTime acceptedAt,
         LocalDateTime withdrawnAt,
@@ -24,6 +25,7 @@ public record ConsentRecordResponseDTO(
                 record.getLegalDocument() == null ? null
                         : record.getLegalDocument().getDocumentType().name(),
                 record.getLegalDocument() == null ? null : record.getLegalDocument().getVersion(),
+                record.getLegalDocument() == null ? null : record.getLegalDocument().getStatus().name(),
                 record.getAction() == null ? null : record.getAction().name(),
                 record.getAcceptedAt(),
                 record.getWithdrawnAt(),

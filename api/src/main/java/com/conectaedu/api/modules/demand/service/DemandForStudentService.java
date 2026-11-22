@@ -3,6 +3,8 @@ package com.conectaedu.api.modules.demand.service;
 import com.conectaedu.api.modules.demand.dto.response.DemandStudentDTO;
 import com.conectaedu.api.modules.demand.mapper.DemandMapper;
 import com.conectaedu.api.modules.demand.repository.DemandRepository;
+import com.conectaedu.api.modules.lesson.repository.LessonRepository;
+import com.conectaedu.api.modules.lesson.support.LessonRules;
 import com.conectaedu.api.modules.user.student.domain.Student;
 import com.conectaedu.api.modules.user.student.repository.StudentRepository;
 import com.conectaedu.api.shared.enums.DemandStatus;
@@ -21,21 +23,25 @@ import java.util.stream.Collectors;
 public class DemandForStudentService {
     private final DemandRepository demandRepository;
     private final StudentRepository studentRepository;
+    private final LessonRepository lessonRepository;
     private final DemandMapper demandMapper;
     private final TenancyValidator tenancyValidator;
 
     @Transactional(readOnly = true)
     public List<DemandStudentDTO> getAvailableDemandsForStudents() {
         Student student = null;
+        UUID authUserId = null;
         try {
-            UUID userId = SecurityContextHolder.getAuthenticatedUserId();
-            student = studentRepository.findById(userId).orElse(null);
+            authUserId = SecurityContextHolder.getAuthenticatedUserId();
+            student = studentRepository.findById(authUserId).orElse(null);
             if (student != null) {
                 tenancyValidator.validateStudentAccess(student);
             }
         } catch (Exception ignored) {}
 
         final Student finalStudent = student;
+        final UUID finalUserId = authUserId;
+        
         return demandRepository.findByStatus(DemandStatus.WAITING).stream()
                 .map(demand -> {
                     Double distance = null;
@@ -46,7 +52,15 @@ public class DemandForStudentService {
                                 demand.getSchool().getLatitude(), demand.getSchool().getLongitude()
                         );
                     }
-                    return demandMapper.mapToStudentDTO(demand, null, distance);
+                    
+                    boolean hasConflict = false;
+                    if (finalUserId != null) {
+                        hasConflict = lessonRepository.existsOverlapBetweenDemandAndStudent(
+                                demand.getId(), finalUserId, LessonRules.BUSY_STATUSES
+                        );
+                    }
+                    
+                    return demandMapper.mapToStudentDTO(demand, null, distance, false, false, hasConflict);
                 })
                 .collect(Collectors.toList());
     }

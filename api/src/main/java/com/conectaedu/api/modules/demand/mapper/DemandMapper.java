@@ -49,11 +49,13 @@ public class DemandMapper {
                         .collect(Collectors.toList()),
                 demand.getCreatedAt(),
                 demand.getUpdatedAt(),
-                null
+                null,
+                false,
+                false
         );
     }
 
-    public DemandResponseDTO mapToResponseDTO(Demand demand, Double distance) {
+    public DemandResponseDTO mapToResponseDTO(Demand demand, Double distance, Boolean hasConflict, Boolean canBeEvaluated) {
         return new DemandResponseDTO(
                 demand.getId(),
                 demand.getTitle(),
@@ -88,8 +90,18 @@ public class DemandMapper {
                         .collect(Collectors.toList()),
                 demand.getCreatedAt(),
                 demand.getUpdatedAt(),
-                distance
+                distance,
+                hasConflict,
+                canBeEvaluated
         );
+    }
+
+    public DemandResponseDTO mapToResponseDTO(Demand demand, Double distance, Boolean hasConflict) {
+        return mapToResponseDTO(demand, distance, hasConflict, false);
+    }
+
+    public DemandResponseDTO mapToResponseDTO(Demand demand, Double distance) {
+        return mapToResponseDTO(demand, distance, false);
     }
 
     public DemandStudentDTO mapToStudentDTO(Demand demand) {
@@ -121,45 +133,13 @@ public class DemandMapper {
                 null,
                 null,
                 false,
-                false
-        );
-    }
-
-    public DemandStudentDTO mapToStudentDTO(Demand demand, Double recommendationScore, Double distance) {
-        return new DemandStudentDTO(
-                demand.getId(),
-                demand.getTitle(),
-                demand.getDescription(),
-                demand.getSubject(),
-                demand.getGradeLevel(),
-                demand.getPupilAmount(),
-                demand.getStatus(),
-                demand.getTotalHours(),
-                demand.getRoom(),
-                demand.getDifficultyLevel(),
-                demand.isArchived(),
-                demand.getSchool().getId(),
-                demand.getSchool().getName(),
-                demand.getSchool().getAddress(),
-                demand.getSchool().getLatitude(),
-                demand.getSchool().getLongitude(),
-                demand.getDirector().getId(),
-                demand.getDirector().getName(),
-                demand.getStudent() != null ? demand.getStudent().getId() : null,
-                demand.getStudent() != null ? demand.getStudent().getName() : null,
-                mapStudentCandidates(demand),
-                demand.getCreatedAt(),
-                demand.getUpdatedAt(),
-                recommendationScore,
-                distance,
-                recommendationScore != null && recommendationScore >= 100,
                 false,
                 false
         );
     }
 
     public DemandStudentDTO mapToStudentDTO(Demand demand, Double recommendationScore, Double distance, 
-                                          Boolean hasStudentFeedback, Boolean hasDirectorFeedback) {
+                                          Boolean hasStudentFeedback, Boolean hasDirectorFeedback, Boolean hasConflict) {
         return new DemandStudentDTO(
                 demand.getId(),
                 demand.getTitle(),
@@ -188,8 +168,18 @@ public class DemandMapper {
                 distance,
                 recommendationScore != null && recommendationScore >= 100,
                 hasStudentFeedback,
-                hasDirectorFeedback
+                hasDirectorFeedback,
+                hasConflict
         );
+    }
+
+    public DemandStudentDTO mapToStudentDTO(Demand demand, Double recommendationScore, Double distance) {
+        return mapToStudentDTO(demand, recommendationScore, distance, false, false, false);
+    }
+
+    public DemandStudentDTO mapToStudentDTO(Demand demand, Double recommendationScore, Double distance, 
+                                          Boolean hasStudentFeedback, Boolean hasDirectorFeedback) {
+        return mapToStudentDTO(demand, recommendationScore, distance, hasStudentFeedback, hasDirectorFeedback, false);
     }
 
     private List<DemandResponseDTO.CandidateResponseDTO> mapCandidates(Demand demand) {

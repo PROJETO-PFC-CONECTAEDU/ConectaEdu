@@ -18,7 +18,7 @@ import { SessionRow } from '../components/schedule/SessionRow';
 import { parseISO, isSameDay, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { clsx } from 'clsx';
-import { formatLessonStatus } from '../utils/format';
+import { formatLessonStatus, formatCancellationReason } from '../utils/format';
 
 export interface Lesson {
   id: string;
@@ -36,6 +36,8 @@ export interface Lesson {
   contentTaught?: string;
   nineBoxPerformance?: number;
   nineBoxPotential?: number;
+  cancellationReason?: string;
+  cancellationNotes?: string;
 }
 
 const registrationSchema = z.object({
@@ -413,6 +415,25 @@ export function Schedule() {
                 </div>
               </div>
             </div>
+
+            {viewingLesson.status === 'CANCELED' && (
+              <div className="p-4 rounded-lg border border-red-200 bg-red-50/30 space-y-4">
+                <div className="bg-red-50 p-4 rounded-lg border border-red-100">
+                  <p className="text-xs text-red-600 mb-1 font-medium uppercase tracking-wider">Motivo do Cancelamento</p>
+                  <p className="text-sm font-bold text-red-700">
+                    {formatCancellationReason(viewingLesson.cancellationReason)}
+                  </p>
+                </div>
+                {viewingLesson.cancellationNotes && (
+                  <div className="bg-white p-4 rounded-lg border border-border-default">
+                    <p className="text-xs text-text-muted mb-2 font-medium uppercase tracking-wider">Detalhes do Motivo</p>
+                    <p className="text-sm text-text-body leading-relaxed whitespace-pre-wrap">
+                      {viewingLesson.cancellationNotes}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="flex justify-end pt-2">
               <Button onClick={() => setViewingLesson(null)}>Fechar</Button>

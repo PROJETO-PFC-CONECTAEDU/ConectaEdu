@@ -1,6 +1,7 @@
 package com.conectaedu.api.modules.internship.repository;
 
 import com.conectaedu.api.modules.lesson.domain.Lesson;
+import com.conectaedu.api.shared.enums.CancellationReason;
 import com.conectaedu.api.shared.enums.LessonStatus;
 import org.springframework.data.repository.Repository;
 
@@ -19,6 +20,7 @@ public interface InternshipLessonRepository extends Repository<Lesson, UUID> {
     List<Lesson> findByStudent_IdAndStatusOrderBySignedAtAsc(UUID studentId, LessonStatus status);
 
     //Pendentes e canceladas aparecem só como quantidade na tela, então não vale trazer as linhas.
-
     long countByStudent_IdAndStatus(UUID studentId, LessonStatus status);
+
+    long countByStudent_IdAndStatusAndCancellationReason(UUID studentId, LessonStatus status, CancellationReason reason);
 }

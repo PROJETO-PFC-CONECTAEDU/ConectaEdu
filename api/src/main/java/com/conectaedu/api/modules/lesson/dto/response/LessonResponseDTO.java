@@ -19,4 +19,6 @@ public record LessonResponseDTO(
         LocalDateTime signedAt,
         String contentTaught,
         Integer nineBoxPerformance,
-        Integer nineBoxPotential) {}
+        Integer nineBoxPotential,
+        String cancellationReason,
+        String cancellationNotes) {}
