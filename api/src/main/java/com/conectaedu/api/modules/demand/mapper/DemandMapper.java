@@ -166,7 +166,7 @@ public class DemandMapper {
                 demand.getUpdatedAt(),
                 recommendationScore,
                 distance,
-                recommendationScore != null && recommendationScore >= 100,
+                recommendationScore != null && recommendationScore >= 70,
                 hasStudentFeedback,
                 hasDirectorFeedback,
                 hasConflict

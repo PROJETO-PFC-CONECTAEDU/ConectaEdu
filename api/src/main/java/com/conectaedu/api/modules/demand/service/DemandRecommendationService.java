@@ -65,33 +65,27 @@ public class DemandRecommendationService {
 
     private double calculateScore(Student student, Demand demand, double distance) {
         double score = 0;
+        //Estudante: possui Matemática entre suas áreas de interesse.
+        //Demanda: reforço escolar de Matemática.
+        //Distância até a escola: 2 km.
+        //Afinidade: 60 pontos.
+        //Proximidade: 40 - (2 × 5) = 30 pontos.
+        //Total: 90 pontos.
 
-        // 1. Afinidade de Interesse (Peso Médio: 70)
+        // 1. Afinidade de interesse (60 pontos)
         if (student.getInterestAreas() != null && demand.getSubject() != null) {
             if (student.getInterestAreas().stream().anyMatch(area ->
                     area.equalsIgnoreCase(demand.getSubject()))) {
-                score += 70;
+                score += 60;
             }
         }
 
-        // 2. Proximidade Geográfica (Peso Alto: até 100)
-        if (distance > 0) {
-            // Ex: 80 pontos se < 2km, diminui conforme a distância aumenta
-            score += Math.max(0, 100 - (distance * 5));
+        // 2. Proximidade geográfica (40 pontos)
+        if (distance >= 0) {
+            score += Math.max(0, 40 - (distance * 5));
         }
 
-        // 3. Correspondência com o Curso (Peso Médio: 50)
-        if (student.getCourse() != null && demand.getSubject() != null &&
-                demand.getSubject().toLowerCase().contains(student.getCourse().toLowerCase())) {
-            score += 50;
-        }
-
-        // 4. Recência (Peso Baixo: 20)
-        if (demand.getCreatedAt() != null && demand.getCreatedAt().isAfter(LocalDateTime.now().minusDays(2))) {
-            score += 20;
-        }
-
-        return score;
+        return Math.min(score, 100);
     }
 
     private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
