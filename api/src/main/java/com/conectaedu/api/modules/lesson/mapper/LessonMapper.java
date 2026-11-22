@@ -24,7 +24,9 @@ public class LessonMapper {
                 lesson.getSignedAt(),
                 lesson.getContentTaught(),
                 lesson.getNineBoxPerformance(),
-                lesson.getNineBoxPotential()
+                lesson.getNineBoxPotential(),
+                lesson.getCancellationReason() != null ? lesson.getCancellationReason().name() : null,
+                lesson.getCancellationNotes()
         );
     }
 }

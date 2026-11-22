@@ -33,7 +33,8 @@ public record DemandStudentDTO(
         Double distance,
         Boolean isRecommended,
         Boolean hasStudentFeedback,
-        Boolean hasDirectorFeedback
+        Boolean hasDirectorFeedback,
+        Boolean hasConflict
 ) {
     public record CandidateResponseDTO(UUID id, String name) {}
 }

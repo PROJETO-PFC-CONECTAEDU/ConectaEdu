@@ -36,7 +36,7 @@ import { Input } from '../components/ui/Input';
 import { Tooltip } from '../components/ui/Tooltip';
 import { MonthCalendar } from '../components/calendar/MonthCalendar';
 import { isSameDay, startOfDay, format } from 'date-fns';
-import { formatDemandStatus, formatLessonStatus } from '../utils/format';
+import { formatDemandStatus, formatLessonStatus, formatCancellationReason } from '../utils/format';
 import type { Lesson } from './Schedule';
 
 interface Candidate {
@@ -68,6 +68,8 @@ interface Demand {
   createdAt: string;
   distance?: number;
   isRecommended?: boolean;
+  hasConflict?: boolean;
+  canBeEvaluated?: boolean;
 }
 
 const schedulingSchema = z.object({
@@ -112,6 +114,7 @@ export function DemandDetail() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
   const [isViewLessonModalOpen, setIsViewLessonModalOpen] = useState(false);
   const [isCancelLessonModalOpen, setIsCancelLessonModalOpen] = useState(false);
   const [isDeleteLessonModalOpen, setIsDeleteLessonModalOpen] = useState(false);
@@ -479,7 +482,7 @@ export function DemandDetail() {
                         </div>
                       </div>
                       <div className="flex items-center gap-3 flex-wrap">
-                        {isStudent && demand.studentId === user?.id && demand.status === 'FINISHED' && (
+                        {isStudent && demand.studentId === user?.id && demand.status === 'FINISHED' && demand.canBeEvaluated && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -592,7 +595,7 @@ export function DemandDetail() {
                         Encerrar Demanda
                       </Button>
                     )}
-                    {isDirector && demand.status === 'FINISHED' && (
+                    {isDirector && demand.status === 'FINISHED' && demand.canBeEvaluated && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -806,6 +809,7 @@ export function DemandDetail() {
                             <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
                               lesson.status === 'SCHEDULED' ? 'bg-blue-100 text-blue-700' :
                               lesson.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
+                              lesson.status === 'CANCELED' ? 'bg-red-100 text-red-700' :    
                               (lesson.status === 'REGISTERED' || lesson.status === 'COMPLETED') ? 'bg-purple-100 text-purple-700' :
                               'bg-emerald-100 text-emerald-700'
                             }`}>
@@ -980,17 +984,31 @@ export function DemandDetail() {
             )}
 
             {isStudent && demand.status === 'WAITING' && !demand.isArchived && (
-              <Card className="p-6 bg-brand-primary text-white">
-                <h3 className="font-bold mb-2">Interessado nesta vaga?</h3>
-                <p className="text-sm opacity-90 mb-6">
+              <Card className={`p-6 ${demand.hasConflict ? 'bg-red-50 border-red-200 text-red-700' : 'bg-brand-primary text-white'}`}>
+                {demand.hasConflict && (
+                  <div className="flex items-center gap-2 mb-4 bg-red-100 p-3 rounded-lg border border-red-200">
+                    <AlertCircle size={20} className="shrink-0" />
+                    <p className="text-sm font-medium">
+                      Você já possui uma demanda ou aula agendada para este mesmo horário.
+                    </p>
+                  </div>
+                )}
+                <h3 className={`font-bold mb-2 ${demand.hasConflict ? 'text-red-800' : ''}`}>Interessado nesta vaga?</h3>
+                <p className={`text-sm opacity-90 mb-6 ${demand.hasConflict ? 'text-red-700' : ''}`}>
                   {demand.candidates.some(c => c.id === user?.id)
                     ? 'Sua candidatura está em análise pelo diretor da escola. Fique atento às atualizações.'
                     : 'Candidate-se agora para que o diretor da escola possa avaliar seu perfil.'}
                 </p>
                 <button 
-                  onClick={() => applyMutation.mutate()}
+                  onClick={() => demand.hasConflict && !demand.candidates.some(c => c.id === user?.id)
+                    ? setIsConflictModalOpen(true)
+                    : applyMutation.mutate()}
                   disabled={applyMutation.isPending || demand.candidates.some(c => c.id === user?.id)}
-                  className="w-full bg-white text-brand-primary py-3 rounded-xl font-bold hover:bg-brand-secondary transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className={`w-full py-3 rounded-xl font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2 ${
+                    demand.hasConflict && !demand.candidates.some(c => c.id === user?.id)
+                      ? 'bg-red-600 text-white hover:bg-red-700' 
+                      : 'bg-white text-brand-primary hover:bg-brand-secondary'
+                  }`}
                 >
                   {demand.candidates.some(c => c.id === user?.id) ? (
                     <>
@@ -1048,6 +1066,20 @@ export function DemandDetail() {
         description="Tem certeza que deseja remover esta aula agendada? Esta ação não pode ser desfeita."
         isLoading={deleteLessonMutation.isPending}
         variant="danger"
+      />
+
+      <ConfirmModal
+        isOpen={isConflictModalOpen}
+        onClose={() => setIsConflictModalOpen(false)}
+        onConfirm={() => {
+          applyMutation.mutate();
+          setIsConflictModalOpen(false);
+        }}
+        title="Conflito de Horário Detectado"
+        description="Você já possui uma demanda ou aula agendada para este mesmo horário. Tem certeza que deseja se candidatar a esta vaga mesmo assim?"
+        confirmText="Sim, tenho certeza"
+        cancelText="Cancelar"
+        variant="info"
       />
 
       <Modal
@@ -1169,6 +1201,27 @@ export function DemandDetail() {
                 <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 p-3 rounded-lg">
                   <CheckCircle2 size={18} />
                   <p className="text-sm font-medium">Validada e assinada pelo diretor</p>
+                </div>
+              </div>
+            )}
+            
+            {selectedLesson.status === 'CANCELED' && (
+              <div className="pt-4 border-t border-border-default space-y-4">
+                <div className="p-4 rounded-lg border border-red-200 bg-red-50/30 space-y-4">
+                  <div>
+                    <p className="text-xs text-text-muted font-medium mb-1">Motivo do Cancelamento</p>
+                    <p className="text-sm font-bold text-red-600 bg-red-50 p-3 rounded-lg border border-red-100">
+                      {formatCancellationReason(selectedLesson.cancellationReason)}
+                    </p>
+                  </div>
+                  {selectedLesson.cancellationNotes && (
+                    <div>
+                      <p className="text-xs text-text-muted font-medium mb-1">Detalhes do Motivo</p>
+                      <p className="text-sm text-text-body bg-white p-3 rounded-lg border border-border-default whitespace-pre-wrap">
+                        {selectedLesson.cancellationNotes}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

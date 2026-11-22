@@ -28,6 +28,7 @@ interface ConsentRecord {
   action: string;
   acceptedAt: string;
   withdrawnAt: string | null;
+  documentStatus: string;
 }
 
 export function Profile() {
@@ -113,7 +114,8 @@ export function Profile() {
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.put('/profile', profileData);
+      const response = await api.put('/profile', profileData);
+      updateUser(response.data);
       toast.success('Perfil atualizado com sucesso!');
       setIsEditingProfile(false);
     } catch (error) {
@@ -388,6 +390,11 @@ export function Profile() {
                         <div className="flex items-center gap-1 text-brand-accent">
                           <XCircle size={18} />
                           <span className="text-sm font-medium">Revogado</span>
+                        </div>
+                      ) : consent.documentStatus === 'ARCHIVED' ? (
+                        <div className="flex items-center gap-1 text-slate-500">
+                          <Shield size={18} />
+                          <span className="text-sm font-medium">Arquivado</span>
                         </div>
                       ) : (
                         <>

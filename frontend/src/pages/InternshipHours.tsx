@@ -14,6 +14,7 @@ interface InternshipHoursData {
   validatedLessons: number;
   pendingLessons: number;
   canceledLessons: number;
+  canceledByStudent: number;
   requiredHours: number;
   remainingHours: number;
 }
@@ -142,7 +143,7 @@ export function InternshipHours() {
             icon={<CheckCircle className="text-brand-primary" size={20} />}
             label="Aulas Canceladas"
             value={hoursData.canceledLessons}
-            note="Não contabilizadas"
+            note={hoursData.canceledByStudent ? `${hoursData.canceledByStudent} pelo estudante` : "Não contabilizadas"}
           />
         </div>
       </div>
