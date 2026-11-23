@@ -20,7 +20,6 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "lesson")
-@SQLRestriction("deleted = false")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
