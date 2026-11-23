@@ -21,7 +21,6 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "universities")
-@SQLRestriction("deleted = false")
 @Getter
 @Setter
 @AllArgsConstructor
