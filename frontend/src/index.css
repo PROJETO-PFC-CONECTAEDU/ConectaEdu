@@ -46,9 +46,7 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color-scheme: light;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -69,5 +67,24 @@ body {
   
   h1, h2, h3, h4, h5, h6 {
     @apply text-text-heading font-display font-bold;
+  }
+
+  /* Fix Google Maps InfoWindow close button visibility */
+  .gm-ui-hover-effect {
+    opacity: 1 !important;
+    background-color: white !important;
+    border-radius: 50% !important;
+    margin: 5px !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
+    width: 28px !important;
+    height: 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .gm-ui-hover-effect span {
+    background-color: #1e293b !important;
+    margin: 0 !important;
   }
 }

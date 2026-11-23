@@ -6,7 +6,7 @@ import { Filter, Calendar, BookOpen, CheckCircle, XCircle, Star, Search } from '
 import { useAuth } from '../context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import api from '../lib/api';
-import { useState, useMemo, useEffect } from 'react';
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { useParams } from 'react-router-dom';
 
