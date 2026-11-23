@@ -34,7 +34,7 @@ public class LessonDeletionService {
                     "Somente aulas agendadas podem ser removidas. Status atual: " + lesson.getStatus());
         }
 
-        lesson.deactivate();
+        lesson.anonymize();
         lessonRepository.save(lesson);
 
         auditService.logDelete(AuditEntityType.LESSON, lesson.getId(), lesson.getAuditName());

@@ -25,9 +25,9 @@ public class SchoolDeletionService {
         School school = schoolRepository.findById(id)
                 .orElseThrow(() -> new SchoolNotFoundException("Escola não encontrada!"));
 
-        school.deactivate();
+        school.anonymize();
         schoolRepository.save(school);
 
-        auditService.logDelete(AuditEntityType.SCHOOL, school.getId(), school.getName());
+        auditService.logDelete(AuditEntityType.SCHOOL, school.getId(), "Escola Anonimizada");
     }
 }

@@ -25,9 +25,9 @@ public class UniversityDeletionService {
         University university = universityRepository.findById(id)
                 .orElseThrow(() -> new UniversityNotFoundException("Universidade não encontrada!"));
 
-        university.deactivate();
+        university.anonymize();
         universityRepository.save(university);
 
-        auditService.logDelete(AuditEntityType.UNIVERSITY, university.getId(), university.getName());
+        auditService.logDelete(AuditEntityType.UNIVERSITY, university.getId(), "Universidade Anonimizada");
     }
 }

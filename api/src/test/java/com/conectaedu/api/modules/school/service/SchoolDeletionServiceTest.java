@@ -58,10 +58,12 @@ class SchoolDeletionServiceTest {
         when(schoolRepository.findById(escola.getId())).thenReturn(Optional.of(escola));
 
         schoolDeletionService.deleteSchool(escola.getId());
-
+        
         assertEquals(false, escola.isActive());
+        assertEquals(true, escola.isDeleted());
+        assertEquals("Escola Anonimizada (" + escola.getId().toString().substring(0, 8) + ")", escola.getName());
         verify(schoolRepository).save(escola);
-        verify(auditService).logDelete(AuditEntityType.SCHOOL, escola.getId(), NOME);
+        verify(auditService).logDelete(AuditEntityType.SCHOOL, escola.getId(), "Escola Anonimizada");
     }
 
     @Test
