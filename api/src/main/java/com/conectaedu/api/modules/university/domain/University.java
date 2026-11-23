@@ -71,12 +71,19 @@ public class University {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public void deactivate() {
+    public void anonymize() {
         this.active = false;
         this.deleted = true;
         this.name = "Universidade Anonimizada (" + this.id.toString().substring(0, 8) + ")";
         this.cnpj = "DEL_" + this.id.toString().replace("-", "").substring(0, 10);
         this.address = "Endereço Removido";
+        this.validationNotes = null;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void deactivate() {
+        this.active = false;
+        this.deleted = true;
         this.updatedAt = LocalDateTime.now();
     }
 }

@@ -85,10 +85,16 @@ public class Lesson {
     private LocalDateTime updatedAt;
     private UUID createdBy;
 
-    public void deactivate() {
+    public void anonymize() {
         this.active = false;
         this.deleted = true;
         this.contentTaught = "Conteúdo Anonimizado";
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void deactivate() {
+        this.active = false;
+        this.deleted = true;
         this.updatedAt = LocalDateTime.now();
     }
 

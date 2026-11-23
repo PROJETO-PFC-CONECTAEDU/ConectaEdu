@@ -58,9 +58,20 @@ public class School {
 
     private LocalDateTime updatedAt;
 
-    public void deactivate() {
+    public void anonymize() {
+        this.name = "Escola Anonimizada (" + this.id.toString().substring(0, 8) + ")";
+        this.cie = "DEL_" + this.id.toString().replace("-", "").substring(0, 10);
+        this.address = "Endereço Removido";
+        this.latitude = 0.0;
+        this.longitude = 0.0;
+        this.validationNotes = null;
         this.active = false;
         this.deleted = true;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void deactivate() {
+        this.active = false;
         this.updatedAt = LocalDateTime.now();
     }
 }
