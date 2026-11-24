@@ -54,14 +54,17 @@ const SUBJECTS = [
 ];
 
 const demandSchema = z.object({
-  title: z.string().min(3, 'Título deve ter pelo menos 3 caracteres'),
-  description: z.string().min(10, 'Descrição deve ter pelo menos 10 caracteres'),
-  subject: z.string().min(2, 'Disciplina é obrigatória'),
-  gradeLevel: z.string().min(1, 'Nível de escolaridade é obrigatório'),
-  pupilAmount: z.number().min(3, 'Quantidade de alunos deve ser pelo menos 3'),
-  totalHours: z.string().min(1, 'Total de horas é obrigatório').regex(/^\d+h$/, 'O padrão deve ser como: 40h, 30h, etc'),
-  room: z.string().min(1, 'Sala é obrigatória'),
-  difficultyLevel: z.string().min(1, 'Grau de dificuldade é obrigatório'),
+  title: z.string({ error: 'Título é obrigatório' }).trim().min(3, 'Título deve ter pelo menos 3 caracteres'),
+  description: z.string({ error: 'Descrição é obrigatória' }).trim().min(10, 'Descrição deve ter pelo menos 10 caracteres'),
+  subject: z.string({ error: 'Disciplina é obrigatória' }).trim().min(1, 'Disciplina é obrigatória'),
+  gradeLevel: z.string({ error: 'Nível de escolaridade é obrigatório' }).trim().min(1, 'Nível de escolaridade é obrigatório'),
+      pupilAmount: z.number({ error: 'Quantidade de alunos é obrigatória' })
+          .min(3, 'A quantidade mínima é 3 alunos')
+          .max(10, 'A quantidade máxima é 10 alunos')
+          .int('A quantidade de alunos deve ser um número inteiro'),
+  totalHours: z.string({ error: 'Total de horas é obrigatório' }).trim().min(1, 'Total de horas é obrigatório').regex(/^\d+h$/, 'O padrão deve ser como: 40h, 30h, etc'),
+  room: z.string({ error: 'Sala é obrigatória' }).trim().min(1, 'Sala é obrigatória'),
+  difficultyLevel: z.string({ error: 'Grau de dificuldade é obrigatório' }).trim().min(1, 'Grau de dificuldade é obrigatório'),
 });
 
 type DemandFormData = z.infer<typeof demandSchema>;
@@ -77,7 +80,17 @@ export function Demands() {
   const isStudent = user?.role === 'STUDENT';
 
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm<DemandFormData>({
-    resolver: zodResolver(demandSchema)
+    resolver: zodResolver(demandSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      subject: '',
+      gradeLevel: '',
+      pupilAmount: 0,
+      totalHours: '',
+      room: '',
+      difficultyLevel: '',
+    }
   });
 
   const { data: demands, isLoading, error } = useQuery<Demand[]>({
